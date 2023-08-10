@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta http-equiv="x-ua-compatible" content="ie=edge" />
+  <title>天气时钟</title>
+  <link rel="stylesheet" href="css/csss.css" />
+  <style>
+    fieldset {
+      background-color: #fbfbfb;
+      border-radius: 15px;
+      margin-bottom: 10px;
+      padding-top: 10px;
+      padding-bottom: 10px;
+      padding-left: 20px;
+      padding-right: 20px;
+      border-radius: 15px;
+    }
+
+    #alertContainer {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    #statusContainer {
+      margin-bottom: 10px;
+      padding-top: 10px;
+      padding-bottom: 10px;
+      padding-left: 20px;
+      padding-right: 20px;
+      border-radius: 15px;
+    }
+
+    #copyrightContainer {
+      margin-top: 10px;
+      margin-bottom: 10px;
+      padding-top: 10px;
+      padding-bottom: 10px;
+      padding-left: 20px;
+      padding-right: 20px;
+      border-radius: 15px;
+    }
+
+    #everything {
+      border: 1px solid #666;
+      margin-bottom: 10px;
+      padding-top: 10px;
+      padding-bottom: 10px;
+      padding-left: 20px;
+      padding-right: 20px;
+      border-radius: 15px;
+    }
+  </style>
+  <script>
+    function displayJson(code, succ) {
+      if (code === 1) {
+        var alertDiv = '<div class="alert alert-danger shadow-5">' + succ + '</div>';
+      }
+      else {
+        var alertDiv = '<div class="alert alert-success shadow-5">' + succ + '</div>';
+      }
+      $("#alertContainer").html(alertDiv);
+      $("#alertContainer .alert").css({ opacity: 0, top: "-50px" }).animate({ opacity: 1, top: "0px" }, 500, "easeOutCirc");
+      setTimeout(function () {
+        $("#alertContainer .alert").css({ top: "0px", opacity: 1 }).animate({ top: "50px", opacity: 0 }, 300, "easeInCirc", function () {
+          $(this).remove();
+        });
+      }, 1000);
+    }
+  </script>
+</head>
+
+<body>
+  <div class="container">
+    <div id="everything">
+      <h2 style="text-align: center;">天气时钟</h2>
+      <div class="alert-info shadow-4" id="statusContainer">
+        <legend>运行状态</legend>
+        <div class="form-group">
+          <div id="status" name="status">正在获取</div>
+        </div>
+      </div>
+      <form id="configForm">
+        <fieldset class="shadow-4">
+          <legend>参数设置</legend>
+          <div class="form-group">
+            <label for="p1">彩云天气GPS坐标，可访问<a href="https://caiyunapp.com/map">caiyunapp.com/map</a>后在地址栏获取</label>
+            <input type="password" class="form-control" id="p1" name="p1">
+          </div>
+          <hr />
+          <div class="form-group">
+            <label for="p2">天气更新间隔，单位分钟</label>
+            <input type="range" class="form-control-range" id="p2" name="p2" min="5" max="60"
+              oninput="document.getElementById('rangeValue').textContent = this.value;" name="range">
+            <label id="rangeValue">
+          </div>
+          <hr />
+          <div class="form-group">
+            <label for="p3">夜间自动休眠功能</label>
+            <select class="form-control" id="p3" name="p3">
+              <option value="0">关闭</option>
+              <option value="1">开启</option>
+            </select>
+            <label for="p4">夜间自动休眠开始时间</label>
+            <input type="time" class="form-control" id="p4" name="p4">
+            <label for="p5">夜间自动休眠结束时间</label>
+            <input type="time" class="form-control" id="p5" name="p5">
+          </div>
+          <hr />
+          <div class="form-group">
+            <label for="p6">WiFi SSID</label>
+            <input type="text" class="form-control" id="p6" name="p6">
+            <label for="p7">WiFi密码</label>
+            <input type="password" class="form-control" id="p7" name="p7">
+          </div>
+          <hr />
+          <div class="form-group">
+            <label for="p8">仅时钟模式</label>
+            <label for="p8">建议待RTC偏移修正稳定后再使用</label>
+            <select class="form-control" id="p8" name="p8">
+              <option value="0">关闭</option>
+              <option value="1">开启</option>
+            </select>
+          </div>
+        </fieldset>
+        <button type="submit" id="submit" class="btn btn-primary">保存设置</button>
+        <button type="button" class="btn btn-warning" data-mdb-toggle="modal"
+          data-mdb-target="#exampleModal">电源选项</button>
+        <a class="btn btn-info" href="edit">文件管理</a>
+      </form>
+
+      <!-- Modal 电源选项 -->
+      <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">电源选项</h5>
+              <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">请选择...</div>
+            <div class="modal-footer">
+              <button type="reset" id="reset" class="btn btn-warning" data-mdb-dismiss="modal">重启</button>
+              <button type="button" id="poweroff" class="btn btn-danger" data-mdb-dismiss="modal">关机</button>
+              <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">关闭</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="alert-info shadow-4" id="copyrightContainer">
+        <legend>关于本机</legend>
+        <p>作者：小李电子实验室<br /><a href="https://space.bilibili.com/213123506">点击打开UP主的Bilibili主页</a><br />2023年7月10日</p>
+        <p>天气更新间隔其实也是全局刷新间隔<br /><a
+            style="color: brown;">数据来源：彩云天气</a><br />使用彩云天气“公共API”，仅限学习研究使用<br />GPS坐标请严格按此格式填写：<br />116.3975,39.9091<br />坐标只会使用HTTP协议发送给彩云天气服务器
+        </p>
+      </div>
+      <div id="alertContainer"></div>
+    </div>
+  </div>
+  <script src="js/jss.js"></script>
+  <script>
+    $(document).ready(function () {
+      $.getJSON("config.json", function (data) {
+        $.each(data, function (key, value) {
+          $("#" + key).val(value);
+        });
+        $('rangeValue').textContent = $('range').value;
+        displayJson(0, "成功读取配置");
+      }, "json").fail(function () {
+        displayJson(1, "读取配置失败");
+      });
+      // 当表单被提交时执行的函数
+      $("#configForm").submit(function (event) {
+        event.preventDefault();
+        var formData = $("#configForm").serializeArray();
+        var json = {};
+        $.each(formData, function (index, field) {
+          json[field.name] = field.value;
+        });
+        var jsonStr = JSON.stringify(json);
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/conf", true);
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+              displayJson(0, "提交成功");
+            } else {
+              displayJson(1, "请求失败，错误代码：" + xhr.status.toString() + xhr.statusText);
+            }
+          }
+        };
+        xhr.send(jsonStr);
+      });
+      $("button[id='reset']").click(function (event) {
+        event.preventDefault();
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/reset", true);
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+              displayJson(0, "请求发送成功");
+            } else {
+              displayJson(1, "请求失败，错误代码：" + xhr.status.toString() + xhr.statusText);
+            }
+          }
+        };
+        xhr.send("IREALLYWANTTOREBOOT");
+      });
+      $("button[id='poweroff']").click(function (event) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/poweroff", true);
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+              displayJson(0, "请求发送成功");
+            } else {
+              displayJson(1, "请求失败，错误代码：" + xhr.status.toString() + xhr.statusText);
+            }
+          }
+        };
+        xhr.send("IREALLYWANTTOSHUTDOWN");
+      });
+      setInterval(() => {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/info", true);
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+              var statusDiv = xhr.responseText;
+              $("#status").html(statusDiv);
+            } else {
+              var statusDiv = "请求失败";
+              $("#status").html(statusDiv);
+            }
+          }
+        };
+        xhr.send();
+      }, 1000);
+    });
+  </script>
+</body>
+
+</html>

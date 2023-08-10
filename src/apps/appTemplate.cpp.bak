@@ -1,0 +1,22 @@
+#include "AppManager.h"
+
+class AppTemplate : public AppBase
+{
+private:
+    /* data */
+public:
+    AppTemplate()
+    {
+        name = "template";
+        title = "模板";
+        description = "模板";
+        image = NULL;
+    }
+    void setup();
+};
+static AppTemplate app;
+
+void AppTemplate::setup()
+{
+}
+

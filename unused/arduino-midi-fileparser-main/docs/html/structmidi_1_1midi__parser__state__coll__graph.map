@@ -1,0 +1,9 @@
+<map id="midi::midi_parser_state" name="midi::midi_parser_state">
+<area shape="rect" id="node1" title="MIDI Parser State Information." alt="" coords="280,132,456,159"/>
+<area shape="rect" id="node2" href="$structmidi_1_1midi__sysex__event.html" title="MIDI Sysex Event Information." alt="" coords="5,5,183,32"/>
+<area shape="rect" id="node3" href="$structmidi_1_1midi__header.html" title="MIDI Header Information." alt="" coords="24,56,164,83"/>
+<area shape="rect" id="node4" href="$structmidi_1_1midi__meta__event.html" title="MIDI Metadata Event Information." alt="" coords="7,107,181,133"/>
+<area shape="rect" id="node5" href="$classmidi_1_1RingBuffer.html" title="RingBuffer that supports extensive peek operations to access and compare the next values." alt="" coords="31,157,157,184"/>
+<area shape="rect" id="node6" href="$structmidi_1_1midi__midi__event.html" title="MIDI Event Information." alt="" coords="10,208,178,235"/>
+<area shape="rect" id="node7" href="$structmidi_1_1midi__track.html" title="MIDI Track Information." alt="" coords="30,259,158,285"/>
+</map>

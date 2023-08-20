@@ -18,13 +18,25 @@
 #include <SPIFFS.h>
 #define SCREEN_WIDTH 296
 #define SCREEN_HEIGHT 128
-#define PIN_BUTTON 14
-#define PIN_BUTTONB 22
-#define PIN_USB 12
 #define PIN_ADC 33
 
+#define PIN_BUTTONL 35
+#define PIN_BUTTONC 34
+#define PIN_BUTTONR 39
 
-//下面这些尽量不要修改，因为改了不完全有效
+#define PIN_RTC_IRQ 25
+#define PIN_SDVDD_CTRL 27
+#define PIN_CHARGING 26
+#define PIN_SD_CS 14
+#define PIN_SD_MOSI 12
+#define PIN_SD_SCLK 13
+#define PIN_SD_MISO 15
+#define PIN_SD_CARDDETECT 2
+#define PIN_BUZZER 21
+#define PIN_SDA 23
+#define PIN_SCL 22
+
+// 下面这些尽量不要修改，因为改了不完全有效
 #define GRAPH_HEIGHT 37
 #define SAMPLE_COUNT 10
 #define SAMPLE_STEP 1
@@ -55,6 +67,8 @@ extern U8G2_FOR_ADAFRUIT_GFX u8g2Fonts;
 
 extern bool force_full_update;
 extern int part_refresh_count;
+extern uint8_t night_sleep;          // 夜间模式屏幕状态，0：不在夜间模式，1：晚安，2：早上好
+extern uint8_t night_sleep_today; // 今天是否进入过夜间模式
 #define PARAM_GPS "p1"
 #define PARAM_FULLUPDATE "p2"
 #define PARAM_SLEEPATNIGHT "p3"
@@ -74,3 +88,7 @@ const uint8_t *getBatteryIcon();
 #include "myNTP.h"
 #include "AppManager.h"
 #include "GUI.h"
+#include "settings.h"
+#include "alarm.h"
+#include "peripherals.h"
+#include "Buzzer.h"

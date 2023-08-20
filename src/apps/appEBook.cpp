@@ -22,6 +22,7 @@ public:
         title = "电子书";
         description = "简易电子书";
         image = ebook_bits;
+        peripherals_requested = PERIPHERALS_SD_BIT;
     }
     void setup();
 };
@@ -29,5 +30,6 @@ static AppEBook app;
 
 void AppEBook::setup()
 {
+    Serial.println(GUI::fileDialog("测试文件浏览"));
     appManager.goBack();
 }

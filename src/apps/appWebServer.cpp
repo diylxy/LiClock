@@ -22,6 +22,7 @@ public:
         title = "网页配置";
         description = "通过网页配置此设备";
         image = webserver_bits;
+        _showInList = false;
     }
     void setup();
 };
@@ -46,7 +47,7 @@ void AppWebserver::setup()
         while (1)
         {
             updateWebServer();
-            if (digitalRead(PIN_BUTTON) == 0)
+            if (digitalRead(PIN_BUTTONR) == 0)
             {
                 ESP.restart();
                 break;

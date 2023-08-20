@@ -36,6 +36,11 @@ void Weather::begin()
     file.readBytes((char *)&realtime, sizeof(realtime));
     file.readBytes((char *)&desc1, sizeof(desc1));
     file.readBytes((char *)&desc2, sizeof(desc2));
+    file.readBytes((char *)&hasAlert, sizeof(hasAlert));
+    file.readBytes((char *)alert, sizeof(alert));
+    file.readBytes((char *)alertTitle, sizeof(alertTitle));
+    file.readBytes((char *)&alertPubTime, sizeof(alertPubTime));
+
 
     file.close();
 }
@@ -50,6 +55,11 @@ void Weather::save()
     file.write((uint8_t *)&realtime, sizeof(realtime));
     file.write((uint8_t *)&desc1, sizeof(desc1));
     file.write((uint8_t *)&desc2, sizeof(desc2));
+    file.write((uint8_t *)&hasAlert, sizeof(hasAlert));
+    file.write((uint8_t *)alert, sizeof(alert));
+    file.write((uint8_t *)alertTitle, sizeof(alertTitle));
+    file.write((uint8_t *)&alertPubTime, sizeof(alertPubTime));
+
     file.close();
 }
 
@@ -103,6 +113,11 @@ int8_t Weather::refresh()
             hour24[i].winddirection = uint16_t(doc["result"]["hourly"]["wind"][i]["direction"].as<float>());
             hour24[i].windspeed = uint16_t(doc["result"]["hourly"]["wind"][i]["speed"].as<float>() * 10);
             hour24[i].rain = uint16_t(doc["result"]["hourly"]["precipitation"][i]["value"].as<float>() * 100);
+            //气压
+            hour24[i].pressure = doc["result"]["hourly"]["pressure"][i]["value"];
+        }
+        for(uint8_t i = 0; i < 120; ++i)
+        {
             // 降水
             rain[i] = doc["result"]["minutely"]["precipitation_2h"][i].as<float>() * 100;
         }
@@ -116,6 +131,7 @@ int8_t Weather::refresh()
         realtime.weathernum = codeToNum(doc["result"]["realtime"]["skycon"].as<String>().c_str());
         realtime.temperature = int16_t(doc["result"]["realtime"]["temperature"].as<float>() * 10);
         realtime.humidity = uint16_t(doc["result"]["realtime"]["humidity"].as<float>() * 100);
+        realtime.pressure = doc["result"]["realtime"]["pressure"];
         doc.clear();
         save();
     }

@@ -13,6 +13,7 @@ public:
     const uint8_t *image = NULL;         // App图像，32*32,xbm格式
     int appID = 0;                       // AppID，唯一标识App
     bool _showInList = true;
+    uint16_t peripherals_requested = 0;
     /**
      * @brief 初始化(App打开)
      */
@@ -66,16 +67,26 @@ public:
         validAppID++;
     }
     int getIDByName(const char *appName);
+    int getRealClock()
+    {
+        if (config[PARAM_CLOCKONLY] == "1")
+        {
+            return getIDByName("clockonly");
+        }
+        else
+        {
+            return getIDByName("clock");
+        }
+    }
     void gotoApp(int appID);
     void gotoApp(const char *appName)
     {
+        Serial.println(appName);
         int appID = getIDByName(appName);
         gotoApp(appID);
     }
-    void gotoDefaultApp()
-    {
-        gotoApp("clock");
-    }
+    void gotoAppBoot(const char *appName);
+    bool recover();
     void goBack();
     void showAppList(); // 显示Applist
     int appSelector();  // 显示Applist并等待用户输入

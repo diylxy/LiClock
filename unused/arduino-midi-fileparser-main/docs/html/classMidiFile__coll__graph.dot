@@ -1,0 +1,22 @@
+digraph "MidiFileParser"
+{
+ // LATEX_PDF_SIZE
+  bgcolor="transparent";
+  edge [fontname=Helvetica,fontsize=10,labelfontname=Helvetica,labelfontsize=10];
+  node [fontname=Helvetica,fontsize=10,shape=box,height=0.2,width=0.4];
+  Node1 [label="MidiFileParser",height=0.2,width=0.4,color="gray40", fillcolor="grey60", style="filled", fontcolor="black",tooltip="Midi File parser. Provide the data via write: You should try to keep the buffer as full as possible w..."];
+  Node2 -> Node1 [dir="back",color="darkorchid3",style="dashed",label=" parser_state" ];
+  Node2 [label="midi_parser_state",height=0.2,width=0.4,color="gray40", fillcolor="white", style="filled",URL="$structmidi__parser__state.html",tooltip="MIDI Parser State Information."];
+  Node3 -> Node2 [dir="back",color="darkorchid3",style="dashed",label=" in" ];
+  Node3 [label="RingBuffer",height=0.2,width=0.4,color="gray40", fillcolor="white", style="filled",URL="$classRingBuffer.html",tooltip="RingBuffer that supports extensive peek operations to access and compare the next values."];
+  Node4 -> Node2 [dir="back",color="darkorchid3",style="dashed",label=" header" ];
+  Node4 [label="midi_header",height=0.2,width=0.4,color="gray40", fillcolor="white", style="filled",URL="$structmidi__header.html",tooltip="MIDI Header Information."];
+  Node5 -> Node2 [dir="back",color="darkorchid3",style="dashed",label=" track" ];
+  Node5 [label="midi_track",height=0.2,width=0.4,color="gray40", fillcolor="white", style="filled",URL="$structmidi__track.html",tooltip="MIDI Track Information."];
+  Node6 -> Node2 [dir="back",color="darkorchid3",style="dashed",label=" midi" ];
+  Node6 [label="midi_midi_event",height=0.2,width=0.4,color="gray40", fillcolor="white", style="filled",URL="$structmidi__midi__event.html",tooltip="MIDI Event Information."];
+  Node7 -> Node2 [dir="back",color="darkorchid3",style="dashed",label=" meta" ];
+  Node7 [label="midi_meta_event",height=0.2,width=0.4,color="gray40", fillcolor="white", style="filled",URL="$structmidi__meta__event.html",tooltip="MIDI Metadata Event Information."];
+  Node8 -> Node2 [dir="back",color="darkorchid3",style="dashed",label=" sysex" ];
+  Node8 [label="midi_sysex_event",height=0.2,width=0.4,color="gray40", fillcolor="white", style="filled",URL="$structmidi__sysex__event.html",tooltip="MIDI Sysex Event Information."];
+}

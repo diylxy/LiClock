@@ -1,0 +1,5 @@
+<map id="midi::Print" name="midi::Print">
+<area shape="rect" id="node1" title=" " alt="" coords="131,5,220,32"/>
+<area shape="rect" id="node2" href="$classmidi_1_1MidiFileParser.html" title="Midi File parser. Provide the data via write: You should try to keep the buffer as full as possible w..." alt="" coords="5,87,156,114"/>
+<area shape="rect" id="node3" href="$classmidi_1_1MidiFileParserMultiTrack.html" title="Midi file parser which stores the data in RAM before making them available for parsing...." alt="" coords="180,80,363,121"/>
+</map>

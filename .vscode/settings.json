@@ -5,6 +5,7 @@
         "fstream": "cpp",
         "istream": "cpp",
         "ostream": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "ff.h": "c"
     }
 }

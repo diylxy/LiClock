@@ -7,30 +7,53 @@ void task_appManager(void *)
 {
     while (1)
     {
-        appManager.attachLocalEvent();
         appManager.update();
+        delay(10);
     }
 }
 void setup()
 {
     bool initResult = hal.init();
-    xTaskCreate(task_appManager, "appManager", 8192, NULL, 1, NULL);
+    xTaskCreate(task_appManager, "appManager", 10240, NULL, 1, NULL);
+    hal.getTime();
+    if (hal.timeinfo.tm_year > (2016 - 1900))
+    {
+        // 判断是否是手动退出夜间模式
+        if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT0 || esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT1)
+        {
+            if (night_sleep != 0)
+            {
+                night_sleep = 0;
+                night_sleep_today = hal.timeinfo.tm_mday;
+            }
+        }
+        hal.checkNightSleep();
+    }
     if (initResult == false)
     {
         appManager.parameter = "p";
     }
+    bool recoverLast = false;
     if (esp_sleep_get_wakeup_cause() != ESP_SLEEP_WAKEUP_UNDEFINED)
     {
-        //TODO:尝试恢复之前的App
-        
+        recoverLast = appManager.recover();
     }
-    if (config[PARAM_CLOCKONLY] == "1")
+    if (recoverLast == false)
     {
-        appManager.gotoApp("clockonly");
-    }
-    else
-    {
-        appManager.gotoApp("clock");
+        String bootapp = hal.pref.getString("boot", "");
+        if (bootapp == "")
+        {
+            hal.pref.putString("boot", "clock");
+            bootapp = "clock";
+        }
+        if (bootapp == "clock")
+        {
+            appManager.gotoApp(appManager.getRealClock());
+        }
+        else
+        {
+            appManager.gotoApp(bootapp.c_str());
+        }
     }
     return;
 }

@@ -187,10 +187,11 @@ void AppClock::setup()
     exit = appclock_exit;
     deepsleep = appclock_deepsleep;
     wakeup = appclock_wakeup;
+    int ntp_interval = hal.getNTPMinute();
     if (appManager.parameter == "p")
     {
         ++NTPCounter;
-        if (NTPCounter < 24 * 60)
+        if (NTPCounter < ntp_interval)
         {
             if (force_full_update == false && part_refresh_count < atoi(config[PARAM_FULLUPDATE].as<const char *>()))
             {
@@ -199,7 +200,8 @@ void AppClock::setup()
                 display.display(true);
                 ++part_refresh_count;
                 appManager.noDeepSleep = false;
-                appManager.nextWakeup = 60 - hal.timeinfo.tm_sec;
+                appManager.nextWakeup = 61 - hal.timeinfo.tm_sec;
+                Serial.println("Finished part");
                 return;
             }
         }
@@ -213,7 +215,7 @@ void AppClock::setup()
     hal.autoConnectWiFi();
     weather.refresh();
     hal.getTime();
-    if (hal.timeinfo.tm_year < (2016 - 1900) || NTPCounter >= 2 * 60) // 等待NTP同步
+    if (hal.timeinfo.tm_year < (2016 - 1900) || NTPCounter >= ntp_interval) // 等待NTP同步
     {
         NTPCounter = 0;
         delay(20);
@@ -231,5 +233,6 @@ void AppClock::setup()
     display.display(false);
     appManager.noDeepSleep = false;
     appManager.nextWakeup = 61 - hal.timeinfo.tm_sec;
+    Serial.println("Finished full");
     return;
 }

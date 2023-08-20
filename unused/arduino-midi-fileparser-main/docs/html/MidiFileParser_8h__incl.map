@@ -1,0 +1,14 @@
+<map id="src/MidiFileParser.h" name="src/MidiFileParser.h">
+<area shape="rect" id="node1" title="A simple midi parser based on the following project https://github.com/abique/midi&#45;parser." alt="" coords="433,5,580,32"/>
+<area shape="rect" id="node2" href="$MidiFileParserState_8h_source.html" title=" " alt="" coords="146,80,305,107"/>
+<area shape="rect" id="node6" title=" " alt="" coords="307,229,378,256"/>
+<area shape="rect" id="node8" title=" " alt="" coords="381,80,449,107"/>
+<area shape="rect" id="node9" title=" " alt="" coords="473,80,540,107"/>
+<area shape="rect" id="node10" title=" " alt="" coords="564,80,631,107"/>
+<area shape="rect" id="node11" title=" " alt="" coords="655,80,721,107"/>
+<area shape="rect" id="node12" title=" " alt="" coords="745,80,825,107"/>
+<area shape="rect" id="node3" href="$RingBuffer_8h_source.html" title=" " alt="" coords="175,155,276,181"/>
+<area shape="rect" id="node4" title=" " alt="" coords="5,229,88,256"/>
+<area shape="rect" id="node5" title=" " alt="" coords="113,229,183,256"/>
+<area shape="rect" id="node7" title=" " alt="" coords="208,229,283,256"/>
+</map>

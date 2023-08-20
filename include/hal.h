@@ -9,6 +9,7 @@ public:
     void saveConfig();
     void loadConfig();
     void getTime();
+    void WiFiConfigSmartConfig();
     void WiFiConfigManual();
     void ReqWiFiConfig();
     /**
@@ -23,6 +24,8 @@ public:
     void powerOff(bool displayMessage = true);
     void goSleep(uint32_t sec = 0);
     void update();
+    int getNTPMinute();
+    void checkNightSleep();
     struct tm timeinfo;
     time_t now;
     int global_hour_offset = 0;
@@ -35,24 +38,50 @@ public:
     int16_t VCC = 0;
     bool USBPluggedIn = false;
     bool isCharging = false;
-    OneButton btna = OneButton(PIN_BUTTON);
-    OneButton btnb = OneButton(PIN_BUTTONB);
-    bool hookButton = false;
+    OneButton btnr = OneButton(PIN_BUTTONR);
+    OneButton btnl = OneButton(PIN_BUTTONL);
+    OneButton btnc = OneButton(PIN_BUTTONC);
+    void hookButton()
+    {
+        _hookButton = true;
+        while (digitalRead(PIN_BUTTONR) == LOW || digitalRead(PIN_BUTTONL) == LOW || digitalRead(PIN_BUTTONC) == LOW)
+        {
+            delay(10);
+        }
+        delay(10);
+        Serial.println("Hooked");
+    }
+    void unhookButton()
+    {
+        while (digitalRead(PIN_BUTTONR) == LOW || digitalRead(PIN_BUTTONL) == LOW || digitalRead(PIN_BUTTONC) == LOW)
+        {
+            delay(10);
+        }
+        delay(10);
+        _hookButton = false;
+        Serial.println("Unhooked");
+    }
     void detachAllButtonEvents()
     {
-        btna.attachClick(NULL);
-        btna.attachDoubleClick(NULL);
-        btna.attachDuringLongPress(NULL);
-        btna.attachLongPressStop(NULL);
-        btna.attachMultiClick(NULL);
-        btnb.attachClick(NULL);
-        btnb.attachDoubleClick(NULL);
-        btnb.attachDuringLongPress(NULL);
-        btnb.attachLongPressStop(NULL);
-        btnb.attachMultiClick(NULL);
+        btnr.attachClick(NULL);
+        btnr.attachDoubleClick(NULL);
+        btnr.attachDuringLongPress(NULL);
+        btnr.attachLongPressStop(NULL);
+        btnr.attachMultiClick(NULL);
+        btnl.attachClick(NULL);
+        btnl.attachDoubleClick(NULL);
+        btnl.attachDuringLongPress(NULL);
+        btnl.attachLongPressStop(NULL);
+        btnl.attachMultiClick(NULL);
+        btnc.attachClick(NULL);
+        btnc.attachDoubleClick(NULL);
+        btnc.attachDuringLongPress(NULL);
+        btnc.attachLongPressStop(NULL);
+        btnc.attachMultiClick(NULL);
     }
     bool noDeepSleep = false;
     bool SleepUpdateMutex = false;
+    bool _hookButton = false; // 不要修改这个
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 private:
 };

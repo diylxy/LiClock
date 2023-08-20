@@ -1,0 +1,22 @@
+{
+  "name": "Cartridge",
+  "description": "By paring VGM data, we can use to to control an emulation of the NES APU!",
+  "keywords": "nes,apu,emulator,vgm,chiptune",
+  "authors":
+  {
+    "name": "Connor Nishijima",
+    "email": "connornishijima@gmail.com"
+  },
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/connornishijima/Cartridge.git"
+  },
+  "version": "1.1.0",
+  "examples": "examples/*.ino",
+  "frameworks": "arduino",
+  "platforms":
+  [
+    "esp32"
+  ]
+}

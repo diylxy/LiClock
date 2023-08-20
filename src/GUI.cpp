@@ -18,11 +18,14 @@ namespace GUI
     {
         while (*str)
         {
-            if (u8g2Fonts.getCursorX() >= max_x)
+            if (u8g2Fonts.getCursorX() >= max_x || *str == '\n')
             {
                 u8g2Fonts.setCursor(start_x, u8g2Fonts.getCursorY() + 13);
             }
-            u8g2Fonts.print(*str);
+            if (*str != '\n')
+            {
+                u8g2Fonts.print(*str);
+            }
             str++;
         }
     }
@@ -53,17 +56,51 @@ namespace GUI
             u8g2Fonts.print(title);
         }
     }
+    ////////////////////////////////////标准对话框
+
+    void msgbox(const char *title, const char *msg)
+    {
+        // 160*100窗口，圆角5
+        constexpr int start_x = (296 - 160) / 2;
+        constexpr int start_y = (128 - 96) / 2;
+        int16_t w;
+        bool result = false;
+        hal.hookButton();
+        push_buffer();
+        drawWindowsWithTitle(start_x, start_y, 160, 96, title);
+        // 内容
+        if (msg)
+        {
+            u8g2Fonts.setCursor(start_x + 5, start_y + 28);
+            autoIndentDraw(msg, start_x + 160 - 5, start_x + 5);
+        }
+        // 按钮
+        display.drawRoundRect(start_x + 85, start_y + 96 - 20, 70, 15, 3, 0);
+        w = u8g2Fonts.getUTF8Width("确定");
+        u8g2Fonts.setCursor(start_x + 85 + (70 - w) / 2, start_y + 96 - 20 + 12);
+        u8g2Fonts.print("确定");
+        display.displayWindow(start_x, start_y, 160, 96);
+        while (1)
+        {
+            if (digitalRead(PIN_BUTTONR) == LOW || digitalRead(PIN_BUTTONL) == LOW || digitalRead(PIN_BUTTONC) == LOW)
+                break;
+            delay(10);
+        }
+        pop_buffer();
+        hal.unhookButton();
+    }
     bool msgbox_yn(const char *title, const char *msg, const char *yes, const char *no)
     {
         // 160*100窗口，圆角5
         constexpr int start_x = (296 - 160) / 2;
         constexpr int start_y = (128 - 96) / 2;
-        if(yes == NULL)
-            yes = "确定 (A)";
-        if(no == NULL)
-            no = "取消 (B)";
+        if (yes == NULL)
+            yes = "确定 (右)";
+        if (no == NULL)
+            no = "取消 (左)";
         int16_t w;
         bool result = false;
+        hal.hookButton();
         push_buffer();
         drawWindowsWithTitle(start_x, start_y, 160, 96, title);
         // 内容
@@ -79,27 +116,25 @@ namespace GUI
         u8g2Fonts.setCursor(start_x + 85 + (70 - w) / 2, start_y + 96 - 20 + 12);
         u8g2Fonts.print(yes);
         display.displayWindow(start_x, start_y, 160, 96);
-        hal.hookButton = true;
-        delay(40);
         while (1)
         {
-            if (digitalRead(PIN_BUTTON) == LOW)
+            if (digitalRead(PIN_BUTTONR) == LOW)
             {
                 result = true;
                 break;
             }
-            if (digitalRead(PIN_BUTTONB) == LOW)
+            if (digitalRead(PIN_BUTTONL) == LOW)
             {
                 result = false;
                 break;
             }
             delay(10);
         }
-        hal.hookButton = false;
         pop_buffer();
+        hal.unhookButton();
         return result;
     }
-    int menu(const char *title, const char *options[])
+    int menu(const char *title, const menu_item options[], int16_t ico_w, int16_t ico_h)
     {
         constexpr int start_x = (296 - 200) / 2;
         constexpr int start_y = (128 - 111) / 2; // 200*96
@@ -112,28 +147,25 @@ namespace GUI
         int barHeight;
         int barPos = 0;
         bool updated = true;
-        while (options[++total] != NULL)
-            ; // 统计一共多少
-        barHeight = number_of_items * 96 / total;
-        hal.hookButton = true;
-        push_buffer();
-        while (digitalRead(PIN_BUTTON) == 0 || digitalRead(PIN_BUTTONB) == 0)
+        bool hasIcon = false;
+        bool waitc = false;
+        while (options[total].title != NULL)
         {
-            delay(10);
+            // 统计一共多少，顺便检查是否有图标
+            if (options[total].icon != NULL)
+                hasIcon = true;
+            ++total;
         }
-        delay(40);
+        barHeight = number_of_items * 96 / total;
+        hal.hookButton();
+        push_buffer();
         while (1)
         {
-            if (digitalRead(PIN_BUTTONB) == 0)
+            if (digitalRead(PIN_BUTTONL) == LOW)
             {
                 delay(20);
-                if (digitalRead(PIN_BUTTONB) == 0)
+                if (digitalRead(PIN_BUTTONL) == LOW)
                 {
-                    if (waitLongPress(PIN_BUTTONB) == true)
-                    {
-                        selected = 0;
-                        break;
-                    }
                     if (selected == 0)
                     {
                         selected = total;
@@ -143,21 +175,35 @@ namespace GUI
                 }
             }
 
-            if (digitalRead(PIN_BUTTON) == 0)
+            if (digitalRead(PIN_BUTTONR) == LOW)
             {
                 delay(20);
-                if (digitalRead(PIN_BUTTON) == 0)
+                if (digitalRead(PIN_BUTTONR) == LOW)
                 {
-                    if (waitLongPress(PIN_BUTTON) == true)
-                    {
-                        break;
-                    }
                     ++selected;
                     if (selected == total)
                     {
                         selected = 0;
                     }
                     updated = true;
+                }
+            }
+
+            if (digitalRead(PIN_BUTTONC) == LOW)
+            {
+                delay(20);
+                if (digitalRead(PIN_BUTTONC) == LOW)
+                {
+                    if (waitLongPress(PIN_BUTTONC) == true)
+                    {
+                        selected = 0;
+                        waitc = true;
+                        updated = true;
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
             }
 
@@ -180,7 +226,11 @@ namespace GUI
                 for (int i = 0; i < max_items; ++i)
                 {
                     int item_y = start_y + 15 + item_height * i;
-                    u8g2Fonts.drawUTF8(start_x + 5, item_y + 13, options[i + pageStart]);
+                    if (options[i + pageStart].icon != NULL && ico_h <= 14)
+                    {
+                        display.drawXBitmap(start_x + 5, item_y + (14 - ico_h) / 2, options[i + pageStart].icon, ico_w, ico_h, 0);
+                    }
+                    u8g2Fonts.drawUTF8(start_x + 5 + (hasIcon ? ico_w + 2 : 0), item_y + 13, options[i + pageStart].title);
                     if (selected == i + pageStart)
                     {
                         display.drawRoundRect(start_x + 3, item_y, 195 - 6, 15, 3, 0);
@@ -195,35 +245,139 @@ namespace GUI
                 }
                 display.displayWindow(start_x, start_y, 200, 111);
             }
-        }
-        pop_buffer();
-        hal.hookButton = false;
-        return selected;
-    }
-    int msgbox_number(const char *title, uint16_t digits, int pre_value)
-    {
-        return 0;           //TODO：需要三个按钮
-        int currentNumber = pre_value;
-        int current_digit = 0;      //0：个位
-        hal.hookButton = true;
-        while (digitalRead(PIN_BUTTON) == 0 || digitalRead(PIN_BUTTONB) == 0)
-        {
+            if (waitc == true)
+            {
+                waitc = false;
+                while (digitalRead(PIN_BUTTONC) == LOW)
+                    delay(10);
+                delay(10);
+            }
             delay(10);
         }
-        push_buffer();
-        delay(20);
-        while(1)
-        {
-            if (digitalRead(PIN_BUTTONB) == 0)
-            {
-                //减
-            }
-            if (digitalRead(PIN_BUTTON) == 0)
-            {
-                //加
-            }
-        }
-        hal.hookButton = false;
         pop_buffer();
+        hal.unhookButton();
+        return selected;
+    }
+    int msgbox_number(const char *title, uint16_t digits, int pre_value) // 注意digits，1表示一位，2表示两位，程序中减一
+    {
+        constexpr int window_w = 120;
+        constexpr int window_h = 48;
+        constexpr int start_x = (296 - window_w) / 2;
+        constexpr int start_y = (128 - window_h) / 2;
+        constexpr int input_x = start_x + 5;
+        constexpr int input_y = start_y + 18;
+        constexpr int input_w = window_w - 10;
+        constexpr int input_h = window_h - 18 - 3;
+        if (digits <= 0)
+            return 0;
+        --digits;
+        if (digits > 8)
+            digits = 8;
+        hal.hookButton();
+        push_buffer();
+        int currentNumber = pre_value;
+        int current_digit = 0; // 0：个位
+        int current_digit_10pow = 1;
+        bool changed = true;
+        while (1)
+        {
+            if (digitalRead(PIN_BUTTONL) == LOW)
+            {
+                // 减
+                if (waitLongPress(PIN_BUTTONL))
+                {
+                    if (current_digit == 0)
+                    {
+                        current_digit = digits;
+                    }
+                    else
+                    {
+                        --current_digit;
+                    }
+                }
+                else
+                {
+                    currentNumber -= current_digit_10pow;
+                }
+                changed = true;
+            }
+            else if (digitalRead(PIN_BUTTONR) == LOW)
+            {
+                // 加
+                if (waitLongPress(PIN_BUTTONR))
+                {
+                    if (current_digit == digits)
+                    {
+                        current_digit = 0;
+                    }
+                    else
+                    {
+                        current_digit++;
+                    }
+                }
+                else
+                {
+                    currentNumber += current_digit_10pow;
+                }
+                changed = true;
+            }
+            else if (digitalRead(PIN_BUTTONC) == LOW)
+            {
+                if (waitLongPress(PIN_BUTTONC))
+                {
+                    currentNumber = pre_value;
+                    changed = true;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            if (changed)
+            {
+                // 计算当前位置
+                current_digit_10pow = 1;
+                if (current_digit != 0)
+                {
+                    for (int i = 0; i < current_digit; ++i)
+                    {
+                        current_digit_10pow *= 10;
+                    }
+                }
+                changed = false;
+                display.fillRoundRect(start_x, start_y, window_w, window_h, 3, 1);
+                GUI::drawWindowsWithTitle(start_x, start_y, window_w, window_h, title);
+                display.drawRoundRect(input_x, input_y, input_w, input_h, 3, 0);
+                display.setFont(&FreeSans9pt7b);
+                display.setTextColor(0);
+                display.setCursor(input_x + 4, input_y + (input_h - 12) / 2 + 12);
+                int currentNumber1 = currentNumber;
+                if (currentNumber1 < 0)
+                {
+                    display.print('-');
+                    currentNumber1 = -currentNumber1;
+                }
+                uint8_t tmp[9];
+                for (int i = 0; i <= digits; ++i)
+                {
+                    tmp[i] = currentNumber1 % 10;
+                    currentNumber1 /= 10;
+                }
+                for (int i = digits; i >= 0; --i)
+                {
+                    if (i == current_digit)
+                    {
+                        display.drawFastHLine(display.getCursorX(), display.getCursorY() + 2, 10, 0);
+                    }
+                    display.print(tmp[i], DEC);
+                }
+                display.displayWindow(start_x, start_y, window_w, window_h);
+            }
+            delay(10);
+        }
+        pop_buffer();
+        hal.unhookButton();
+        display.display(); // 全局刷新一次
+        return currentNumber;
     }
 } // namespace GUI

@@ -12,6 +12,8 @@ typedef struct
     uint16_t winddirection; // 风向，整数，指面向北方顺时针旋转的角度
     uint16_t rain;          // 降水量，单位毫米/24小时，整数
     uint16_t humidity;      // 湿度，百分数
+    float pressure;
+
 } weatherInfo24H;
 typedef struct
 {
@@ -24,6 +26,7 @@ typedef struct
     uint16_t weathernum;
     int16_t temperature;
     uint16_t humidity;
+    float pressure;
 } weatherInfoRealtime;
 class Weather
 {

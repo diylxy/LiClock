@@ -31,10 +31,10 @@ static AppDebug app;
 
 void AppDebug::setup()
 {
-    const char *menuItems[] = {"测试选项1", "测试选项2", "测试选项3","测试选项4", "测试选项5", "测试选项6","测试选项7", "测试选项8", "测试选项9", NULL};
-    int sel = GUI::menu("测试", menuItems);
-    display.clearScreen();
-    u8g2Fonts.setCursor(10, 10);
-    u8g2Fonts.print(sel);
-    display.display(false);
+    int res = GUI::msgbox_number("test", 4, 0);
+    display.setCursor(20, 20);
+    display.println(res);
+    display.display();
+    delay(2000);
+    appManager.goBack();
 }

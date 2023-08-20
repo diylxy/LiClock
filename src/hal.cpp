@@ -5,24 +5,25 @@ void task_hal_update(void *)
 {
     while (1)
     {
-        if (hal.hookButton)
+        if (hal._hookButton)
         {
-            while (digitalRead(PIN_BUTTON) == 0 || digitalRead(PIN_BUTTONB) == 0)
+            while (digitalRead(PIN_BUTTONR) == 0 || digitalRead(PIN_BUTTONL) == 0 || digitalRead(PIN_BUTTONC) == 0)
             {
-                hal.btna.tick();
-                hal.btnb.tick();
+                hal.btnr.tick();
+                hal.btnl.tick();
+                hal.btnc.tick();
                 delay(10);
             }
-            hal.btna.tick();
-            hal.btnb.tick();
-            while (hal.hookButton)
+            hal.btnr.tick();
+            hal.btnl.tick();
+            while (hal._hookButton)
             {
                 while (hal.SleepUpdateMutex)
                     delay(5);
                 hal.update();
                 delay(10);
             }
-            while (digitalRead(PIN_BUTTON) == 0 || digitalRead(PIN_BUTTONB) == 0)
+            while (digitalRead(PIN_BUTTONR) == 0 || digitalRead(PIN_BUTTONL) == 0 || digitalRead(PIN_BUTTONC) == 0)
             {
                 delay(10);
             }
@@ -30,24 +31,21 @@ void task_hal_update(void *)
         while (hal.SleepUpdateMutex)
             delay(5);
         hal.SleepUpdateMutex = true;
-        hal.btna.tick();
-        hal.btnb.tick();
+        hal.btnr.tick();
+        hal.btnl.tick();
+        hal.btnc.tick();
         hal.SleepUpdateMutex = false;
         delay(10);
         while (hal.SleepUpdateMutex)
             delay(5);
         hal.SleepUpdateMutex = true;
-        hal.btna.tick();
-        hal.btnb.tick();
+        hal.btnr.tick();
+        hal.btnl.tick();
+        hal.btnc.tick();
         hal.update();
         hal.SleepUpdateMutex = false;
         delay(10);
     }
-}
-static void setSleepGPIO()
-{
-    rtc_gpio_init((gpio_num_t)PIN_BUTTON);
-    rtc_gpio_pullup_en((gpio_num_t)PIN_BUTTON);
 }
 void HAL::saveConfig()
 {
@@ -87,7 +85,7 @@ void HAL::getTime()
     localtime_r(&now, &timeinfo);
 }
 
-void WiFiConfigSmartConfig()
+void HAL::WiFiConfigSmartConfig()
 {
 #include "img_esptouch.h"
     display.fillScreen(GxEPD_WHITE);
@@ -179,11 +177,11 @@ void HAL::ReqWiFiConfig()
     uint32_t last_millis = millis();
     while (1)
     {
-        if (digitalRead(PIN_BUTTONB) == 0)
+        if (digitalRead(PIN_BUTTONL) == 0)
         {
             WiFiConfigManual();
         }
-        if (digitalRead(PIN_BUTTON) == 0)
+        if (digitalRead(PIN_BUTTONR) == 0)
         {
             WiFiConfigSmartConfig();
         }
@@ -231,25 +229,32 @@ bool HAL::init()
     if (esp_sleep_get_wakeup_cause() != ESP_SLEEP_WAKEUP_UNDEFINED)
         initial = false;
     // 下面进行初始化
-    rtc_gpio_deinit((gpio_num_t)PIN_BUTTON);
     esp_task_wdt_init(portMAX_DELAY, false);
-    pinMode(PIN_BUTTON, INPUT_PULLUP);
-    pinMode(PIN_BUTTONB, INPUT_PULLUP);
-    pinMode(PIN_USB, INPUT_PULLUP);
+    pinMode(PIN_BUTTONR, INPUT);
+    pinMode(PIN_BUTTONL, INPUT);
+    pinMode(PIN_BUTTONC, INPUT);
+    pinMode(PIN_CHARGING, INPUT);
+    pinMode(PIN_SD_CARDDETECT, INPUT_PULLUP);
+    pinMode(PIN_SDVDD_CTRL, OUTPUT);
+    digitalWrite(PIN_SDVDD_CTRL, 1);
+    digitalWrite(PIN_BUZZER, 0);
+    pinMode(PIN_BUZZER, OUTPUT);
+    digitalWrite(PIN_BUZZER, 0);
+
     xTaskCreate(task_hal_update, "hal_update", 2048, NULL, 10, NULL);
     Serial.begin(115200);
     WiFi.mode(WIFI_OFF);
     display.init(0, initial);
-    display.setRotation(3);
+    display.setRotation(pref.getUChar(SETTINGS_PARAM_SCREEN_ORIENTATION, 3));
     display.setTextColor(GxEPD_BLACK);
     u8g2Fonts.setFontMode(1);
     u8g2Fonts.setForegroundColor(GxEPD_BLACK);
     u8g2Fonts.setBackgroundColor(GxEPD_WHITE);
     u8g2Fonts.setFont(u8g2_font_wqy12_t_gb2312b);
     u8g2Fonts.begin(display);
-    if (digitalRead(PIN_BUTTONB) == 0 && (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED))
+    if (digitalRead(PIN_BUTTONL) == 0 && (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED))
     {
-        // 关机，防止后面程序出问题
+        // 复位时检查左键是否按下，可以用于无限重启时临时关机
         powerOff(true);
         ESP.restart();
     }
@@ -278,40 +283,13 @@ bool HAL::init()
     }
     loadConfig();
     weather.begin();
+    peripherals.init();
+    buzzer.init();
     if (initial == false && timeerr == false)
     {
         return false;
     }
     return true;
-}
-
-void HAL::goSleep(uint32_t sec)
-{
-    hal.getTime();
-    long nextSleep = 0;
-    if (sec != 0)
-        nextSleep = sec;
-    else
-    {
-        nextSleep = 1;
-    }
-    Serial.printf("next wakeup:%ld s\n", nextSleep);
-    Serial.println("sleep");
-    nextSleep = nextSleep * 1000000UL;
-    setSleepGPIO();
-    esp_sleep_enable_timer_wakeup(nextSleep);
-    esp_sleep_enable_ext0_wakeup((gpio_num_t)PIN_BUTTON, 0);
-    display.hibernate();
-    delay(10);
-    if (noDeepSleep)
-    {
-        esp_light_sleep_start();
-        display.init(0, false);
-    }
-    else
-    {
-        esp_deep_sleep_start();
-    }
 }
 
 void HAL::autoConnectWiFi()
@@ -340,6 +318,45 @@ void HAL::autoConnectWiFi()
     }
     sntp_stop();
 }
+static void set_sleep_set_gpio_interrupt()
+{
+    esp_sleep_enable_ext0_wakeup((gpio_num_t)PIN_BUTTONC, 0);
+    esp_sleep_enable_ext1_wakeup((1LL << PIN_BUTTONL), ESP_EXT1_WAKEUP_ALL_LOW);
+}
+static void pre_sleep()
+{
+    peripherals.sleep();
+    set_sleep_set_gpio_interrupt();
+    display.hibernate();
+    buzzer.waitForSleep();
+    delay(10);
+    digitalWrite(PIN_BUZZER, 0);
+}
+void HAL::goSleep(uint32_t sec)
+{
+    hal.getTime();
+    long nextSleep = 0;
+    if (sec != 0)
+        nextSleep = sec;
+    else
+    {
+        nextSleep = 1;
+    }
+    Serial.printf("下次唤醒:%ld s\n", nextSleep);
+    nextSleep = nextSleep * 1000000UL;
+    pre_sleep();
+    esp_sleep_enable_timer_wakeup(nextSleep);
+    if (noDeepSleep)
+    {
+        esp_light_sleep_start();
+        display.init(0, false);
+        peripherals.wakeup();
+    }
+    else
+    {
+        esp_deep_sleep_start();
+    }
+}
 
 void HAL::powerOff(bool displayMessage)
 {
@@ -350,23 +367,16 @@ void HAL::powerOff(bool displayMessage)
         u8g2Fonts.setCursor(120, 70);
         u8g2Fonts.print("已关机");
         display.display();
-        display.hibernate();
-        delay(70);
-    }
-    else
-    {
-        display.hibernate();
-        delay(70);
     }
     force_full_update = true;
+    pre_sleep();
     WiFi.disconnect(true);
-    setSleepGPIO();
-    esp_sleep_enable_ext0_wakeup((gpio_num_t)PIN_BUTTON, 0);
-    delay(10);
+    set_sleep_set_gpio_interrupt();
     if (noDeepSleep)
     {
         esp_light_sleep_start();
         display.init(0, false);
+        peripherals.wakeup();
     }
     else
     {
@@ -389,7 +399,7 @@ void HAL::update(void)
     {
         USBPluggedIn = false;
     }
-    if (digitalRead(PIN_USB) == 0)
+    if (digitalRead(PIN_CHARGING) == 0)
     {
         isCharging = true;
     }
@@ -398,5 +408,115 @@ void HAL::update(void)
         isCharging = false;
     }
 }
-
+int HAL::getNTPMinute()
+{
+    int res[] = {
+        0,
+        2 * 60,
+        4 * 60,
+        6 * 60,
+        12 * 60,
+        24 * 60,
+        36 * 60,
+        48 * 60,
+    };
+    int val = pref.getUChar(SETTINGS_PARAM_NTP_INTERVAL, 1);
+    return res[val];
+}
+#include "img_goodnightmorning.h"
+uint8_t RTC_DATA_ATTR night_sleep_today = -1; // 用于判断今天是否退出过夜间模式
+uint8_t RTC_DATA_ATTR night_sleep = 0;
+void HAL::checkNightSleep()
+{
+    if (hal.timeinfo.tm_year < (2016 - 1900))
+    {
+        Serial.println("[夜间模式] 时间错误，直接返回");
+        return;
+    }
+    if (config[PARAM_SLEEPATNIGHT].as<String>() == "0")
+    {
+        Serial.println("[夜间模式] 夜间模式已禁用");
+        return;
+    }
+    if (night_sleep_today == hal.timeinfo.tm_mday)
+    {
+        Serial.println("[夜间模式] 当天暂时退出夜间模式");
+        return;
+    }
+    if (hal.timeinfo.tm_year < (2016 - 1900))
+    {
+        Serial.println("[夜间模式] 时间错误");
+        night_sleep = 0;
+        night_sleep_today = -1;
+        return;
+    }
+    String tmp = config[PARAM_SLEEPATNIGHT_START].as<String>();
+    // 转换时间数据到分钟
+    int sleepStart = tmp.substring(0, 2).toInt() * 60 + tmp.substring(3, 5).toInt();
+    tmp = config[PARAM_SLEEPATNIGHT_END].as<String>();
+    int sleepEnd = tmp.substring(0, 2).toInt() * 60 + tmp.substring(3, 5).toInt();
+    bool end_at_nextday = sleepStart > sleepEnd; // 是否在第二天结束
+    int now = hal.timeinfo.tm_hour * 60 + hal.timeinfo.tm_min;
+    uint8_t night_sleep_pend = 0; // 当前夜间模式状态
+    if (end_at_nextday)
+    {
+        if (now >= sleepStart)
+        {
+            // 晚安
+            night_sleep_pend = 1;
+        }
+        else if (now < sleepEnd)
+        {
+            // 早上好
+            night_sleep_pend = 2;
+        }
+        else
+        {
+            night_sleep_pend = 0;
+        }
+    }
+    else
+    {
+        int mid = sleepStart + sleepEnd;
+        mid = mid / 2;
+        if (now >= sleepStart && now <= sleepEnd)
+        {
+            if (now < mid)
+            {
+                night_sleep_pend = 1;
+            }
+            else
+            {
+                night_sleep_pend = 2;
+            }
+        }
+        else
+        {
+            night_sleep_pend = 0;
+        }
+    }
+    // 判断当前屏幕显示
+    if (night_sleep != night_sleep_pend)
+    {
+        Serial.println("[DEBUG] 夜间模式重绘");
+        night_sleep = night_sleep_pend;
+        display.clearScreen();
+        if (night_sleep == 1)
+        {
+            // 晚安
+            display.drawXBitmap(0, 0, goodnight_bits, 296, 128, 0);
+        }
+        else if (night_sleep == 2)
+        {
+            // 早上好
+            display.drawXBitmap(0, 0, goodmorning_bits, 296, 128, 0);
+        }
+        display.display(false);
+    }
+    // 判断是否进入睡眠
+    if (night_sleep != 0)
+    {
+        hal.goSleep(1800); // 休眠半小时再看
+    }
+}
 HAL hal;

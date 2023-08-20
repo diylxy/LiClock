@@ -1,7 +1,9 @@
 #include <AppManager.h>
 AppManager appManager;
-AppBase *appList[128];
+#define MAX_APP_COUNT 128
+AppBase *appList[MAX_APP_COUNT];
 int tail = 0;
+int RTC_DATA_ATTR latest_appid = -1;
 void appList_push_back(AppBase *app)
 {
     appList[tail++] = app;
@@ -85,6 +87,8 @@ static const uint8_t wifiIcon[] = {
     0x00, 0x00, 0xf0, 0x0f, 0xfc, 0x3f, 0x1e, 0x78, 0x07, 0xe0, 0xe0, 0x07,
     0xf8, 0x1f, 0x38, 0x1c, 0x00, 0x00, 0x80, 0x01, 0xc0, 0x03, 0x80, 0x01,
     0x00, 0x00};
+static AppBase *realAppList[MAX_APP_COUNT];
+static int realAppCount = 0;
 void AppManager::showAppList()
 {
     // 下面是标题部分
@@ -119,6 +123,15 @@ void AppManager::showAppList()
     int count = 1;
     for (int16_t i = 0; i < tail; i++)
     {
+        if (appList[i]->_showInList == false)
+        {
+            continue;
+        }
+        if (peripherals.checkAvailable(appList[i]->peripherals_requested) != 0)
+        {
+            continue;
+        }
+        realAppList[count - 1] = appList[i];
         int16_t x, y;
         x = (count / 2) * 49 + 4;
         y = (count % 2) * 52 + 21; // App左上角位置
@@ -139,50 +152,51 @@ void AppManager::showAppList()
         u8g2Fonts.drawUTF8(x + x_font_offset, y + 45, appList[i]->title);
         count++;
     }
+    realAppCount = count - 1;
 }
 int AppManager::appSelector()
 {
     display.swapBuffer(1);
     display.clearScreen();
     showAppList();
+    display.display(true);
     // 下面是选择
     int selected = 0;
-    bool btnaClicked = false;
-    bool btnbClicked = false;
-    bool btnaLongPressed = false;
-    bool btnbLongPressed = false;
-    hal.detachAllButtonEvents();
-    hal.btna.attachClick([](void *scope)
-                         { *((bool *)scope) = true; },
-                         &btnaClicked);
-    hal.btnb.attachClick([](void *scope)
-                         { *((bool *)scope) = true; },
-                         &btnbClicked);
-    hal.btna.attachLongPressStart([](void *scope)
-                                  { *((bool *)scope) = true; },
-                                  &btnaLongPressed);
-    hal.btnb.attachLongPressStart([](void *scope)
-                                  { *((bool *)scope) = true; },
-                                  &btnbLongPressed);
+    hal.hookButton();
     int last_selected = -1;
     int idleTime = 0;
+    bool waitc = false;
     while (1)
     {
-        if (btnbClicked == true)
+        if (digitalRead(PIN_BUTTONL) == 0)
         {
             idleTime = 0;
-            btnbClicked = false;
             selected--;
             if (selected < 0)
-                selected = tail; // 这里没问题
+                selected = realAppCount; // 这里没问题，不要改
         }
-        else if (btnaClicked == true)
+        if (digitalRead(PIN_BUTTONR) == 0)
         {
             idleTime = 0;
-            btnaClicked = false;
             selected++;
-            if (selected > tail) // 这里也没问题
+            if (selected > realAppCount) // 这里也没问题
                 selected = 0;
+        }
+        if (digitalRead(PIN_BUTTONC) == LOW)
+        {
+            delay(20);
+            if (digitalRead(PIN_BUTTONC) == LOW)
+            {
+                if (GUI::waitLongPress(PIN_BUTTONC) == true)
+                {
+                    selected = 0;
+                    waitc = true;
+                }
+                else
+                {
+                    break;
+                }
+            }
         }
         if (selected != last_selected)
         {
@@ -199,16 +213,12 @@ int AppManager::appSelector()
             display.drawRoundRect(x - 1, y - 2, 50, 50, 5, 0);           // 绘制选择框
             display.display(true);
         }
-        if (btnaLongPressed == true)
+        if (waitc == true)
         {
-            btnaLongPressed = false;
-            break;
-        }
-        else if (btnbLongPressed == true)
-        {
-            btnbLongPressed = false;
-            selected = 0;
-            break;
+            waitc = false;
+            while (digitalRead(PIN_BUTTONC) == LOW)
+                delay(10);
+            delay(10);
         }
         delay(10);
         idleTime++;
@@ -219,7 +229,7 @@ int AppManager::appSelector()
             break;
         }
     }
-    attachLocalEvent();
+    hal.unhookButton();
     if (selected == 0)
     {
         display.swapBuffer(0);
@@ -234,7 +244,9 @@ int AppManager::appSelector()
         display.display(true);
         display.swapBuffer(0);
     }
-    return selected;
+    if (selected == 0)
+        return 0;
+    return realAppList[selected - 1]->appID + 1; // 这里没问题
 }
 
 void AppManager::update()
@@ -276,6 +288,11 @@ void AppManager::update()
         nextWakeup = 0;
         noDeepSleep = false;
         currentApp = app_to;
+        latest_appid = app_to->appID;
+        if(peripherals.load(currentApp->peripherals_requested) == false)
+        {
+            GUI::msgbox("错误", "外设加载失败，APP运行将不稳定");
+        }
         currentApp->setup();
         parameter = "";
         updateAgain = true;
@@ -291,13 +308,18 @@ void AppManager::update()
             currentApp->exit();
         // 然后准备环境
         attachLocalEvent();
-        appStack.pop();
         currentApp = appStack.top();
+        appStack.pop();
+        latest_appid = currentApp->appID;
         fTimer = NULL;
         timer_interval = 0;
         nextWakeup = 0;
         noDeepSleep = false;
         // 然后执行前一app初始化
+        if(peripherals.load(currentApp->peripherals_requested) == false)
+        {
+            GUI::msgbox("错误", "外设加载失败，APP运行将不稳定");
+        }
         currentApp->setup();
         updateAgain = true;
     }
@@ -317,7 +339,7 @@ void AppManager::update()
         updateAgain = false;
         return;
     }
-    if (hal.btna.isIdle() && hal.btnb.isIdle() && digitalRead(PIN_BUTTON) == 1 && digitalRead(PIN_BUTTONB) == 1)
+    if (digitalRead(PIN_BUTTONL) == 1 && digitalRead(PIN_BUTTONR) == 1 && digitalRead(PIN_BUTTONC) == 1 && hal.btnl.isIdle() == true && hal.btnr.isIdle() == true && hal.btnc.isIdle() == true)
     {
         // 准备进入睡眠模式
         // 计算下一次唤醒时间
@@ -400,10 +422,28 @@ void AppManager::clearTimer()
 void AppManager::attachLocalEvent()
 {
     hal.detachAllButtonEvents();
-    hal.btna.attachLongPressStart([](void *scope)
+    hal.btnc.attachLongPressStart([](void *scope)
                                   { ((AppManager *)scope)->method = APPMANAGER_SHOWAPPSELECTOR; },
                                   this);
-    hal.btnb.attachLongPressStart([](void *scope)
-                                  { ((AppManager *)scope)->method = APPMANAGER_GOBACK; },
+    hal.btnl.attachLongPressStart([](void *scope)
+                                  { ((AppManager *)scope)->method = APPMANAGER_GOBACK; Serial.println("Back."); },
                                   this);
+}
+void AppManager::gotoAppBoot(const char *appName)
+{
+    appStack.push(appList[getRealClock()]);
+    gotoApp(appName);
+}
+
+bool AppManager::recover()
+{
+    if (latest_appid != -1)
+    {
+        Serial.print("重新打开上个APP：");
+        Serial.println(latest_appid);
+        appStack.push(appList[getRealClock()]);
+        gotoApp(latest_appid);
+        return true;
+    }
+    return false;
 }

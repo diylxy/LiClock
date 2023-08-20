@@ -1,0 +1,5 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classmidi_1_1Print.html" title=" " alt="" coords="5,35,95,61"/>
+<area shape="rect" id="node2" href="$classmidi_1_1MidiFileParser.html" title="Midi File parser. Provide the data via write: You should try to keep the buffer as full as possible w..." alt="" coords="159,5,309,32"/>
+<area shape="rect" id="node3" href="$classmidi_1_1MidiFileParserMultiTrack.html" title="Midi file parser which stores the data in RAM before making them available for parsing...." alt="" coords="143,57,325,98"/>
+</map>

@@ -31,6 +31,11 @@ static AppWarning app;
 
 void AppWarning::setup()
 {
+    if(digitalRead(PIN_BUTTONL) == 0)
+    {
+        appManager.goBack();
+        return;
+    }
     display.clearScreen();
     if (weather.hasAlert)
     {
@@ -59,5 +64,4 @@ void AppWarning::setup()
         return;
     }
     appManager.noDeepSleep = false;
-    appManager.nextWakeup = 4 * 60 * 60; // 四小时自动退出
 }

@@ -59,6 +59,7 @@ public:
     char alert[300];      // 天气预警
     char alertTitle[100]; // 天气预警标题
     uint32_t alertPubTime = 0;
+    time_t lastupdate = 0;
 };
 extern Weather weather;
 

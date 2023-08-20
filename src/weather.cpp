@@ -40,7 +40,7 @@ void Weather::begin()
     file.readBytes((char *)alert, sizeof(alert));
     file.readBytes((char *)alertTitle, sizeof(alertTitle));
     file.readBytes((char *)&alertPubTime, sizeof(alertPubTime));
-
+    file.readBytes((char *)&lastupdate, sizeof(lastupdate));
 
     file.close();
 }
@@ -59,7 +59,7 @@ void Weather::save()
     file.write((uint8_t *)alert, sizeof(alert));
     file.write((uint8_t *)alertTitle, sizeof(alertTitle));
     file.write((uint8_t *)&alertPubTime, sizeof(alertPubTime));
-
+    file.write((uint8_t *)&lastupdate, sizeof(lastupdate));
     file.close();
 }
 
@@ -113,10 +113,10 @@ int8_t Weather::refresh()
             hour24[i].winddirection = uint16_t(doc["result"]["hourly"]["wind"][i]["direction"].as<float>());
             hour24[i].windspeed = uint16_t(doc["result"]["hourly"]["wind"][i]["speed"].as<float>() * 10);
             hour24[i].rain = uint16_t(doc["result"]["hourly"]["precipitation"][i]["value"].as<float>() * 100);
-            //气压
+            // 气压
             hour24[i].pressure = doc["result"]["hourly"]["pressure"][i]["value"];
         }
-        for(uint8_t i = 0; i < 120; ++i)
+        for (uint8_t i = 0; i < 120; ++i)
         {
             // 降水
             rain[i] = doc["result"]["minutely"]["precipitation_2h"][i].as<float>() * 100;
@@ -133,6 +133,7 @@ int8_t Weather::refresh()
         realtime.humidity = uint16_t(doc["result"]["realtime"]["humidity"].as<float>() * 100);
         realtime.pressure = doc["result"]["realtime"]["pressure"];
         doc.clear();
+        lastupdate = hal.now;
         save();
     }
     else

@@ -170,9 +170,11 @@ void HAL::ReqWiFiConfig()
     u8g2Fonts.setCursor(0, 20);
     u8g2Fonts.print("无法连接到WiFi");
     u8g2Fonts.setCursor(0, 40);
-    u8g2Fonts.print("按键A:SmartConfig");
+    u8g2Fonts.print("向左:网页配置");
     u8g2Fonts.setCursor(0, 60);
-    u8g2Fonts.print("按键B:网页配置");
+    u8g2Fonts.print("向右:SmartConfig");
+    u8g2Fonts.setCursor(0, 80);
+    u8g2Fonts.print("中间:离线模式");
     display.display();
     uint32_t last_millis = millis();
     while (1)
@@ -189,14 +191,14 @@ void HAL::ReqWiFiConfig()
         if (millis() - last_millis > 60000) // 1分钟超时
         {
             Serial.println("WiFi配置方式选择超时");
-            display.fillScreen(GxEPD_WHITE);
-            u8g2Fonts.setCursor(70, 80);
-            u8g2Fonts.print("WiFi配置方式选择超时");
-            display.display();
-            delay(100);
-            hal.powerOff(false);
-            ESP.restart();
+            break;
         }
+    }
+    if(WiFi.isConnected() == false)
+    {
+        config[PARAM_CLOCKONLY] = true;
+        hal.saveConfig();
+        ESP.restart();
     }
 }
 bool HAL::init()

@@ -6,14 +6,39 @@ bool _hasNote = false;
 char _path[128];
 bool useFile = false;
 bool _forcestop = false;
+static buzzer_desc current_buzz;
+static uint32_t current_start = 0;
+static void _mybuzz()
+{
+    int32_t now_duty = 511;
+    ledcWriteTone(0, current_buzz.freq);
+    current_start = millis();
+    while (millis() - current_start < current_buzz.duration)
+    {
+        ledcWrite(0, now_duty);
+        if (now_duty > 200)
+            now_duty -= 20;
+        else if (now_duty > 100)
+            now_duty -= 15;
+        else if (now_duty > 50)
+            now_duty -= 10;
+        else if (now_duty > 10)
+            now_duty -= 7;
+        else if (now_duty > 0)
+            now_duty -= 4;
+        else
+            now_duty = 0;
+        delay(20);
+    }
+    ledcWriteTone(0, 0);
+}
 void task_buzzer(void *)
 {
-    buzzer_desc current;
     while (1)
     {
-        if (xQueueReceive(queue_buzzer, &current, portMAX_DELAY) == pdTRUE)
+        if (xQueueReceive(queue_buzzer, &current_buzz, portMAX_DELAY) == pdTRUE)
         {
-            if (current.freq == -1 && current.duration == -1)
+            if (current_buzz.freq == -1 && current_buzz.duration == -1)
             {
                 // 播放文件
                 if (_path[0])
@@ -30,16 +55,14 @@ void task_buzzer(void *)
                     {
                         if (feof(fp))
                             break;
-                        fread(&current, sizeof(buzzer_desc), 1, fp);
-                        ledcWriteTone(0, current.freq);
-                        delay(current.duration);
-                        ledcWriteTone(0, 0);
+                        fread(&current_buzz, sizeof(buzzer_desc), 1, fp);
+                        _mybuzz();
                         if (feof(fp))
                             break;
                         if (_forcestop)
                         {
                             _forcestop = false;
-                            while (xQueueReceive(queue_buzzer, &current, 0) == pdTRUE)
+                            while (xQueueReceive(queue_buzzer, &current_buzz, 0) == pdTRUE)
                                 ;
                             break;
                         }
@@ -54,15 +77,13 @@ void task_buzzer(void *)
             {
                 _forcestop = false;
                 ledcWriteTone(0, 0);
-                while (xQueueReceive(queue_buzzer, &current, 0) == pdTRUE)
+                while (xQueueReceive(queue_buzzer, &current_buzz, 0) == pdTRUE)
                     ;
                 continue;
             }
             // 播放
             _hasNote = true;
-            ledcWriteTone(0, current.freq);
-            delay(current.duration);
-            ledcWriteTone(0, 0);
+            _mybuzz();
             _hasNote = false;
         }
     }

@@ -193,7 +193,7 @@ void AppClock::setup()
         ++NTPCounter;
         if (NTPCounter < ntp_interval)
         {
-            if (force_full_update == false && part_refresh_count < atoi(config[PARAM_FULLUPDATE].as<const char *>()))
+            if (force_full_update == false && part_refresh_count < 20)
             {
                 // 局部刷新
                 drawLayout();
@@ -211,21 +211,23 @@ void AppClock::setup()
     part_refresh_count = 0;
     display.setFullWindow();
     display.fillScreen(GxEPD_WHITE);
-
-    hal.autoConnectWiFi();
-    weather.refresh();
+    if (hal.now < weather.lastupdate || hal.now - weather.lastupdate > 60 * atoi(config[PARAM_FULLUPDATE].as<const char *>()))
+    {
+        weather.refresh();
+    }
     hal.getTime();
     if (hal.timeinfo.tm_year < (2016 - 1900) || NTPCounter >= ntp_interval) // 等待NTP同步
     {
         NTPCounter = 0;
         delay(20);
+        hal.autoConnectWiFi();
         NTPSync();
         hal.getTime();
     }
     if (weather.hasAlert && weather.alertPubTime != last_alertPubTime)
     {
         last_alertPubTime = weather.alertPubTime;
-        appManager.gotoApp("alert");
+        appManager.gotoApp("warning");
         force_full_update = true;
         return;
     }

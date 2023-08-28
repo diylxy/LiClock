@@ -31,7 +31,7 @@ static AppWarning app;
 
 void AppWarning::setup()
 {
-    if(digitalRead(PIN_BUTTONL) == 0)
+    if(digitalRead(PIN_BUTTONL) == 0 || digitalRead(PIN_BUTTONR) == 0 || digitalRead(PIN_BUTTONC) == 0)
     {
         appManager.goBack();
         return;
@@ -39,7 +39,7 @@ void AppWarning::setup()
     display.clearScreen();
     if (weather.hasAlert)
     {
-        GUI::drawWindowsWithTitle(0, 0, 296, 128, weather.alertTitle);
+        GUI::drawWindowsWithTitle(weather.alertTitle, 0, 0, 296, 128);
         u8g2Fonts.setBackgroundColor(1);
         u8g2Fonts.setForegroundColor(0);
         u8g2Fonts.setCursor(18 + 24, 31);

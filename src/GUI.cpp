@@ -39,7 +39,7 @@ namespace GUI
     {
         display.swapBuffer(last_buffer_idx);
     }
-    void drawWindowsWithTitle(int16_t x, int16_t y, int16_t w, int16_t h, const char *title)
+    void drawWindowsWithTitle(const char *title, int16_t x, int16_t y, int16_t w, int16_t h)
     {
         int16_t wchar;
         display.fillRoundRect(x, y, w, h, 3, 1); // 清空区域
@@ -67,7 +67,7 @@ namespace GUI
         bool result = false;
         hal.hookButton();
         push_buffer();
-        drawWindowsWithTitle(start_x, start_y, 160, 96, title);
+        drawWindowsWithTitle(title, start_x, start_y, 160, 96);
         // 内容
         if (msg)
         {
@@ -102,7 +102,7 @@ namespace GUI
         bool result = false;
         hal.hookButton();
         push_buffer();
-        drawWindowsWithTitle(start_x, start_y, 160, 96, title);
+        drawWindowsWithTitle(title, start_x, start_y, 160, 96);
         // 内容
         u8g2Fonts.setCursor(start_x + 5, start_y + 28);
         autoIndentDraw(msg, start_x + 160 - 5, start_x + 5);
@@ -220,7 +220,7 @@ namespace GUI
                     pageStart = selected - number_of_items + 1;
                 }
                 // 下面渲染菜单
-                drawWindowsWithTitle(start_x, start_y, 200, 111, title);
+                drawWindowsWithTitle(title, start_x, start_y, 200, 111);
                 // 项目
                 int max_items = min(number_of_items, total);
                 for (int i = 0; i < max_items; ++i)
@@ -346,7 +346,7 @@ namespace GUI
                 }
                 changed = false;
                 display.fillRoundRect(start_x, start_y, window_w, window_h, 3, 1);
-                GUI::drawWindowsWithTitle(start_x, start_y, window_w, window_h, title);
+                GUI::drawWindowsWithTitle(title, start_x, start_y, window_w, window_h);
                 display.drawRoundRect(input_x, input_y, input_w, input_h, 3, 0);
                 display.setFont(&FreeSans9pt7b);
                 display.setTextColor(0);

@@ -23,3 +23,14 @@
 屏幕方向（1或3）
 */
 #define SETTINGS_PARAM_SCREEN_ORIENTATION "p3"
+
+/**
+ * 电子书上次打开的文件
+*/
+#define SETTINGS_PARAM_LAST_EBOOK "p4"
+
+/**
+ * 电子书上次打开的页码
+*/
+#define SETTINGS_PARAM_LAST_EBOOK_PAGE "p5"
+

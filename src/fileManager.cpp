@@ -114,6 +114,12 @@ namespace GUI
             {
                 String tmp = file.name();
                 Serial.println(tmp);
+                if (tmp.endsWith(".i"))
+                {
+                    file.close();
+                    file = root.openNextFile();
+                    continue;
+                }
                 if (file.isDirectory())
                 {
                     entries[total_entries].icon = folder_bits;

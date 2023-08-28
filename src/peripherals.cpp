@@ -5,7 +5,7 @@ Peripherals peripherals;
 void Peripherals::check()
 {
     display.clearScreen();
-    GUI::drawWindowsWithTitle(0, 0, 296, 128, "重新检测外设");
+    GUI::drawWindowsWithTitle("重新检测外设", 0, 0, 296, 128);
     u8g2Fonts.drawUTF8(20, 30, "检测到硬件更改，正在重新检测外设");
     display.display();
     String msg = "";
@@ -47,7 +47,7 @@ void Peripherals::check()
 void Peripherals::init()
 {
     Wire.begin(PIN_SDA, PIN_SCL);
-            SDSPI.begin(PIN_SD_SCLK, PIN_SD_MISO, PIN_SD_MOSI, -1);
+    SDSPI.begin(PIN_SD_SCLK, PIN_SD_MISO, PIN_SD_MOSI, -1);
     peripherals_current = hal.pref.getUShort(SETTINGS_PARAM_PHERIPHERAL_BITMASK, 0xffff);
     if (peripherals_current == 0xffff)
     {
@@ -79,23 +79,20 @@ bool Peripherals::load(uint16_t bitmask)
     Serial.printf("[外设] 外设加载：0x%x -> 0x%x，当前安装：0x%x\n", peripherals_load, bitmask, peripherals_current);
     if (bitmask & PERIPHERALS_SD_BIT && (peripherals_load & PERIPHERALS_SD_BIT) == 0)
     {
-        Serial.println("[外设] 加载TF卡");
         // 需要加载TF卡
         // 首先测试TF卡是否存在
-        if (digitalRead(PIN_SD_CARDDETECT) == 1)
+        if (digitalRead(PIN_SD_CARDDETECT) != 1)
         {
-            goto sderr; // 我就用goto
-        }
-        else
-        {
+            Serial.println("[外设] 加载TF卡");
             digitalWrite(PIN_SDVDD_CTRL, 0);
-            delay(100);
+            delay(50);
             if (SD.begin(PIN_SD_CS, SDSPI) == false)
             {
-                delay(500);
+                delay(100);
                 if (SD.begin(PIN_SD_CS, SDSPI) == false)
                 {
-                    goto sderr;
+                    GUI::msgbox("错误", "存在TF卡，但无法挂载");
+                    SD.end();
                 }
             }
         }
@@ -105,7 +102,7 @@ bool Peripherals::load(uint16_t bitmask)
         // 卸载TF卡
         Serial.println("[外设] 卸载TF卡");
         SD.end();
-        delay(300);
+        delay(50);
         digitalWrite(PIN_SDVDD_CTRL, 1);
     }
     // 只有sgp和SD卡需要重新加载
@@ -152,16 +149,6 @@ bool Peripherals::load(uint16_t bitmask)
     // DS3231无需初始化
     peripherals_load = bitmask;
     return true;
-sderr:
-    // 不存在SD卡
-    GUI::msgbox("错误", "TF卡挂载失败，已重置外设加载状态");
-    SD.end();
-    if (bitmask & PERIPHERALS_SGP30_BIT == 0 && peripherals_current & PERIPHERALS_SGP30_BIT)
-    {
-        sgp.softReset();
-    }
-    peripherals_load = 0;
-    return false;
 }
 
 void Peripherals::sleep()
@@ -170,7 +157,7 @@ void Peripherals::sleep()
     if (peripherals_load & PERIPHERALS_SD_BIT)
     {
         SD.end();
-        delay(300);
+        delay(50);
         digitalWrite(PIN_SDVDD_CTRL, 1);
     }
     if (peripherals_load & PERIPHERALS_SGP30_BIT)

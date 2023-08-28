@@ -159,11 +159,12 @@ int AppManager::appSelector()
     display.swapBuffer(1);
     display.clearScreen();
     showAppList();
+    display.drawRoundRect(4 - 1, 21 - 2, 50, 50, 5, 0); // 绘制选择框
     display.display(true);
     // 下面是选择
     int selected = 0;
     hal.hookButton();
-    int last_selected = -1;
+    int last_selected = 0;
     int idleTime = 0;
     bool waitc = false;
     while (1)
@@ -289,7 +290,10 @@ void AppManager::update()
         noDeepSleep = false;
         currentApp = app_to;
         latest_appid = app_to->appID;
-        if(peripherals.load(currentApp->peripherals_requested) == false)
+        hal.setWakeupIO(currentApp->wakeupIO[0], currentApp->wakeupIO[1]);
+        if (currentApp->noDefaultEvent)
+            hal.detachAllButtonEvents();
+        if (peripherals.load(currentApp->peripherals_requested) == false)
         {
             GUI::msgbox("错误", "外设加载失败，APP运行将不稳定");
         }
@@ -307,7 +311,6 @@ void AppManager::update()
         if (currentApp->exit != NULL)
             currentApp->exit();
         // 然后准备环境
-        attachLocalEvent();
         currentApp = appStack.top();
         appStack.pop();
         latest_appid = currentApp->appID;
@@ -316,7 +319,10 @@ void AppManager::update()
         nextWakeup = 0;
         noDeepSleep = false;
         // 然后执行前一app初始化
-        if(peripherals.load(currentApp->peripherals_requested) == false)
+        hal.setWakeupIO(currentApp->wakeupIO[0], currentApp->wakeupIO[1]);
+        if (currentApp->noDefaultEvent)
+            hal.detachAllButtonEvents();
+        if (peripherals.load(currentApp->peripherals_requested) == false)
         {
             GUI::msgbox("错误", "外设加载失败，APP运行将不稳定");
         }
@@ -423,10 +429,10 @@ void AppManager::attachLocalEvent()
 {
     hal.detachAllButtonEvents();
     hal.btnc.attachLongPressStart([](void *scope)
-                                  { ((AppManager *)scope)->method = APPMANAGER_SHOWAPPSELECTOR; },
+                                  {if( ((AppManager *)scope)->currentApp->noDefaultEvent == false) ((AppManager *)scope)->method = APPMANAGER_SHOWAPPSELECTOR; },
                                   this);
     hal.btnl.attachLongPressStart([](void *scope)
-                                  { ((AppManager *)scope)->method = APPMANAGER_GOBACK; Serial.println("Back."); },
+                                  { if( ((AppManager *)scope)->currentApp->noDefaultEvent == false) {((AppManager *)scope)->method = APPMANAGER_GOBACK; Serial.println("Back."); } },
                                   this);
 }
 void AppManager::gotoAppBoot(const char *appName)

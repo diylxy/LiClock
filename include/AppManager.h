@@ -7,12 +7,15 @@ class AppBase
 {
 private:
 public:
-    const char *name = "BaseApp";        // 一个标识符，唯一标识这个App
-    const char *title = "BaseApp";       // 一个标题，显示在App列表中
-    const char *description = "BaseApp"; // App描述
-    const uint8_t *image = NULL;         // App图像，32*32,xbm格式
-    int appID = 0;                       // AppID，唯一标识App
-    bool _showInList = true;
+    const char *name = "BaseApp";                 // 一个标识符，唯一标识这个App
+    const char *title = "BaseApp";                // 一个标题，显示在App列表中
+    const char *description = "BaseApp";          // App描述
+    const uint8_t *image = NULL;                  // App图像，32*32,xbm格式
+    int appID = 0;                                // AppID，唯一标识App
+    bool _showInList = true;                      // 是否展示在App列表
+    int wakeupIO[2] = {PIN_BUTTONC, PIN_BUTTONL}; // 唤醒IO
+    bool noDefaultEvent = false;                   // 禁用默认按钮事件
+
     uint16_t peripherals_requested = 0;
     /**
      * @brief 初始化(App打开)

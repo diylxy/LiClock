@@ -95,7 +95,7 @@ static AppSettings app;
 void AppSettings::setup()
 {
     display.clearScreen();
-    GUI::drawWindowsWithTitle(0, 0, 296, 128, "设置");
+    GUI::drawWindowsWithTitle("设置", 0, 0, 296, 128);
     u8g2Fonts.drawUTF8(120, 75, "请稍等...");
     // 下面是设置菜单
     int res = 0;

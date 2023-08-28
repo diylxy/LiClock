@@ -34,7 +34,7 @@ static void RTCOffsetTimer()
 {
     display.setFullWindow();
     display.clearScreen();
-    GUI::drawWindowsWithTitle(0, 0, 296, 128, "RTC线性误差补偿");
+    GUI::drawWindowsWithTitle("RTC线性误差补偿", 0, 0, 296, 128);
     u8g2Fonts.setCursor(0, 30);
     time_t now;
     tm rtctime;

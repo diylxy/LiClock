@@ -322,8 +322,8 @@ void HAL::autoConnectWiFi()
 }
 static void set_sleep_set_gpio_interrupt()
 {
-    esp_sleep_enable_ext0_wakeup((gpio_num_t)PIN_BUTTONC, 0);
-    esp_sleep_enable_ext1_wakeup((1LL << PIN_BUTTONL), ESP_EXT1_WAKEUP_ALL_LOW);
+    esp_sleep_enable_ext0_wakeup((gpio_num_t)hal._wakeupIO[0], 0);
+    esp_sleep_enable_ext1_wakeup((1LL << hal._wakeupIO[1]), ESP_EXT1_WAKEUP_ALL_LOW);
 }
 static void pre_sleep()
 {
@@ -520,5 +520,10 @@ void HAL::checkNightSleep()
     {
         hal.goSleep(1800); // 休眠半小时再看
     }
+}
+void HAL::setWakeupIO(int io1, int io2)
+{
+    _wakeupIO[0] = io1;
+    _wakeupIO[1] = io2;
 }
 HAL hal;

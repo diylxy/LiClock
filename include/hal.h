@@ -26,6 +26,7 @@ public:
     void update();
     int getNTPMinute();
     void checkNightSleep();
+    void setWakeupIO(int io1, int io2);
     struct tm timeinfo;
     time_t now;
     int global_hour_offset = 0;
@@ -65,24 +66,48 @@ public:
     {
         btnr.attachClick(NULL);
         btnr.attachDoubleClick(NULL);
+        btnr.attachLongPressStart(NULL);
         btnr.attachDuringLongPress(NULL);
         btnr.attachLongPressStop(NULL);
         btnr.attachMultiClick(NULL);
+        btnr.attachClick(NULL, NULL);
+        btnr.attachDoubleClick(NULL, NULL);
+        btnr.attachLongPressStart(NULL, NULL);
+        btnr.attachDuringLongPress(NULL, NULL);
+        btnr.attachLongPressStop(NULL, NULL);
+        btnr.attachMultiClick(NULL, NULL);
+        
         btnl.attachClick(NULL);
         btnl.attachDoubleClick(NULL);
         btnl.attachDuringLongPress(NULL);
         btnl.attachLongPressStop(NULL);
         btnl.attachMultiClick(NULL);
+        btnl.attachClick(NULL, NULL);
+        btnl.attachDoubleClick(NULL, NULL);
+        btnl.attachLongPressStart(NULL, NULL);
+        btnl.attachDuringLongPress(NULL, NULL);
+        btnl.attachLongPressStop(NULL, NULL);
+        btnl.attachMultiClick(NULL, NULL);
+
         btnc.attachClick(NULL);
         btnc.attachDoubleClick(NULL);
+        btnc.attachLongPressStart(NULL);
         btnc.attachDuringLongPress(NULL);
         btnc.attachLongPressStop(NULL);
         btnc.attachMultiClick(NULL);
+        btnc.attachClick(NULL, NULL);
+        btnc.attachDoubleClick(NULL, NULL);
+        btnc.attachLongPressStart(NULL, NULL);
+        btnc.attachDuringLongPress(NULL, NULL);
+        btnc.attachLongPressStop(NULL, NULL);
+        btnc.attachMultiClick(NULL, NULL);
     }
     bool noDeepSleep = false;
     bool SleepUpdateMutex = false;
     bool _hookButton = false; // 不要修改这个
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    int _wakeupIO[2] = {PIN_BUTTONC, PIN_BUTTONL};
+
 private:
 };
 extern HAL hal;

@@ -19,8 +19,6 @@ public:
      */
     bool init();
     void autoConnectWiFi();
-    void drawPageWeatherFrame();
-    void drawPageWeatherTime();
     void powerOff(bool displayMessage = true);
     void goSleep(uint32_t sec = 0);
     void update();

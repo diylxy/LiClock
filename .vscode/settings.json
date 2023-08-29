@@ -6,6 +6,8 @@
         "istream": "cpp",
         "ostream": "cpp",
         "sstream": "cpp",
-        "ff.h": "c"
+        "ff.h": "c",
+        "lrodefs.h": "c",
+        "lualib.h": "c"
     }
 }

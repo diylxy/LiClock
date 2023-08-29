@@ -14,6 +14,8 @@ void task_appManager(void *)
 void setup()
 {
     bool initResult = hal.init();
+    // openLua();
+    // lua_execute("/spiffs/boot.lua");
     xTaskCreate(task_appManager, "appManager", 10240, NULL, 1, NULL);
     hal.getTime();
     if (hal.timeinfo.tm_year > (2016 - 1900))

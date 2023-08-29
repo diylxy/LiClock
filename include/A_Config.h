@@ -92,3 +92,4 @@ const uint8_t *getBatteryIcon();
 #include "alarm.h"
 #include "peripherals.h"
 #include "Buzzer.h"
+#include "lua_trans.h"

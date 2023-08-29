@@ -380,10 +380,10 @@ namespace GUI
         display.display(); // 全局刷新一次
         return currentNumber;
     }
-    void drawLBM(const char *filename, int16_t x, int16_t y, uint16_t color)
+    void drawLBM(int16_t x, int16_t y, const char *filename, uint16_t color)
     {
         FILE *fp = fopen(filename, "rb");
-        if(!fp)
+        if (!fp)
         {
             Serial.printf("File %s not found!\n", filename);
             return;
@@ -393,11 +393,11 @@ namespace GUI
         fread(&h, 2, 1, fp);
         size_t imgsize;
         uint16_t tmp = w / 8;
-        if(w % 8 != 0)
+        if (w % 8 != 0)
             tmp++;
         imgsize = tmp * h;
         uint8_t *img = (uint8_t *)malloc(imgsize);
-        if(!img)
+        if (!img)
         {
             Serial.printf("malloc failed!\n");
             fclose(fp);

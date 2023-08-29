@@ -39,9 +39,19 @@ static const struct s_fileicondict fileicondict[] = {
     {"json", sysfile_bits},
     {"bin", sysfile_bits},
     {"txt", textfile_bits},
-    {"lim", imgfile_bits}, // 自定义的图片格式（实际上是XBM编码），TODO
+    {"lbm", imgfile_bits}, // 自定义的图片格式（实际上是XBM编码）
     {NULL, NULL},
 };
+/**
+ * 
+“lbm”格式定义：
+扩展名.lbm
+单色位图
+小端
+2字节宽度
+2字节高度
+之后是数据
+*/
 static const uint8_t *getFileIcon(const char *extension)
 {
     for (int i = 0; fileicondict[i].extension != NULL; i++)

@@ -94,7 +94,7 @@ public:
     void gotoAppBoot(const char *appName);
     bool recover();
     void goBack();
-    void showAppList();     // 显示Applist
+    void showAppList(int page);     // 显示Applist
     AppBase *appSelector(); // 显示Applist并等待用户输入
     void update();
     String parameter = "";                        // 传递的参数，会在goto目标app的setup执行完后自动清空

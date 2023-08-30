@@ -212,11 +212,6 @@ void AppClock::setup()
     part_refresh_count = 0;
     display.setFullWindow();
     display.fillScreen(GxEPD_WHITE);
-    if (weather.lastupdate == 0 || hal.now < weather.lastupdate || hal.now - weather.lastupdate > 60 * atoi(config[PARAM_FULLUPDATE].as<const char *>()))
-    {
-        hal.autoConnectWiFi();
-        weather.refresh();
-    }
     hal.getTime();
     if (hal.timeinfo.tm_year < (2016 - 1900) || NTPCounter >= ntp_interval) // 等待NTP同步
     {
@@ -225,6 +220,11 @@ void AppClock::setup()
         hal.autoConnectWiFi();
         NTPSync();
         hal.getTime();
+    }
+    if (hal.now < weather.lastupdate || hal.now - weather.lastupdate > 60 * atoi(config[PARAM_FULLUPDATE].as<const char *>()))
+    {
+        hal.autoConnectWiFi();
+        weather.refresh();
     }
     if (weather.hasAlert && weather.alertPubTime != last_alertPubTime)
     {

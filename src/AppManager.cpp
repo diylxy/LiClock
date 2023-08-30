@@ -82,8 +82,30 @@ static const uint8_t wifiIcon[] = {
     0x00, 0x00};
 static AppBase *realAppList[MAX_APP_COUNT];
 static int realAppCount = 0;
-void AppManager::showAppList()
+void buildAppList()
 {
+    realAppCount = 0;
+    for (int16_t i = 0; i < tail; i++)
+    {
+        if (appList[i]->_showInList == false)
+        {
+            continue;
+        }
+        if (peripherals.checkAvailable(appList[i]->peripherals_requested) != 0)
+        {
+            continue;
+        }
+        realAppList[realAppCount] = appList[i];
+        realAppCount++;
+    }
+}
+// AppList每页11个，算左上角一个返回共12个
+// 先build再show
+void AppManager::showAppList(int page)
+{
+    int totalPage = realAppCount / 11;
+    if (realAppCount % 11)
+        ++totalPage;
     // 下面是标题部分
     {
         char buf[30];
@@ -94,6 +116,11 @@ void AppManager::showAppList()
         u8g2Fonts.setForegroundColor(0);
         sprintf(buf, "%02d:%02d", hal.timeinfo.tm_hour, hal.timeinfo.tm_min);
         u8g2Fonts.drawUTF8(2, 12, buf);
+        if (realAppCount > 11)
+        {
+            sprintf(buf, "第%d页/共%d页", page + 1, totalPage);
+            u8g2Fonts.drawUTF8(40, 12, buf);
+        }
         // 右侧状态图标
         int16_t x = 294;
         // 电池
@@ -113,114 +140,183 @@ void AppManager::showAppList()
     // 返回按钮
     display.drawXBitmap(12, 21, goBackIcon, 32, 32, 0);
     u8g2Fonts.drawUTF8(16, 65, "返回");
-    int count = 1;
-    for (int16_t i = 0; i < tail; i++)
+    int pagebase = 11 * page; // 页基数（这一页第一个）
+    int pageItemsCount;
+    if (page == totalPage - 1)
     {
-        if (appList[i]->_showInList == false)
-        {
-            continue;
-        }
-        if (peripherals.checkAvailable(appList[i]->peripherals_requested) != 0)
-        {
-            continue;
-        }
-        realAppList[count - 1] = appList[i];
+        pageItemsCount = realAppCount % 11;
+        if (pageItemsCount == 0)
+            pageItemsCount = 11;
+    }
+    else
+    {
+        pageItemsCount = 11;
+    }
+    for (int16_t i = 0; i < pageItemsCount; i++)
+    {
         int16_t x, y;
-        x = (count / 2) * 49 + 4;
-        y = (count % 2) * 52 + 21; // App左上角位置
-        if (appList[i]->image != NULL)
+        x = ((i + 1) / 2) * 49 + 4;
+        y = ((i + 1) % 2) * 52 + 21; // App左上角位置
+        if (realAppList[pagebase + i]->image != NULL)
         {
-            display.drawXBitmap(x + 8, y, appList[i]->image, 32, 32, 0);
+            display.drawXBitmap(x + 8, y, realAppList[pagebase + i]->image, 32, 32, 0);
         }
         else
         {
             display.drawXBitmap(x + 8, y, defaultAppIcon, 32, 32, 0);
         }
-        int w = u8g2Fonts.getUTF8Width(appList[i]->title);
+        int w = u8g2Fonts.getUTF8Width(realAppList[pagebase + i]->title);
         int x_font_offset = 0;
         if (w <= 48)
         {
             x_font_offset = (48 - w) / 2;
         }
-        u8g2Fonts.drawUTF8(x + x_font_offset, y + 45, appList[i]->title);
-        count++;
+        u8g2Fonts.drawUTF8(x + x_font_offset, y + 45, realAppList[pagebase + i]->title);
     }
-    realAppCount = count - 1;
 }
 AppBase *AppManager::appSelector()
 {
-    display.swapBuffer(1);
-    display.clearScreen();
-    showAppList();
-    display.drawRoundRect(4 - 1, 21 - 2, 50, 50, 5, 0); // 绘制选择框
-    display.display(true);
-    // 下面是选择
+    bool finished = false; // 是否完成选择，用于超过一页的情况
+    int currentPage = 0;
+    buildAppList();
+    int totalPage = realAppCount / 11;
+    if (realAppCount % 11)
+        ++totalPage;
+    int pageItemsCount;
     int selected = 0;
-    hal.hookButton();
     int last_selected = 0;
     int idleTime = 0;
     bool waitc = false;
-    while (1)
+    display.swapBuffer(1);
+    display.clearScreen();
+    showAppList(currentPage);
+    display.drawRoundRect(4 - 1, 21 - 2, 50, 50, 5, 0); // 绘制选择框
+    display.display(true);
+    // 下面是选择
+    hal.hookButton();
+    while (finished == false)
     {
-        if (digitalRead(PIN_BUTTONL) == 0)
+        if (currentPage == totalPage - 1)
         {
-            idleTime = 0;
-            selected--;
-            if (selected < 0)
-                selected = realAppCount; // 这里没问题，不要改
+            pageItemsCount = realAppCount % 11;
+            if (pageItemsCount == 0)
+                pageItemsCount = 11;
         }
-        if (digitalRead(PIN_BUTTONR) == 0)
+        else
         {
-            idleTime = 0;
-            selected++;
-            if (selected > realAppCount) // 这里也没问题
-                selected = 0;
+            pageItemsCount = 11;
         }
-        if (digitalRead(PIN_BUTTONC) == LOW)
+        // 下面是选择
+        idleTime = 0;
+        waitc = false;
+        while (1)
         {
-            delay(20);
-            if (digitalRead(PIN_BUTTONC) == LOW)
+            if (digitalRead(PIN_BUTTONL) == 0)
             {
-                if (GUI::waitLongPress(PIN_BUTTONC) == true)
+                idleTime = 0;
+                selected--;
+                if (selected < 0)
                 {
-                    selected = 0;
-                    waitc = true;
-                }
-                else
-                {
-                    break;
+                    if (totalPage == 1)
+                        selected = realAppCount; // 这里没问题，不要改，因为0是返回
+                    else
+                    {
+                        if (currentPage == 0)
+                            currentPage = totalPage - 1;
+                        else
+                            --currentPage;
+                        if (currentPage == totalPage - 1)
+                        {
+                            pageItemsCount = realAppCount % 11;
+                            if (pageItemsCount == 0)
+                                pageItemsCount = 11;
+                        }
+                        else
+                        {
+                            pageItemsCount = 11;
+                        }
+                        selected = pageItemsCount;
+                        break;
+                    }
                 }
             }
+            if (digitalRead(PIN_BUTTONR) == 0)
+            {
+                idleTime = 0;
+                selected++;
+                if (selected > pageItemsCount) // 这里也没问题
+                {
+                    if (totalPage == 1)
+                        selected = 0;
+                    else
+                    {
+                        selected = 0;
+                        ++currentPage;
+                        if (currentPage == totalPage)
+                            currentPage = 0;
+                        break;
+                    }
+                }
+            }
+            if (digitalRead(PIN_BUTTONC) == LOW)
+            {
+                delay(20);
+                if (digitalRead(PIN_BUTTONC) == LOW)
+                {
+                    if (GUI::waitLongPress(PIN_BUTTONC) == true)
+                    {
+                        selected = 0;
+                        waitc = true;
+                    }
+                    else
+                    {
+                        finished = true;
+                        break;
+                    }
+                }
+            }
+            if (selected != last_selected)
+            {
+                int16_t x, y;
+                int16_t last_x, last_y;
+                x = (selected / 2) * 49 + 4;
+                y = (selected % 2) * 52 + 21; // App左上角位置
+                if (last_selected == -1)
+                    last_selected = 0;
+                last_x = (last_selected / 2) * 49 + 4;
+                last_y = (last_selected % 2) * 52 + 21;
+                last_selected = selected;
+                display.drawRoundRect(last_x - 1, last_y - 2, 50, 50, 5, 1); // 清除上一个选择框
+                display.drawRoundRect(x - 1, y - 2, 50, 50, 5, 0);           // 绘制选择框
+                display.display(true);
+            }
+            if (waitc == true)
+            {
+                waitc = false;
+                while (digitalRead(PIN_BUTTONC) == LOW)
+                    delay(10);
+                delay(10);
+            }
+            delay(10);
+            idleTime++;
+            if (idleTime > 6000)
+            {
+                // 60s无操作，自动返回
+                selected = 0;
+                finished = true;
+                break;
+            }
         }
-        if (selected != last_selected)
+        if (finished == false)
         {
             int16_t x, y;
-            int16_t last_x, last_y;
             x = (selected / 2) * 49 + 4;
             y = (selected % 2) * 52 + 21; // App左上角位置
-            if (last_selected == -1)
-                last_selected = 0;
-            last_x = (last_selected / 2) * 49 + 4;
-            last_y = (last_selected % 2) * 52 + 21;
+            display.clearScreen();
+            showAppList(currentPage);
+            display.drawRoundRect(x - 1, y - 2, 50, 50, 5, 0); // 绘制选择框
             last_selected = selected;
-            display.drawRoundRect(last_x - 1, last_y - 2, 50, 50, 5, 1); // 清除上一个选择框
-            display.drawRoundRect(x - 1, y - 2, 50, 50, 5, 0);           // 绘制选择框
             display.display(true);
-        }
-        if (waitc == true)
-        {
-            waitc = false;
-            while (digitalRead(PIN_BUTTONC) == LOW)
-                delay(10);
-            delay(10);
-        }
-        delay(10);
-        idleTime++;
-        if (idleTime > 6000)
-        {
-            // 60s无操作，自动返回
-            selected = 0;
-            break;
         }
     }
     hal.unhookButton();
@@ -240,7 +336,9 @@ AppBase *AppManager::appSelector()
     }
     if (selected == 0)
         return NULL;
-    return realAppList[selected - 1]; // 这里没问题
+    selected -= 1;
+    selected += currentPage * 11;
+    return realAppList[selected]; // 这里没问题
 }
 
 void AppManager::update()

@@ -86,15 +86,23 @@ void AppEBook::setup()
     if (appManager.parameter == "")
     {
         currentPage = hal.pref.getInt(SETTINGS_PARAM_LAST_EBOOK_PAGE, 0);
-        Serial.printf("电子书：上次打开的文件：%s，上次打开的页：%d\n", app.currentFilename, currentPage);
         if (s == 0)
         {
             openFile();
         }
         else
         {
+            Serial.printf("电子书：上次打开的文件：%s，上次打开的页：%d\n", app.currentFilename, currentPage);
             if (openFile(app.currentFilename) == false)
-                appManager.goBack();
+            {
+                if (openFile() == false)
+                {
+                    GUI::msgbox("打开文件失败", currentFilename);
+                    hal.pref.remove(SETTINGS_PARAM_LAST_EBOOK);
+                    hal.pref.remove(SETTINGS_PARAM_LAST_EBOOK_PAGE);
+                    appManager.goBack();
+                }
+            }
         }
         page_changed = true;
     }

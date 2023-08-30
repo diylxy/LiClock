@@ -25,6 +25,8 @@ public:
     int getNTPMinute();
     void checkNightSleep();
     void setWakeupIO(int io1, int io2);
+    void copy(File &newFile, File &file);
+    void rm_rf(const char *path);
     struct tm timeinfo;
     time_t now;
     int global_hour_offset = 0;

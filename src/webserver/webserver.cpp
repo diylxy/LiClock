@@ -92,7 +92,7 @@ void updateWebServer()
 
 
 //holds the current upload
-#define FILESYSTEM SPIFFS
+#define FILESYSTEM LittleFS
 #define DBG_OUTPUT_PORT Serial
 File fsUploadFile;
 

@@ -18,5 +18,5 @@ namespace GUI
     int menu(const char *title, const menu_item options[], int16_t ico_w = 8, int16_t ico_h = 8);
     void drawLBM(int16_t x, int16_t y,const char *filename, uint16_t color);
     // fileManager.cpp
-    const char *fileDialog(const char *title);
+    const char *fileDialog(const char *title, bool isApp = false, const char *endsWidth = NULL);
 } // namespace GUI

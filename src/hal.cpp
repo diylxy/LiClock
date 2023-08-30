@@ -1,5 +1,5 @@
 #include "hal.h"
-#include <SPIFFS.h>
+#include <LittleFS.h>
 
 void task_hal_update(void *)
 {
@@ -49,7 +49,7 @@ void task_hal_update(void *)
 }
 void HAL::saveConfig()
 {
-    File configFile = SPIFFS.open("/config.json", "w");
+    File configFile = LittleFS.open("/config.json", "w");
     if (!configFile)
     {
         Serial.println("Failed to open config file for writing");
@@ -60,7 +60,7 @@ void HAL::saveConfig()
 }
 void HAL::loadConfig()
 {
-    File configFile = SPIFFS.open("/config.json", "r");
+    File configFile = LittleFS.open("/config.json", "r");
     if (!configFile)
     {
         Serial.println("Failed to open config file");
@@ -162,6 +162,10 @@ void HAL::WiFiConfigManual()
             hal.powerOff(false);
             ESP.restart();
         }
+        if(digitalRead(PIN_BUTTONC) == 0 || digitalRead(PIN_BUTTONL) == 0 || digitalRead(PIN_BUTTONR) == 0)
+        {
+            ESP.restart();
+        }
     }
 }
 void HAL::ReqWiFiConfig()
@@ -187,6 +191,11 @@ void HAL::ReqWiFiConfig()
         {
             WiFiConfigSmartConfig();
         }
+        if (digitalRead(PIN_BUTTONC) == 0)
+        {
+            WiFi.disconnect(true);
+            break;
+        }
         delay(5);
         if (millis() - last_millis > 60000) // 1分钟超时
         {
@@ -194,7 +203,7 @@ void HAL::ReqWiFiConfig()
             break;
         }
     }
-    if(WiFi.isConnected() == false)
+    if (WiFi.isConnected() == false)
     {
         config[PARAM_CLOCKONLY] = true;
         hal.saveConfig();
@@ -260,26 +269,26 @@ bool HAL::init()
         powerOff(true);
         ESP.restart();
     }
-    if (SPIFFS.begin(false) == false)
+    if (LittleFS.begin(false) == false)
     {
         display.fillScreen(GxEPD_WHITE);
         u8g2Fonts.setCursor(70, 80);
-        u8g2Fonts.print("等待SPIFFS格式化");
+        u8g2Fonts.print("等待LittleFS格式化");
         display.display();
-        SPIFFS.format();
-        if (SPIFFS.begin(false) == false)
+        LittleFS.format();
+        if (LittleFS.begin(false) == false)
         {
-            Serial.println("SPIFFS格式化失败");
+            Serial.println("LittleFS格式化失败");
             display.fillScreen(GxEPD_WHITE);
             u8g2Fonts.setCursor(70, 80);
-            u8g2Fonts.print("SPIFFS格式化失败");
+            u8g2Fonts.print("LittleFS格式化失败");
             display.display(true);
             delay(100);
             powerOff(false);
             ESP.restart();
         }
         Serial.println("正在写入默认配置");
-        File f = SPIFFS.open("/config.json", "w");
+        File f = LittleFS.open("/config.json", "w");
         f.print(DEFAULT_CONFIG);
         f.close();
     }
@@ -526,4 +535,86 @@ void HAL::setWakeupIO(int io1, int io2)
     _wakeupIO[0] = io1;
     _wakeupIO[1] = io2;
 }
+void HAL::copy(File &newFile, File &file)
+{
+    char *buf = (char *)malloc(512);
+    size_t currentsize = 0;
+    if (!buf)
+    {
+        Serial.println("内存已满");
+        ESP.restart();
+    }
+    while (1)
+    {
+        currentsize = file.readBytes(buf, 512);
+        if (currentsize == 0)
+            break;
+        newFile.write((uint8_t *)buf, currentsize);
+    }
+    free(buf);
+}
+#include <stdio.h>
+#include <stdlib.h>
+#include <dirent.h>
+#include <sys/stat.h>
+
+void HAL::rm_rf(const char *path)
+{
+    DIR *dp;
+    struct dirent *entry;
+    struct stat statbuf;
+
+    // 打开目录
+    if ((dp = opendir(path)) == NULL)
+    {
+        perror("opendir");
+        return;
+    }
+
+    // 迭代读取目录中的文件
+    while ((entry = readdir(dp)) != NULL)
+    {
+        // 获取文件的完整路径
+        char filePath[256];
+        sprintf(filePath, "%s/%s", path, entry->d_name);
+
+        // 获取文件信息
+        if (stat(filePath, &statbuf) == -1)
+        {
+            perror("lstat");
+            continue;
+        }
+
+        // 判断是否是目录
+        if (S_ISDIR(statbuf.st_mode))
+        {
+            // 忽略.和..目录
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+            {
+                continue;
+            }
+
+            // 递归删除子目录
+            rm_rf(filePath);
+        }
+        else
+        {
+            // 删除文件
+            if (remove(filePath) != 0)
+            {
+                perror("remove");
+            }
+        }
+    }
+
+    // 关闭目录
+    closedir(dp);
+
+    // 删除空目录
+    if (rmdir(path) != 0)
+    {
+        perror("rmdir");
+    }
+}
+
 HAL hal;

@@ -42,7 +42,7 @@ void AppWebserver::setup()
         beginWebServer();
         u8g2Fonts.printf("请在浏览器中打开以下网址\n");
         u8g2Fonts.printf("http://%s\n", WiFi.localIP().toString().c_str());
-        u8g2Fonts.printf("按下按钮A重启\n");
+        u8g2Fonts.printf("按下右键重启\n");
         display.display(true);
         while (1)
         {

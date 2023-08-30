@@ -43,7 +43,7 @@ void task_buzzer(void *)
                 // 播放文件
                 if (_path[0])
                 {
-                    FILE *fp = fopen(_path, "rb");
+                    FILE *fp = fopen(getRealPath(_path), "rb");
                     if (fp == NULL)
                     {
                         Serial.printf("Buzzer: Failed to open file %s\n", _path);
@@ -103,6 +103,8 @@ void Buzzer::init()
 
 bool Buzzer::hasNote()
 {
+    if (!queue_buzzer)
+        return false;
     return (_hasNote || uxQueueMessagesWaiting(queue_buzzer) != 0 || useFile == true);
 }
 void Buzzer::append(int freq, int duration)

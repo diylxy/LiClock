@@ -11,12 +11,29 @@ void task_appManager(void *)
         delay(10);
     }
 }
+#include <LittleFS.h>
 void setup()
 {
     bool initResult = hal.init();
-    // openLua();
-    // lua_execute("/spiffs/boot.lua");
-    xTaskCreate(task_appManager, "appManager", 10240, NULL, 1, NULL);
+    if (LittleFS.exists("/test.app") == false)
+    {
+        LittleFS.mkdir("/test.app");
+        File f = LittleFS.open("/test.app/conf.lua", "w");
+        f.print("title = \"测试\"\n");
+        f.close();
+        f = LittleFS.open("/test.app/main.lua", "w");
+        f.print("function setup()\n");
+        f.print("    print(\"Hello World!\")\n");
+        f.print("    buzzer.append(1000, 100)\n");
+        f.print("end\n");
+        f.print("buzzer.append(2000, 100)\n");
+        f.print("buzzer.append(0, 100)\n");
+        f.close();
+    }
+    Serial.println(ESP.getFreeHeap());
+    searchForLuaAPP();
+    Serial.println(ESP.getFreeHeap());
+    xTaskCreate(task_appManager, "appManager", 20480, NULL, 1, NULL);
     hal.getTime();
     if (hal.timeinfo.tm_year > (2016 - 1900))
     {
@@ -63,5 +80,6 @@ void setup()
 int NTPCounter = 0;
 void loop()
 {
+    vTaskDelete(NULL);
     vTaskDelay(portMAX_DELAY);
 }

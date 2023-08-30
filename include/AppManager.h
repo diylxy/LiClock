@@ -14,9 +14,10 @@ public:
     int appID = 0;                                // AppID，唯一标识App
     bool _showInList = true;                      // 是否展示在App列表
     int wakeupIO[2] = {PIN_BUTTONC, PIN_BUTTONL}; // 唤醒IO
-    bool noDefaultEvent = false;                   // 禁用默认按钮事件
+    bool noDefaultEvent = false;                  // 禁用默认按钮事件
+    uint16_t peripherals_requested = 0;           // 请求的外设
+    bool isLuaApp = false;                        // 是否是LuaApp
 
-    uint16_t peripherals_requested = 0;
     /**
      * @brief 初始化(App打开)
      */
@@ -34,7 +35,7 @@ public:
      */
     void (*exit)();
     /**
-     * @brief 进入deepsleep前执行
+     * @brief 进入deepsleep前执行，注意如果没有此函数，会尝试执行exit函数
      */
     void (*deepsleep)();
     AppBase();
@@ -69,30 +70,32 @@ public:
     {
         validAppID++;
     }
-    int getIDByName(const char *appName);
-    int getRealClock()
+    AppBase *getPtrByName(const char *appName);
+    AppBase *getRealClock()
     {
         if (config[PARAM_CLOCKONLY] == "1")
         {
-            return getIDByName("clockonly");
+            return getPtrByName("clockonly");
         }
         else
         {
-            return getIDByName("clock");
+            return getPtrByName("clock");
         }
     }
-    void gotoApp(int appID);
+    void gotoApp(AppBase *appPtr);
     void gotoApp(const char *appName)
     {
-        Serial.println(appName);
-        int appID = getIDByName(appName);
-        gotoApp(appID);
+        AppBase *appPtr = getPtrByName(appName);
+        if (appPtr != NULL)
+        {
+            gotoApp(appPtr);
+        }
     }
     void gotoAppBoot(const char *appName);
     bool recover();
     void goBack();
-    void showAppList(); // 显示Applist
-    int appSelector();  // 显示Applist并等待用户输入
+    void showAppList();     // 显示Applist
+    AppBase *appSelector(); // 显示Applist并等待用户输入
     void update();
     String parameter = "";                        // 传递的参数，会在goto目标app的setup执行完后自动清空
     String result = "";                           // 传递的返回值，不会自动清空
@@ -105,3 +108,28 @@ public:
 
 extern AppManager appManager;
 extern AppBase *appList[128];
+
+class LuaAppWrapper : public AppBase
+{
+private:
+    String path;
+    char _title[32];
+    char _name[36];
+    uint8_t _image[128];
+
+public:
+    LuaAppWrapper(const String filename, const String path);
+    LuaAppWrapper()
+    {
+        isLuaApp = true;
+        _showInList = false;
+    };
+    void
+    initialize(const String filename, const String path);
+    ~LuaAppWrapper();
+    void init();
+    void setup();
+};
+
+extern void newLuaApp(const char *filename);
+extern void searchForLuaAPP();

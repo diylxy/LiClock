@@ -35,6 +35,7 @@ public:
         title = "天气时钟";
         description = "默认主页应用";
         image = clock_cloud_bits;
+        _showInList = false;
     }
     void setup();
 
@@ -211,8 +212,9 @@ void AppClock::setup()
     part_refresh_count = 0;
     display.setFullWindow();
     display.fillScreen(GxEPD_WHITE);
-    if (hal.now < weather.lastupdate || hal.now - weather.lastupdate > 60 * atoi(config[PARAM_FULLUPDATE].as<const char *>()))
+    if (weather.lastupdate == 0 || hal.now < weather.lastupdate || hal.now - weather.lastupdate > 60 * atoi(config[PARAM_FULLUPDATE].as<const char *>()))
     {
+        hal.autoConnectWiFi();
         weather.refresh();
     }
     hal.getTime();

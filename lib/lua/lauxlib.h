@@ -40,6 +40,8 @@ typedef struct luaL_Reg {
   lua_CFunction func;
 } luaL_Reg;
 
+extern void setPath(const char *path);
+extern const char *getRealPath(const char *fpath);
 
 #define LUAL_NUMSIZES	(sizeof(lua_Integer)*16 + sizeof(lua_Number))
 

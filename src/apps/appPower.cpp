@@ -26,7 +26,7 @@ public:
     void setup();
 };
 static AppPower app;
-extern int latest_appid;
+extern char latest_appname[];
 void AppPower::setup()
 {
     const menu_item menu[] = {
@@ -42,7 +42,7 @@ void AppPower::setup()
     }
     else if(res == 2)
     {
-        latest_appid = -1;
+        latest_appname[0] = 0;
         hal.powerOff();
     }
     appManager.goBack();

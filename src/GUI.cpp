@@ -382,7 +382,7 @@ namespace GUI
     }
     void drawLBM(int16_t x, int16_t y, const char *filename, uint16_t color)
     {
-        FILE *fp = fopen(filename, "rb");
+        FILE *fp = fopen(getRealPath(filename), "rb");
         if (!fp)
         {
             Serial.printf("File %s not found!\n", filename);

@@ -1,7 +1,8 @@
 #include "A_Config.h"
 
 const char *err_invalid_param = "参数个数不符";
-lua_State *L;       //公用Lua虚拟机状态
+lua_State *L = NULL; // 公用Lua虚拟机状态
+char __mypath[101];
 
 static int common_delay(lua_State *L)
 {
@@ -95,9 +96,11 @@ void lua_execute(const char *filename)
         printf("Error: %s\n", lua_tostring(L, -1));
         lua_pop(L, 1);
     }
-    //luaL_dostring(L, "display.clearScreen()\ndisplay.display()\nprint(\"lua_execute\")\nbuzzer.append(1000, 100)\n");
+    // luaL_dostring(L, "display.clearScreen()\ndisplay.display()\nprint(\"lua_execute\")\nbuzzer.append(1000, 100)\n");
 }
 void closeLua()
 {
-    lua_close(L);
+    if (L)
+        lua_close(L);
+    L = NULL;
 }

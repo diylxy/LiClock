@@ -1,25 +1,25 @@
 #include <alarm.h>
-#include <SPIFFS.h>
+#include <LittleFS.h>
 
 Alarm alarms;
 
 void Alarm::load()
 {
-    // 从SPIFFS加载
-    if (SPIFFS.exists("/alarms.bin") == false)
+    // 从LittleFS加载
+    if (LittleFS.exists("/alarms.bin") == false)
     {
         clearAll();
         save();
         return;
     }
-    File f = SPIFFS.open("/alarms.bin");
+    File f = LittleFS.open("/alarms.bin");
     f.readBytes((char *)alarm_table, sizeof(alarm_table));
     f.close();
 }
 
 void Alarm::save()
 {
-    File f = SPIFFS.open("/alarms.bin", "w");
+    File f = LittleFS.open("/alarms.bin", "w");
     f.write((uint8_t *)alarm_table, sizeof(alarm_table));
     f.close();
 }

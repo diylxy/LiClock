@@ -398,16 +398,16 @@ void AppSettings::menu_other()
             {
                 if (GUI::msgbox_yn("此操作不可撤销", "是否恢复出厂设置？"))
                 {
-                    if (GUI::msgbox_yn("这是最后一次提示", "将格式化nvs和SPIFFS存储区", "取消（右）", "确认（左）") == false)
+                    if (GUI::msgbox_yn("这是最后一次提示", "将格式化nvs和LittleFS存储区", "取消（右）", "确认（左）") == false)
                     {
                         display.clearScreen();
                         u8g2Fonts.drawUTF8(30, 40, "正在格式化NVS存储");
                         display.display();
                         nvs_flash_erase();
-                        u8g2Fonts.drawUTF8(30, 40, "正在格式化SPIFFS存储");
+                        u8g2Fonts.drawUTF8(30, 40, "正在格式化LittleFS存储");
                         display.display(true);
-                        SPIFFS.end();
-                        SPIFFS.format();
+                        LittleFS.end();
+                        LittleFS.format();
                         u8g2Fonts.drawUTF8(30, 40, "完成，正在重启");
                         display.display(true);
                         ESP.restart();

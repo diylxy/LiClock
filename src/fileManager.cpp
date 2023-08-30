@@ -43,7 +43,7 @@ static const struct s_fileicondict fileicondict[] = {
     {NULL, NULL},
 };
 /**
- * 
+ *
 “lbm”格式定义：
 扩展名.lbm
 单色位图
@@ -69,16 +69,23 @@ namespace GUI
     void push_buffer();
     void pop_buffer();
     // 注意，下面这个函数完全没有考虑线程安全，no reentrent!!!
-    const char *fileDialog(const char *title)
+    const char *fileDialog(const char *title, bool isApp, const char *endsWidth)
     {
         // 首先选择文件系统
         bool useSD = false;
-        if (peripherals.isSDLoaded())
+        if (isApp == false)
         {
-            if (msgbox_yn("请选择文件系统", "左：SPIFFS\n右：TF 卡", "TF 卡", "SPIFFS"))
+            if (peripherals.isSDLoaded())
             {
-                useSD = true;
+                if (msgbox_yn("请选择文件系统", "左：LittleFS\n右：TF 卡", "TF 卡", "LittleFS"))
+                {
+                    useSD = true;
+                }
             }
+        }
+        else
+        {
+            useSD = true;
         }
         String cwd = "/";
         File root;
@@ -111,7 +118,7 @@ namespace GUI
             }
             else
             {
-                root = SPIFFS.open(cwd);
+                root = LittleFS.open(cwd);
             }
             if (cwd != "/")
                 cwd += "/";
@@ -123,6 +130,15 @@ namespace GUI
             while (file)
             {
                 String tmp = file.name();
+                String ext;
+                if (tmp.lastIndexOf('.') != -1)
+                {
+                    ext = tmp.substring(tmp.lastIndexOf('.') + 1);
+                }
+                else
+                {
+                    ext = "";
+                }
                 Serial.println(tmp);
                 if (tmp.endsWith(".i"))
                 {
@@ -130,23 +146,52 @@ namespace GUI
                     file = root.openNextFile();
                     continue;
                 }
-                if (file.isDirectory())
+                if (isApp == false)
                 {
-                    entries[total_entries].icon = folder_bits;
+                    if (file.isDirectory())
+                    {
+                        entries[total_entries].icon = folder_bits;
+                    }
+                    else
+                    {
+                        if (endsWidth != NULL)
+                        {
+                            if (strcmp(endsWidth, ext.c_str()) != 0)
+                            {
+                                continue;
+                            }
+                        }
+                        entries[total_entries].icon = getFileIcon(ext.c_str());
+                    }
+                    titles[total_entries] = (char *)malloc(strlen(file.name()) + 1);
+                    if (titles[total_entries] == NULL)
+                    {
+                        GUI::msgbox("严重错误", "[文件管理] 动态内存不足");
+                        ESP.restart();
+                    }
+                    strcpy(titles[total_entries], file.name());
+                    entries[total_entries].title = titles[total_entries];
+                    ++total_entries;
                 }
                 else
                 {
-                    entries[total_entries].icon = getFileIcon(tmp.substring(tmp.lastIndexOf('.') + 1).c_str());
+                    if (file.isDirectory())
+                    {
+                        if (ext == "app")
+                        {
+                            entries[total_entries].icon = luafile_bits;
+                            titles[total_entries] = (char *)malloc(strlen(file.name()) + 1);
+                            if (titles[total_entries] == NULL)
+                            {
+                                GUI::msgbox("严重错误", "[文件管理] 动态内存不足");
+                                ESP.restart();
+                            }
+                            strcpy(titles[total_entries], file.name());
+                            entries[total_entries].title = titles[total_entries];
+                            ++total_entries;
+                        }
+                    }
                 }
-                titles[total_entries] = (char *)malloc(strlen(file.name()) + 1);
-                if (titles[total_entries] == NULL)
-                {
-                    GUI::msgbox("严重错误", "[文件管理] 动态内存不足");
-                    ESP.restart();
-                }
-                strcpy(titles[total_entries], file.name());
-                entries[total_entries].title = titles[total_entries];
-                ++total_entries;
                 if (total_entries >= 128)
                 {
                     GUI::msgbox("严重错误", "文件数超过128个，即将重启");
@@ -196,7 +241,7 @@ namespace GUI
             }
             else
             {
-                sprintf(filedialog_buffer, "%s%s%s", useSD ? "/sd" : "/spiffs", cwd.c_str(), entries[selected].title);
+                sprintf(filedialog_buffer, "%s%s%s", useSD ? "/sd" : "/littlefs", cwd.c_str(), entries[selected].title);
                 break;
             }
         }

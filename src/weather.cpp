@@ -27,9 +27,12 @@ const char *weather_codes[WEATHER_TYPE_COUNT] =
 };
 void Weather::begin()
 {
-    File file = SPIFFS.open("/weather.bin", "r");
+    File file = LittleFS.open("/weather.bin", "r");
     if (!file)
+    {
+        Serial.println("无法打开天气文件，或天气不存在");
         return;
+    }
     file.readBytes((char *)&hour24, sizeof(hour24));
     file.readBytes((char *)&rain, sizeof(rain));
     file.readBytes((char *)&five_days, sizeof(five_days));
@@ -46,9 +49,12 @@ void Weather::begin()
 }
 void Weather::save()
 {
-    File file = SPIFFS.open("/weather.bin", "w");
+    File file = LittleFS.open("/weather.bin", "w");
     if (!file)
+    {
+        Serial.println("无法写入天气文件");
         return;
+    }
     file.write((uint8_t *)&hour24, sizeof(hour24));
     file.write((uint8_t *)&rain, sizeof(rain));
     file.write((uint8_t *)&five_days, sizeof(five_days));
@@ -70,6 +76,7 @@ int8_t Weather::refresh()
     http.addHeader("Accept", "*/*");
     http.addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36");
 
+    Serial.println("开始更新天气");
     int httpCode = http.GET();
 
     if (httpCode == HTTP_CODE_OK)
@@ -81,6 +88,7 @@ int8_t Weather::refresh()
         { // API失效
             http.end();
             doc.clear();
+            Serial.println("天气API已失效");
             return -3;
         }
         if (doc["result"]["alert"]["status"] == "ok")
@@ -135,10 +143,12 @@ int8_t Weather::refresh()
         doc.clear();
         lastupdate = hal.now;
         save();
+        Serial.println("天气更新成功");
     }
     else
     {
         http.end();
+        Serial.println("HTTP错误");
         return -2;
     }
     http.end();

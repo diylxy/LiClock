@@ -222,7 +222,7 @@
 
 #else			/* }{ */
 
-#define LUA_ROOT	"/spiffs/lua/"
+#define LUA_ROOT	"/littlefs/lua/"
 #define LUA_LDIR	LUA_ROOT
 #define LUA_CDIR	LUA_ROOT
 

@@ -256,11 +256,49 @@ static LStream *newfile (lua_State *L) {
   p->closef = &io_fclose;
   return p;
 }
+char __mypath[101];
+char __realfilepath[129];
 
+void setPath(const char *path)
+{
+    strncpy(__mypath, path, 100);
+}
 
+const char *getRealPath(const char *fpath)
+{
+  if(fpath[0] != '/')
+  {
+    // 相对目录
+    int len_mypath = strlen(__mypath);
+    if(fpath[0] == '.')
+    {
+      if(fpath[1] == '/')
+      {
+        strncpy(__realfilepath, __mypath, 128);
+        strncpy(__realfilepath + len_mypath, fpath + 1, 128 - len_mypath);
+        return __realfilepath;
+      }
+      else
+      {
+        if(fpath[1] == 0)
+        {
+          return __mypath;
+        }
+      }
+    }
+    else
+    {
+      strncpy(__realfilepath, __mypath, 128);
+      __realfilepath[len_mypath] = '/';
+      strncpy(__realfilepath + len_mypath + 1, fpath, 128 - len_mypath - 1);
+      return __realfilepath;
+    }
+  }
+  return fpath;
+}
 static void opencheck (lua_State *L, const char *fname, const char *mode) {
   LStream *p = newfile(L);
-  p->f = fopen(fname, mode);
+  p->f = fopen(getRealPath(fname), mode);
   if (l_unlikely(p->f == NULL))
     luaL_error(L, "cannot open file '%s' (%s)", fname, strerror(errno));
 }
@@ -272,7 +310,7 @@ static int io_open (lua_State *L) {
   LStream *p = newfile(L);
   const char *md = mode;  /* to traverse/check mode */
   luaL_argcheck(L, l_checkmode(md), 2, "invalid mode");
-  p->f = fopen(filename, mode);
+  p->f = fopen(getRealPath(filename), mode);
   return (p->f == NULL) ? luaL_fileresult(L, 0, filename) : 1;
 }
 

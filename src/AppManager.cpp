@@ -3,7 +3,7 @@ AppManager appManager;
 #define MAX_APP_COUNT 128
 AppBase *appList[MAX_APP_COUNT];
 int tail = 0;
-int RTC_DATA_ATTR latest_appid = -1;
+char RTC_DATA_ATTR latest_appname[36] = "";
 void appList_push_back(AppBase *app)
 {
     appList[tail++] = app;
@@ -23,27 +23,20 @@ AppBase::~AppBase()
 {
 }
 
-int AppManager::getIDByName(const char *appName)
+AppBase *AppManager::getPtrByName(const char *appName)
 {
     for (int16_t i = 0; i < tail; i++)
     {
         if (strcmp(appList[i]->name, appName) == 0)
-            return appList[i]->appID;
+            return appList[i];
     }
-    return -1;
+    return NULL;
 }
 
-void AppManager::gotoApp(int appID)
+void AppManager::gotoApp(AppBase *appPtr)
 {
     AppBase *app_to = NULL;
-    for (int16_t i = 0; i < tail; i++)
-    {
-        if (appList[i]->appID == appID)
-        {
-            app_to = appList[i];
-            break;
-        }
-    }
+    app_to = appPtr;
     if (app_to == NULL)
         return;
     this->app_to = app_to;
@@ -154,7 +147,7 @@ void AppManager::showAppList()
     }
     realAppCount = count - 1;
 }
-int AppManager::appSelector()
+AppBase *AppManager::appSelector()
 {
     display.swapBuffer(1);
     display.clearScreen();
@@ -246,8 +239,8 @@ int AppManager::appSelector()
         display.swapBuffer(0);
     }
     if (selected == 0)
-        return 0;
-    return realAppList[selected - 1]->appID + 1; // 这里没问题
+        return NULL;
+    return realAppList[selected - 1]; // 这里没问题
 }
 
 void AppManager::update()
@@ -259,11 +252,12 @@ void AppManager::update()
     if (method == APPMANAGER_SHOWAPPSELECTOR)
     {
         method = APPMANAGER_NOOPERATION;
-        int res = appSelector();
-        if (res != 0)
+        AppBase *res = appSelector();
+        if (res != NULL)
         {
-            this->app_to = appList[res - 1];
+            this->app_to = res;
             method = APPMANAGER_GOTOAPP;
+            Serial.printf("正在跳转到APP：%d:%s\n", app_to->appID, app_to->name);
             return;
         }
         updateAgain = true;
@@ -289,7 +283,7 @@ void AppManager::update()
         nextWakeup = 0;
         noDeepSleep = false;
         currentApp = app_to;
-        latest_appid = app_to->appID;
+        strncpy(latest_appname, app_to->name, 36);
         hal.setWakeupIO(currentApp->wakeupIO[0], currentApp->wakeupIO[1]);
         if (currentApp->noDefaultEvent)
             hal.detachAllButtonEvents();
@@ -313,7 +307,7 @@ void AppManager::update()
         // 然后准备环境
         currentApp = appStack.top();
         appStack.pop();
-        latest_appid = currentApp->appID;
+        strncpy(latest_appname, currentApp->name, 36);
         fTimer = NULL;
         timer_interval = 0;
         nextWakeup = 0;
@@ -437,18 +431,18 @@ void AppManager::attachLocalEvent()
 }
 void AppManager::gotoAppBoot(const char *appName)
 {
-    appStack.push(appList[getRealClock()]);
+    appStack.push(getRealClock());
     gotoApp(appName);
 }
 
 bool AppManager::recover()
 {
-    if (latest_appid != -1)
+    if (latest_appname[0] != 0)
     {
         Serial.print("重新打开上个APP：");
-        Serial.println(latest_appid);
-        appStack.push(appList[getRealClock()]);
-        gotoApp(latest_appid);
+        Serial.println(latest_appname);
+        appStack.push(getRealClock());
+        gotoApp(latest_appname);
         return true;
     }
     return false;

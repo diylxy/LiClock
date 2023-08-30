@@ -21,9 +21,24 @@ int appmanager_goBack(lua_State *L)
     return 0;
 }
 
+int appmanager_nextWakeup(lua_State *L)
+{
+    if(lua_gettop(L) == 1)
+    {
+        int nextwakeup = luaL_checkinteger(L, 1);
+        appManager.nextWakeup = nextwakeup;
+    }
+    else
+    {
+        appManager.nextWakeup = 0;
+    }
+    return 0;
+}
+
 static const luaL_Reg _lualib[] = {
     {"gotoApp", appmanager_gotoApp},
     {"goBack", appmanager_goBack},
+    {"nextWakeup", appmanager_nextWakeup},
     {NULL, NULL},
 };
 

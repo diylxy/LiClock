@@ -15,7 +15,7 @@
 #include "esp_task_wdt.h"
 #include <driver/rtc_io.h>
 #include <esp_netif.h>
-#include <SPIFFS.h>
+#include <LittleFS.h>
 #define SCREEN_WIDTH 296
 #define SCREEN_HEIGHT 128
 #define PIN_ADC 33
@@ -93,3 +93,5 @@ const uint8_t *getBatteryIcon();
 #include "peripherals.h"
 #include "Buzzer.h"
 #include "lua_trans.h"
+extern const char *getRealPath(const char *fpath);
+extern void setPath(const char *path);

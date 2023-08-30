@@ -99,13 +99,14 @@ void AppInstaller::loadApp(const String path) // 加载TF卡App
     app_lua.init();
     app_lua.peripherals_requested = PERIPHERALS_SD_BIT;
     app_lua._showInList = false;
+    app_lua._reentrant = false;
     appManager.gotoApp(&app_lua);
 }
 bool AppInstaller::install(const String path)
 {
     std::list<String> filenames;
     File root, file;
-    filenames.push_back("/");
+    filenames.push_back(path);
     while (filenames.empty() == false)
     {
         root = SD.open(filenames.back());
@@ -115,6 +116,7 @@ bool AppInstaller::install(const String path)
             Serial.println("[文件] 无法打开目录");
             continue;
         }
+        LittleFS.mkdir(path);
         file = root.openNextFile();
         while (file)
         {
@@ -243,7 +245,7 @@ void AppInstaller::menu_local()
         case 0:
             break;
         case 1:
-            appManager.gotoApp(appList[appIdx].title);
+            loadApp(appList[appIdx].title);
             end = true;
             delete appList;
             return;
@@ -285,6 +287,7 @@ void AppInstaller::menu_tf()
             break;
         case 1:
             loadApp(appPath);
+            end = true;
             return;
             break;
         case 2:

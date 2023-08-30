@@ -32,8 +32,21 @@ void LuaAppWrapper::init()
 {
     if (file_exist((path + "/conf.lua").c_str()))
     {
-        closeLua();
+        Serial.print("文件存在: ");
+        Serial.println(path);
+        // closeLua();
         openLua();
+        lua_pushstring(L, "无标题");
+        lua_setglobal(L, "title");
+        lua_pushinteger(L, PIN_BUTTONC);
+        lua_setglobal(L, "wakeupIO1");
+        lua_pushinteger(L, PIN_BUTTONL);
+        lua_setglobal(L, "wakeupIO2");
+        lua_pushboolean(L, false);
+        lua_setglobal(L, "noDefaultEvent");
+        lua_pushinteger(L, 0);
+        lua_setglobal(L, "peripherals_requested");
+
         lua_execute((path + "/conf.lua").c_str());
         lua_getglobal(L, "title");
         if (lua_isstring(L, -1))
@@ -177,7 +190,7 @@ void newLuaApp(const String filename, const String path)
     {
         return;
     }
-    Serial.printf("[文件] 新的LuaApp: %s (%s)\n", filename.c_str(), path.c_str());
+    // Serial.printf("[文件] 新的LuaApp: %s (%s)\n", filename.c_str(), path.c_str());
     LuaAppWrapper *ptr = new LuaAppWrapper(filename, path);
     ptr->init();
 }

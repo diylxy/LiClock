@@ -75,6 +75,9 @@ static int common_pinMode(lua_State *L)
 
 void openLua()
 {
+    if (L)
+        return;
+    Serial.println("Lua 初始化");
     L = luaL_newstate();
     luaL_openlibs(L);
     lua_pushcfunction(L, common_delay);

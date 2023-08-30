@@ -35,11 +35,9 @@ AppBase *AppManager::getPtrByName(const char *appName)
 
 void AppManager::gotoApp(AppBase *appPtr)
 {
-    AppBase *app_to = NULL;
-    app_to = appPtr;
-    if (app_to == NULL)
+    if (appPtr == NULL)
         return;
-    this->app_to = app_to;
+    this->app_to = appPtr;
     method = APPMANAGER_GOTOAPP;
 }
 
@@ -381,7 +379,8 @@ void AppManager::update()
         nextWakeup = 0;
         noDeepSleep = false;
         currentApp = app_to;
-        strncpy(latest_appname, app_to->name, 36);
+        if (currentApp->_reentrant)
+            strncpy(latest_appname, app_to->name, 36);
         hal.setWakeupIO(currentApp->wakeupIO[0], currentApp->wakeupIO[1]);
         if (currentApp->noDefaultEvent)
             hal.detachAllButtonEvents();
@@ -405,7 +404,8 @@ void AppManager::update()
         // 然后准备环境
         currentApp = appStack.top();
         appStack.pop();
-        strncpy(latest_appname, currentApp->name, 36);
+        if (currentApp->_reentrant)
+            strncpy(latest_appname, currentApp->name, 36);
         fTimer = NULL;
         timer_interval = 0;
         nextWakeup = 0;

@@ -15,21 +15,6 @@ void task_appManager(void *)
 void setup()
 {
     bool initResult = hal.init();
-    if (LittleFS.exists("/test.app") == false)
-    {
-        LittleFS.mkdir("/test.app");
-        File f = LittleFS.open("/test.app/conf.lua", "w");
-        f.print("title = \"测试\"\n");
-        f.close();
-        f = LittleFS.open("/test.app/main.lua", "w");
-        f.print("function setup()\n");
-        f.print("    print(\"Hello World!\")\n");
-        f.print("    buzzer.append(1000, 100)\n");
-        f.print("end\n");
-        f.print("buzzer.append(2000, 100)\n");
-        f.print("buzzer.append(0, 100)\n");
-        f.close();
-    }
     Serial.println(ESP.getFreeHeap());
     searchForLuaAPP();
     Serial.println(ESP.getFreeHeap());
@@ -83,3 +68,20 @@ void loop()
     vTaskDelete(NULL);
     vTaskDelay(portMAX_DELAY);
 }
+
+    /*
+    if (LittleFS.exists("/test.app") == false)
+    {
+        LittleFS.mkdir("/test.app");
+        File f = LittleFS.open("/test.app/conf.lua", "w");
+        f.print("title = \"测试\"\n");
+        f.close();
+        f = LittleFS.open("/test.app/main.lua", "w");
+        f.print("function setup()\n");
+        f.print("    print(\"Hello World!\")\n");
+        f.print("    buzzer.append(1000, 100)\n");
+        f.print("end\n");
+        f.print("buzzer.append(2000, 100)\n");
+        f.print("buzzer.append(0, 100)\n");
+        f.close();
+    }*/

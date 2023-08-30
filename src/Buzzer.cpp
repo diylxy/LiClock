@@ -11,24 +11,31 @@ static uint32_t current_start = 0;
 static void _mybuzz()
 {
     int32_t now_duty = 511;
-    ledcWriteTone(0, current_buzz.freq);
-    current_start = millis();
-    while (millis() - current_start < current_buzz.duration)
+    if (current_buzz.freq == 0)
     {
-        ledcWrite(0, now_duty);
-        if (now_duty > 200)
-            now_duty -= 20;
-        else if (now_duty > 100)
-            now_duty -= 15;
-        else if (now_duty > 50)
-            now_duty -= 10;
-        else if (now_duty > 10)
-            now_duty -= 7;
-        else if (now_duty > 0)
-            now_duty -= 4;
-        else
-            now_duty = 0;
-        delay(20);
+        delay(current_buzz.duration);
+    }
+    else
+    {
+        ledcWriteTone(0, current_buzz.freq);
+        current_start = millis();
+        while (millis() - current_start < current_buzz.duration)
+        {
+            ledcWrite(0, now_duty);
+            if (now_duty > 200)
+                now_duty -= 20;
+            else if (now_duty > 100)
+                now_duty -= 15;
+            else if (now_duty > 50)
+                now_duty -= 10;
+            else if (now_duty > 10)
+                now_duty -= 7;
+            else if (now_duty > 0)
+                now_duty -= 4;
+            else
+                now_duty = 0;
+            delay(20);
+        }
     }
     ledcWriteTone(0, 0);
 }

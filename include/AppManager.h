@@ -17,6 +17,7 @@ public:
     bool noDefaultEvent = false;                  // 禁用默认按钮事件
     uint16_t peripherals_requested = 0;           // 请求的外设
     bool isLuaApp = false;                        // 是否是LuaApp
+    bool _reentrant = true;                       // 阻止休眠后重新打开，用于某些只能运行一次的App或临时App对象
 
     /**
      * @brief 初始化(App打开)
@@ -94,8 +95,8 @@ public:
     void gotoAppBoot(const char *appName);
     bool recover();
     void goBack();
-    void showAppList(int page);     // 显示Applist
-    AppBase *appSelector(); // 显示Applist并等待用户输入
+    void showAppList(int page); // 显示Applist
+    AppBase *appSelector();     // 显示Applist并等待用户输入
     void update();
     String parameter = "";                        // 传递的参数，会在goto目标app的setup执行完后自动清空
     String result = "";                           // 传递的返回值，不会自动清空

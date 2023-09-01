@@ -22,7 +22,7 @@ public:
         title = "网页配置";
         description = "通过网页配置此设备";
         image = webserver_bits;
-        _showInList = false;
+        _showInList = true;
     }
     void setup();
 };

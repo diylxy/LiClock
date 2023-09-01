@@ -245,7 +245,7 @@ void AppInstaller::menu_local()
         case 0:
             break;
         case 1:
-            loadApp(appList[appIdx].title);
+            appManager.gotoApp(appList[appIdx].title);
             end = true;
             delete appList;
             return;
@@ -254,7 +254,7 @@ void AppInstaller::menu_local()
             if (GUI::msgbox_yn("请确认", "是否确认卸载？此操作不可逆") == true)
             {
                 hal.rm_rf(("/littlefs/" + String(appList[appIdx].title)).c_str());
-                GUI::msgbox("删除成功", "App卸载成功，重启后生效");
+                GUI::msgbox("删除成功", "App卸载成功");
             }
             break;
         case 3:

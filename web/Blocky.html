@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Blockly IDE-天气时钟</title>
+    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+    <script src="https://unpkg.com/blockly/blocks_compressed.js"></script>
+    <script src="https://unpkg.com/blockly/lua_compressed"></script>
+    <script src="https://unpkg.com/blockly/msg/zh-hans.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        #textarea_code {
+            height: 400px;
+            margin: 1%;
+            overflow-y: scroll;
+            overflow-x: scroll;
+            resize: none;
+        }
+
+        #textarea_terminal {
+            height: 200px;
+            margin: 1%;
+            overflow-y: scroll;
+            overflow-x: scroll;
+            resize: none;
+        }
+
+        #alertContainer {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .globalContainer {
+            margin-bottom: 20px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            padding-left: 10px;
+            padding-right: 20px;
+            border-radius: 6px;
+        }
+
+        #everything {
+            border: 1px solid #666;
+            margin-bottom: 10px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            padding-left: 20px;
+            padding-right: 20px;
+            border-radius: 15px;
+        }
+
+        .btn {
+            margin-top: 5px;
+        }
+    </style>
+    <link rel="stylesheet" href="css/csss.css" />
+    <script>
+        function displayJson(code, succ) {
+            if (code === 1) {
+                var alertDiv = '<div class="alert alert-danger shadow-5">' + succ + '</div>';
+            }
+            else {
+                var alertDiv = '<div class="alert alert-success shadow-5">' + succ + '</div>';
+            }
+            $("#alertContainer").html(alertDiv);
+            $("#alertContainer .alert").css({ opacity: 0, top: "-50px" }).animate({ opacity: 1, top: "0px" }, 500, "easeOutCirc");
+            setTimeout(function () {
+                $("#alertContainer .alert").css({ top: "0px", opacity: 1 }).animate({ top: "50px", opacity: 0 }, 300, "easeInCirc", function () {
+                    $(this).remove();
+                });
+            }, 1000);
+        }
+    </script>
+</head>
+
+<body>
+    <xml xmlns="https://developers.google.com/blockly/xml" id="toolbox" style="display: none">
+        <category name="逻辑" colour="#5b80a5">
+            <block type="controls_if"></block>
+            <block type="logic_compare">
+                <field name="OP">EQ</field>
+            </block>
+            <block type="logic_operation">
+                <field name="OP">AND</field>
+            </block>
+            <block type="logic_negate"></block>
+            <block type="logic_boolean">
+                <field name="BOOL">TRUE</field>
+            </block>
+            <block type="logic_null"></block>
+            <block type="logic_ternary"></block>
+        </category>
+        <category name="循环" colour="#5ba55b">
+            <block type="controls_repeat_ext">
+                <value name="TIMES">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="controls_whileUntil">
+                <field name="MODE">WHILE</field>
+            </block>
+            <block type="controls_for">
+                <field name="VAR" id="Ti}5D1hw${5:U?W=wBh8">i</field>
+                <value name="FROM">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+                <value name="TO">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+                <value name="BY">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="controls_forEach">
+                <field name="VAR" id="S0YZ6ob}|]_Bo~+i|#eF">j</field>
+            </block>
+            <block type="controls_flow_statements">
+                <field name="FLOW">BREAK</field>
+            </block>
+        </category>
+        <category name="数学" colour="#5b67a5">
+            <block type="math_number">
+                <field name="NUM">0</field>
+            </block>
+            <block type="math_arithmetic">
+                <field name="OP">ADD</field>
+                <value name="A">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+                <value name="B">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_single">
+                <field name="OP">ROOT</field>
+                <value name="NUM">
+                    <shadow type="math_number">
+                        <field name="NUM">9</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_trig">
+                <field name="OP">SIN</field>
+                <value name="NUM">
+                    <shadow type="math_number">
+                        <field name="NUM">45</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_constant">
+                <field name="CONSTANT">PI</field>
+            </block>
+            <block type="math_number_property">
+                <mutation divisor_input="false"></mutation>
+                <field name="PROPERTY">EVEN</field>
+                <value name="NUMBER_TO_CHECK">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_round">
+                <field name="OP">ROUND</field>
+                <value name="NUM">
+                    <shadow type="math_number">
+                        <field name="NUM">3.1</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_on_list">
+                <mutation op="SUM"></mutation>
+                <field name="OP">SUM</field>
+            </block>
+            <block type="math_modulo">
+                <value name="DIVIDEND">
+                    <shadow type="math_number">
+                        <field name="NUM">64</field>
+                    </shadow>
+                </value>
+                <value name="DIVISOR">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_constrain">
+                <value name="VALUE">
+                    <shadow type="math_number">
+                        <field name="NUM">50</field>
+                    </shadow>
+                </value>
+                <value name="LOW">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+                <value name="HIGH">
+                    <shadow type="math_number">
+                        <field name="NUM">100</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_random_int">
+                <value name="FROM">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+                <value name="TO">
+                    <shadow type="math_number">
+                        <field name="NUM">100</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_random_float"></block>
+        </category>
+        <category name="文本" colour="#5ba58c">
+            <block type="text">
+                <field name="TEXT"></field>
+            </block>
+            <block type="text_join">
+                <mutation items="2"></mutation>
+            </block>
+            <block type="text_append">
+                <field name="VAR" id="LnYl?}}Qz)_#W3%pQv47">item</field>
+                <value name="TEXT">
+                    <shadow type="text">
+                        <field name="TEXT"></field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="text_length">
+                <value name="VALUE">
+                    <shadow type="text">
+                        <field name="TEXT">abc</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="text_isEmpty">
+                <value name="VALUE">
+                    <shadow type="text">
+                        <field name="TEXT"></field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="text_indexOf">
+                <field name="END">FIRST</field>
+                <value name="VALUE">
+                    <block type="variables_get">
+                        <field name="VAR" id="]c)#!r$NUqcvTNkyjG%k">text</field>
+                    </block>
+                </value>
+                <value name="FIND">
+                    <shadow type="text">
+                        <field name="TEXT">abc</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="text_charAt">
+                <mutation at="true"></mutation>
+                <field name="WHERE">FROM_START</field>
+                <value name="VALUE">
+                    <block type="variables_get">
+                        <field name="VAR" id="]c)#!r$NUqcvTNkyjG%k">text</field>
+                    </block>
+                </value>
+            </block>
+            <block type="text_getSubstring">
+                <mutation at1="true" at2="true"></mutation>
+                <field name="WHERE1">FROM_START</field>
+                <field name="WHERE2">FROM_START</field>
+                <value name="STRING">
+                    <block type="variables_get">
+                        <field name="VAR" id="]c)#!r$NUqcvTNkyjG%k">text</field>
+                    </block>
+                </value>
+            </block>
+            <block type="text_changeCase">
+                <field name="CASE">UPPERCASE</field>
+                <value name="TEXT">
+                    <shadow type="text">
+                        <field name="TEXT">abc</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="text_trim">
+                <field name="MODE">BOTH</field>
+                <value name="TEXT">
+                    <shadow type="text">
+                        <field name="TEXT">abc</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="text_print">
+                <value name="TEXT">
+                    <shadow type="text">
+                        <field name="TEXT">abc</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="text_prompt_ext">
+                <mutation type="TEXT"></mutation>
+                <field name="TYPE">TEXT</field>
+                <value name="TEXT">
+                    <shadow type="text">
+                        <field name="TEXT">abc</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+        <category name="列表" colour="#745ba5">
+            <block type="lists_create_with">
+                <mutation items="0"></mutation>
+            </block>
+            <block type="lists_create_with">
+                <mutation items="3"></mutation>
+            </block>
+            <block type="lists_repeat">
+                <value name="NUM">
+                    <shadow type="math_number">
+                        <field name="NUM">5</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="lists_length"></block>
+            <block type="lists_isEmpty"></block>
+            <block type="lists_indexOf">
+                <field name="END">FIRST</field>
+                <value name="VALUE">
+                    <block type="variables_get">
+                        <field name="VAR" id="e@y)^STcH%Wes?`Hr($:">list</field>
+                    </block>
+                </value>
+            </block>
+            <block type="lists_getIndex">
+                <mutation statement="false" at="true"></mutation>
+                <field name="MODE">GET</field>
+                <field name="WHERE">FROM_START</field>
+                <value name="VALUE">
+                    <block type="variables_get">
+                        <field name="VAR" id="e@y)^STcH%Wes?`Hr($:">list</field>
+                    </block>
+                </value>
+            </block>
+            <block type="lists_setIndex">
+                <mutation at="true"></mutation>
+                <field name="MODE">SET</field>
+                <field name="WHERE">FROM_START</field>
+                <value name="LIST">
+                    <block type="variables_get">
+                        <field name="VAR" id="e@y)^STcH%Wes?`Hr($:">list</field>
+                    </block>
+                </value>
+            </block>
+            <block type="lists_getSublist">
+                <mutation at1="true" at2="true"></mutation>
+                <field name="WHERE1">FROM_START</field>
+                <field name="WHERE2">FROM_START</field>
+                <value name="LIST">
+                    <block type="variables_get">
+                        <field name="VAR" id="e@y)^STcH%Wes?`Hr($:">list</field>
+                    </block>
+                </value>
+            </block>
+            <block type="lists_split">
+                <mutation mode="SPLIT"></mutation>
+                <field name="MODE">SPLIT</field>
+                <value name="DELIM">
+                    <shadow type="text">
+                        <field name="TEXT">,</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="lists_sort">
+                <field name="TYPE">NUMERIC</field>
+                <field name="DIRECTION">1</field>
+            </block>
+        </category>
+        <category name="屏幕" colour="#5b67a5">
+            <block type="display_drawlbm">
+                <field name="color">black</field>
+                <value name="pos_x1">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="pos_y1">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="file">
+                    <shadow type="text">
+                        <field name="TEXT">./icon.lbm</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="display_clearscreen">
+                <field name="color">white</field>
+            </block>
+            <block type="display_display">
+                <field name="refreshtype">full</field>
+            </block>
+            <block type="display_displaywindow">
+                <value name="pos_x">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="pos_y">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="pos_w">
+                    <shadow type="math_number">
+                        <field name="NUM">296</field>
+                    </shadow>
+                </value>
+                <value name="pos_h">
+                    <shadow type="math_number">
+                        <field name="NUM">128</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="display_setcursor">
+                <value name="pos_x">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="pos_y">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="display_u8g2print">
+                <value name="str">
+                    <shadow type="text">
+                        <field name="TEXT">你好，世界</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="display_print">
+                <value name="str">
+                    <shadow type="text">
+                        <field name="TEXT">Hello, World!</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="display_settextcolor">
+                <field name="color">black</field>
+            </block>
+            <block type="display_setbackgroundcolor">
+                <field name="color">white</field>
+            </block>
+            <block type="display_drawline">
+                <field name="color">black</field>
+                <value name="pos_x1">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="pos_y1">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="pos_x2">
+                    <shadow type="math_number">
+                        <field name="NUM">296</field>
+                    </shadow>
+                </value>
+                <value name="pos_y2">
+                    <shadow type="math_number">
+                        <field name="NUM">128</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="display_drawpixel">
+                <field name="color">black</field>
+                <value name="pos_x1">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="pos_y1">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="display_drawrect">
+                <field name="color">black</field>
+                <value name="pos_x">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="pos_y">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="pos_w">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+                <value name="pos_h">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="display_fillrect">
+                <field name="color">black</field>
+                <value name="pos_x">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="pos_y">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="pos_w">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+                <value name="pos_h">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="display_drawroundrect">
+                <field name="color">black</field>
+                <value name="pos_x">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="pos_y">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="pos_w">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+                <value name="pos_h">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+                <value name="radius">
+                    <shadow type="math_number">
+                        <field name="NUM">3</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="display_fillroundrect">
+                <field name="color">black</field>
+                <value name="pos_x">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="pos_y">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="pos_w">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+                <value name="pos_h">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+                <value name="radius">
+                    <shadow type="math_number">
+                        <field name="NUM">3</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="display_drawcircle">
+                <field name="color">black</field>
+                <value name="pos_x">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+                <value name="pos_y">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+                <value name="radius">
+                    <shadow type="math_number">
+                        <field name="NUM">5</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="display_fillcircle">
+                <field name="color">black</field>
+                <value name="pos_x">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+                <value name="pos_y">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+                <value name="radius">
+                    <shadow type="math_number">
+                        <field name="NUM">5</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="display_setfont">
+                <field name="font">0</field>
+            </block>
+            <block type="display_getcursorx"></block>
+            <block type="display_getcursory"></block>
+            <block type="display_u8g2getcursorx"></block>
+            <block type="display_u8g2getcursory"></block>
+            <block type="display_setpartialwindow">
+                <value name="pos_x">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="pos_y">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="pos_w">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+                <value name="pos_h">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="display_setfullwindow"></block>
+        </category>
+        <sep></sep>
+        <category name="变量" colour="#a55b80" custom="VARIABLE"></category>
+        <category name="函数" colour="#995ba5" custom="PROCEDURE"></category>
+    </xml>
+    <div class="modal fade" id="modalFileList" tabindex="-1" aria-labelledby="modalFileListLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalFileListLabel">文件管理</h5>
+                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6 id="html_cwd">
+                        当前目录：
+                    </h6>
+                    <div class="progress" style="height: 20px;">
+                        <div id="uploadProgress" class="progress-bar" role="progressbar" style="width: 0%;"></div>
+                    </div>
+                    <table class="table table-striped table-sm" id="tableFile">
+                        <tbody>
+                            <tr>
+                                <td>加载中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="btnMkDir" data-mdb-toggle="modal"
+                        data-mdb-target="#modalNewFolder"><i class="fa fa-folder fa-lg" aria-hidden="true"></i></button>
+                    <button type="button" class="btn btn-primary" id="btnGoBack">上级目录</button>
+                    <button type="button" class="btn btn-warning" id="btnUpload">上传</button>
+                    <button type="button" class="btn btn-danger" id="btnDeleteFolder">删除文件夹</button>
+                    <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modalFilePreview" tabindex="-1" aria-labelledby="modalFilePreviewLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalFilePreviewLabel">文件预览</h5>
+                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="filePreviewBody">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-info" data-mdb-dismiss="modal" id="btnRename">重命名</button>
+                    <button type="button" class="btn btn-info" data-mdb-dismiss="modal"
+                        id="btnDownloadPreview">下载</button>
+                    <button type="button" class="btn btn-danger" data-mdb-dismiss="modal"
+                        id="btnDeletePreview">删除</button>
+                    <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modalCreateApp" tabindex="-1" aria-labelledby="modalCreateAppLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCreateAppLabel">创建App</h5>
+                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>此操作会将webtmp文件夹中的main.lua以及其它文件复制到相应App文件夹，并创建conf.lua配置文件。<br />如果还没有上传lua文件，请先点击“上传并运行”，或者手动上传main.lua到webtmp目录
+                    </p>
+                    <p style="color: red;">我没有写参数合法性检查，请仔细检查后再创建，否则可能会损坏你的设备</p>
+                    <hr />
+                    <input type="text" id="appName" class="form-control singleLineTxt"
+                        placeholder="App 唯一标识（只能用数字和英文，无特殊符号，最长32个字符）"></input>
+                    <input type="text" id="appTitle" class="form-control singleLineTxt"
+                        placeholder="App 显示名称（显示在App列表，可以是中文）"></input>
+                    <textarea id="appConf" class="form-control" placeholder="其它设置（直接追加到conf.lua文件）"
+                        style="height: 100px; width: auto;"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" data-mdb-dismiss="modal" id="btnCreateApp">创建</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modalRename" tabindex="-1" aria-labelledby="modalRenameLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalRenameLabel">重命名</h5>
+                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="input_newFileName" class="form-control singleLineTxt"
+                        placeholder="请输入新文件名"></input>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" data-mdb-dismiss="modal"
+                        id="btnRenameConfirm">确认</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modalNewFolder" tabindex="-1" aria-labelledby="modalNewFolderLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalNewFolderLabel">新建文件夹</h5>
+                    <button type="button" class="btn-close" data-mdb-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="input_Mkdir" class="form-control singleLineTxt"
+                        placeholder="请输入新文件夹名"></input>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" data-mdb-toggle="modal"
+                        data-mdb-target="#modalFileList" id="btnMkdirConfirm">确认</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div id="everything">
+            <div class="row">
+                <div id="blocklyArea" class="col-sm-8 globalContainer alert-warning shadow-4"
+                    style="width: fit-content; margin: 1%;">
+                    <div id="blocklyDiv" style="width: 800px; height: 800px; left: 0px; top: 0px;"></div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="row globalContainer alert-info shadow-4">
+                        <textarea id="textarea_code" wrap="off" placeholder="这里将会是main.lua的内容"></textarea>
+                    </div>
+                    <div class="row globalContainer alert-success shadow-4">
+                        <textarea id="textarea_terminal" wrap="off" placeholder="这里是Lua输出" readonly="true"></textarea>
+                    </div>
+                    <div id="toolsArea" class="row globalContainer alert-primary shadow-4">
+                        <div>
+                            <button id="btnSave" class="btn btn-primary">保存工程</button>
+                            <input type="file" id="fileInput" style="visibility: hidden; width: 0px;height: 0px;">
+                            <button id="btnLoad" class="btn btn-primary">加载工程</button>
+                            <button type="button" class="btn btn-info" data-mdb-toggle="modal"
+                                data-mdb-target="#modalFileList" id="btnOpenFileManager">
+                                文件管理
+                            </button>
+                        </div>
+                    </div>
+                    <div id="toolsArea" class="row globalContainer alert-primary shadow-4">
+                        <div>
+                            <button type="button" class="btn btn-warning" id="btnUploadAndRun">上传并运行</button>
+                            <button type="button" class="btn btn-info" id="btnClearTerminal">清空终端</button>
+                            <button type="button" class="btn btn-danger" id="btnForceStop">强行停止</button>
+                            <button type="button" class="btn btn-primary" data-mdb-toggle="modal"
+                                data-mdb-target="#modalCreateApp">
+                                创建App
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button type="button" data-mdb-toggle="modal" data-mdb-target="#modalFilePreview" id="openFilePreview"
+        style="display: none;">
+        文件预览
+    </button>
+    <button type="button" data-mdb-toggle="modal" data-mdb-target="#modalRename" id="btnToggleRenameModal"
+        style="display: none;">
+        重命名
+    </button>
+    <input style="visibility: hidden;" id="fileManagerCurrent" />
+    <div id="alertContainer"></div>
+    <script src="./js/jss.js"></script>
+    <script>
+        var toolbox = document.getElementById("toolbox");
+        var blocklyDiv = document.getElementById('blocklyDiv');
+        var blocklyArea = document.getElementById('blocklyArea');
+        var demoWorkspace = Blockly.inject(blocklyDiv, {
+            toolbox: toolbox,
+            collapse: true,
+            comments: true,
+            disable: true,
+            maxBlocks: Infinity,
+            trashcan: true,
+            horizontalLayout: false,
+            toolboxPosition: 'start',
+            css: true,
+            media: 'https://unpkg.com/blockly/media',
+            rtl: false,
+            scrollbars: true,
+            sounds: true,
+            oneBasedIndex: true
+        });
+
+        function updateCode(event) {
+            const code = lua.luaGenerator.workspaceToCode(demoWorkspace);
+            document.getElementById('textarea_code').value = code;
+        }
+        demoWorkspace.addChangeListener(updateCode);
+
+        const btnSave = document.getElementById('btnSave')
+        // 给按钮添加点击事件
+        btnSave.onclick = () => {
+            const state = Blockly.serialization.workspaces.save(demoWorkspace);
+            // 要保存的字符串, 需要先将数据转成字符串
+            const stringData = JSON.stringify(state, null, 2)
+            // dada 表示要转换的字符串数据，type 表示要转换的数据格式
+            const blob = new Blob([stringData], {
+                type: 'application/json'
+            })
+            // 根据 blob生成 url链接
+            const objectURL = URL.createObjectURL(blob)
+            // 创建一个 a 标签Tag
+            const aTag = document.createElement('a')
+            // 设置文件的下载地址
+            aTag.href = objectURL
+            // 设置保存后的文件名称
+            aTag.download = "工程.json"
+            // 给 a 标签添加点击事件
+            aTag.click()
+            // 释放一个之前已经存在的、通过调用 URL.createObjectURL() 创建的 URL 对象。
+            // 当你结束使用某个 URL 对象之后，应该通过调用这个方法来让浏览器知道不用在内存中继续保留对这个文件的引用了。
+            URL.revokeObjectURL(objectURL)
+        }
+        btnLoad.onclick = () => {
+            var fileInput = document.getElementById("fileInput");
+            fileInput.click();  // 模拟点击文件输入框
+
+            fileInput.addEventListener("change", function (event) {
+                var selectedFile = event.target.files[0];  // 获取用户选择的文件
+                console.log("用户选择的文件：", selectedFile);
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var contents = e.target.result;
+                    Blockly.serialization.workspaces.load(JSON.parse(contents), demoWorkspace);
+                };
+                reader.readAsText(selectedFile);
+            });
+
+        }
+
+    </script>
+    <script src="js/toolbox_display.js"></script>
+    <!--websocket-->
+    <script>
+        var socket = new WebSocket('ws://' + document.domain + '/ws');
+        socket.onopen = function () {
+            displayJson(0, "WebSocket终端已连接");
+        }
+        socket.onmessage = function (event) {
+            console.log(event.data);
+            textarea_terminal = document.getElementById('textarea_terminal');
+            textarea_terminal.value += (event.data);
+        };
+        window.onclose = function (event) {
+            socket.close();
+        }
+    </script>
+    <script>
+        var cwd = '/';
+        var currentFilePath = '/';
+        var currentFileName = '/';
+        var fileManagerCurrent = document.getElementById('fileManagerCurrent');
+        function updir() {
+            if (cwd.lastIndexOf("/") != 0) {
+                cwd = cwd.substring(0, cwd.lastIndexOf("/"));
+            }
+            else {
+                cwd = '/';
+            }
+            console.log(cwd);
+        }
+        function gotodir(filename) {
+            if (cwd != "/") {
+                cwd += "/"
+            }
+            cwd += filename;
+        }
+        function deleteFile(filename) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('DELETE', 'http://192.168.1.213/edit', true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var data = xhr.responseText;
+                    displayJson(0, "文件已删除");
+                    refreshFileList();
+                }
+            };
+            xhr.send("path=" + filename);
+            displayJson(0, "已发送请求");
+        }
+        function deleteFolder(filename) {
+            if (filename == '/') {
+                displayJson(1, "不允许删除根目录");
+                return;
+            }
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/rmrf?path=' + filename, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    displayJson(0, "文件夹已删除");
+                    var data = xhr.responseText;
+                    updir();
+                    refreshFileList();
+                }
+            };
+            xhr.send();
+            displayJson(0, "已发送请求");
+        }
+        function mkdir(filename) {
+            if (filename == '/') {
+                displayJson(1, "不允许创建根目录");
+                return;
+            }
+            var tmp = cwd;
+            if (cwd != '/')
+                tmp += '/';
+            tmp += filename;
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/mkdir?path=' + tmp, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4) {
+                    if (xhr.status == 200) {
+                        displayJson(0, "文件夹已创建");
+                        gotodir(filename);
+                        refreshFileList();
+                    }
+                    else {
+                        displayJson(1, "文件夹创建失败");
+                    }
+                }
+            };
+            xhr.send();
+            displayJson(0, "已发送请求");
+        }
+        function downloadFile(content, fileName) {
+            var aEle = document.createElement("a");// 创建a标签
+            aEle.download = fileName;// 设置下载文件的文件名
+            aEle.href = content;// content为后台返回的下载地址
+            aEle.target = '_blank';
+            aEle.click();
+        }
+        function rename(filename, newname) {
+            console.log(filename, newname);
+            if (filename == newname) return;
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/rename?path=' + filename + '&new=' + newname, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4) {
+                    if (xhr.status == 200) {
+                        displayJson(0, "重命名成功");
+                    }
+                    else {
+                        displayJson(1, "重命名失败");
+                    }
+                }
+            };
+            xhr.send();
+            displayJson(0, "已发送请求");
+        }
+        function createApp(name, conf) {
+            console.log(name, conf);
+            var formdata = new FormData();
+            var strblob = new Blob([conf], { type: 'text/plain' });
+            formdata.append("data", strblob, "/webtmp/conf.lua");
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/edit');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4) {
+                    if (xhr.status == 200) {
+                        var xhr1 = new XMLHttpRequest();
+                        xhr1.open('POST', '/createapp?name=' + name, true);
+                        xhr1.onreadystatechange = function () {
+                            if (xhr1.readyState == 4) {
+                                if (xhr1.status == 200) {
+                                    displayJson(0, "创建成功");
+                                }
+                                else {
+                                    displayJson(1, "创建过程中出现问题");
+                                }
+                            }
+                        };
+                        xhr1.send();
+                    }
+                    else {
+                        displayJson(1, "上传失败！");
+                    }
+                }
+            }
+            xhr.send(formdata);
+            displayJson(0, "已发送请求");
+        }
+        var btnCreateApp = document.getElementById('btnCreateApp');
+        btnCreateApp.onclick = function () {
+            var conf_file = 'title = \'';
+            var appName = document.getElementById('appName');
+            var appTitle = document.getElementById('appTitle');
+            var appConf = document.getElementById('appConf');
+            if (appName.value.trim() == '') {
+                displayJson(1, "APP名不能为空");
+                return;
+            }
+            if (appTitle.value.trim() == '') {
+                displayJson(1, "APP标题不能为空");
+                return;
+            }
+            conf_file += appTitle.value.trim();
+            conf_file += "'\n";
+            conf_file += appConf.value.trim();
+            conf_file += '\n';
+            createApp(appName.value.trim(), conf_file);
+        };
+        function refreshFileList() {
+            var html_cwd = document.getElementById('html_cwd');
+            html_cwd.innerHTML = '当前目录：' + cwd;
+            var table = document.getElementById('tableFile');
+            while (table.rows.length > 0) {
+                table.deleteRow(0);
+            }
+            var row = table.insertRow();
+            var cell1 = row.insertCell();
+            cell1.innerHTML = "加载中...";
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/edit?list=' + cwd, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4 && xhr.status == 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    // console.log(data);
+                    //下面是响应成功
+                    table.deleteRow(0);
+                    var row = table.insertRow();
+                    var cell1 = row.insertCell();
+                    cell1.innerHTML = '图标';
+                    var cell1 = row.insertCell();
+                    cell1.innerHTML = '文件名';
+                    var cell1 = row.insertCell();
+                    cell1.innerHTML = '文件大小/字节';
+                    // var data = JSON.parse('[{"type":"folder","name":"System Volume Information","size":0},{"type":"file","name":"Test2.app","size":0},{"type":"file","name":"config.json","size":114},{"type":"file","name":"test.app","size":0},{"type":"file","name":"weather.bin","size":1445},{"type":"file","name":"金瓶梅前20.txt.i","size":2492},{"type":"file","name":"金瓶梅前20.txt","size":385173}]');
+                    data.forEach(element => {
+                        var row = table.insertRow();
+                        var cell1 = row.insertCell();
+                        var cell2 = row.insertCell();
+                        var cell3 = row.insertCell();
+                        if (element["type"] == 'file') {
+                            var tmp = String(element['name']);
+                            if (tmp.endsWith(".app")) {
+                                cell1.innerHTML = '<i class="fa fa-lg fa-window-maximize"></i>';
+                            }
+                            else if (tmp.endsWith(".lua")) {
+                                cell1.innerHTML = '<i class="fa fa-lg fa-code"></i>';
+                            }
+                            else if (tmp.endsWith(".lbm")) {
+                                cell1.innerHTML = '<i class="fa fa-image fa-lg"></i>';
+                            }
+                            else if (tmp.endsWith(".buz")) {
+                                cell1.innerHTML = '<i class="fa fa-lg fa-music"></i>';
+                            }
+                            else if (tmp.endsWith(".txt")) {
+                                cell1.innerHTML = '<i class="fa fa-lg fa-file-text"></i>';
+                            }
+                            else if (tmp.endsWith(".i")) {
+                                cell1.innerHTML = '<i class="fa fa-lg fa-indent"></i>';
+                            }
+                            else if (tmp.endsWith(".json")) {
+                                cell1.innerHTML = '<i class="fa fa-lg fa-gears"></i>';
+                            }
+                            else if (tmp.endsWith(".conf")) {
+                                cell1.innerHTML = '<i class="fa fa-lg fa-gears"></i>';
+                            }
+                            else {
+                                cell1.innerHTML = '<i class="fa fa-lg fa-file"></i>';
+                            }
+                            cell3.innerHTML = '' + String(element["size"]) + ''
+                            row.onclick = function () {
+                                prevbody = document.getElementById('filePreviewBody');
+                                prevbody.innerHTML = cwd;
+                                if (cwd != '/') {
+                                    prevbody.innerHTML += '/';
+                                }
+                                prevbody.innerHTML += element["name"];
+                                currentFilePath = prevbody.innerHTML;
+                                currentFileName = element["name"];
+                                prev = document.getElementById('openFilePreview');
+                                prev.click();
+                            }
+                        }
+                        else {
+                            cell1.innerHTML = '<i class="fa fa-lg fa-folder"></i>';
+                            cell3.innerHTML = "";
+                            row.onclick = function () {
+                                gotodir(element["name"]);
+                                refreshFileList();
+                            }
+                        }
+                        cell2.innerHTML = element["name"];
+                    });
+                }
+            };
+            xhr.send();
+        }
+        var btnGoBack = document.getElementById('btnGoBack');
+        btnGoBack.onclick = function () {
+            updir();
+            refreshFileList();
+        }
+        var btnRename = document.getElementById('btnRename');
+        btnRename.onclick = function () {
+            var btnToggleRenameModal = document.getElementById('btnToggleRenameModal');
+            var input_newFileName = document.getElementById('input_newFileName');
+            input_newFileName.value = currentFileName;
+            btnToggleRenameModal.click();
+        }
+        var btnRenameConfirm = document.getElementById('btnRenameConfirm');
+        btnRenameConfirm.onclick = function () {
+            var input_newFileName = document.getElementById('input_newFileName');
+            var tmp = cwd;
+            if (cwd != '/') tmp += '/';
+            tmp += input_newFileName.value;
+            rename(currentFilePath, tmp);
+        }
+        var btnDownloadPreview = document.getElementById('btnDownloadPreview');
+        btnDownloadPreview.onclick = function () {
+            downloadFile('/edit?download=' + currentFilePath, currentFileName);
+        }
+        var btnDeletePreview = document.getElementById('btnDeletePreview');
+        btnDeletePreview.onclick = function () {
+            deleteFile(currentFilePath);
+        }
+        var btnDeleteFolder = document.getElementById('btnDeleteFolder');
+        btnDeleteFolder.onclick = function () {
+            deleteFolder(cwd);
+            updir();
+        }
+        var btnOpenFileManager = document.getElementById('btnOpenFileManager');
+        btnOpenFileManager.onclick = function () {
+            refreshFileList();
+        }
+        function upload() {
+            var fileInput = document.getElementById("fileInput");
+            fileInput.click();  // 模拟点击文件输入框
+            fileInput.addEventListener("change", function (event) {
+                var selectedFile = event.target.files[0];  // 获取用户选择的文件
+                console.log("用户选择的文件：", selectedFile);
+                let formData = new FormData();
+                var tmp = cwd;
+                if (tmp != '/')
+                    tmp += '/';
+                tmp += String(selectedFile.name);
+                formData.append("data", event.target.files[0], tmp);
+                console.log(tmp);
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/edit');
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState == 4) {
+                        if (xhr.status == 200) {
+                            displayJson(0, "上传成功！");
+                        }
+                        else {
+                            displayJson(1, "上传失败！");
+                        }
+                    }
+                }
+                xhr.upload.onprogress = function (event) {
+                    var uploadProgress = document.getElementById('uploadProgress');
+                    var prog = String((event.loaded / event.total) * 100);
+                    uploadProgress.style = 'width: ' + prog + '%;';
+                    uploadProgress.innerHTML = prog + "%";
+                    if (prog == "100")
+                        uploadProgress.className = "progress-bar bg-success";
+                    else
+                        uploadProgress.className = "progress-bar";
+                };
+                xhr.send(formData);
+                displayJson(0, "已发送请求");
+            });
+        }
+        document.getElementById('btnUpload').onclick = upload;
+        function uploadText(str) {
+            var formdata = new FormData();
+            var strblob = new Blob([str], { type: 'text/plain' });
+            formdata.append("data", strblob, "/webtmp/main.lua");
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/edit');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4) {
+                    if (xhr.status == 200) {
+                        var xhr1 = new XMLHttpRequest();
+                        xhr1.open('GET', '/rundebug', true);
+                        xhr1.onreadystatechange = function () {
+                            if (xhr1.readyState == 4) {
+                                if (xhr1.status == 200) {
+                                    displayJson(0, "Lua上传成功并已开始运行");
+                                }
+                                else {
+                                    displayJson(1, "Lua上传成功，但未运行");
+                                }
+                            }
+                        };
+                        xhr1.send();
+                    }
+                    else {
+                        displayJson(1, "上传失败！");
+                    }
+                }
+            }
+            xhr.send(formdata);
+            displayJson(0, "已发送请求");
+        }
+        var btnClearTerminal = document.getElementById('btnClearTerminal');
+        btnClearTerminal.onclick = function () {
+            var terminal = document.getElementById('textarea_terminal');
+            terminal.value = "";
+        }
+        var btnForceStop = document.getElementById('btnForceStop');
+        btnForceStop.onclick = function () {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/terminate', true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4) {
+                    if (xhr.status == 200) {
+                        displayJson(0, "强行停止成功");
+                    }
+                    else {
+                        displayJson(1, "无法结束App");
+                    }
+                }
+            };
+            xhr.send();
+            displayJson(0, "已发送请求");
+        }
+        var btnUploadAndRun = document.getElementById("btnUploadAndRun");
+        btnUploadAndRun.onclick = function () {
+            var textarea_code = document.getElementById('textarea_code');
+            uploadText(textarea_code.value);
+        }
+        var btnMkdirConfirm = document.getElementById('btnMkdirConfirm');
+        btnMkdirConfirm.onclick = function () {
+            var input_Mkdir = document.getElementById('input_Mkdir');
+            if (input_Mkdir.value.trim() != "") {
+                mkdir(input_Mkdir.value.trim());
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -329,11 +329,8 @@ void beginWebServer()
     server.on("/reset", HTTP_POST, [](AsyncWebServerRequest *request)
               {
                                 request->send(200, "text/plain", "OK");
-                                if(request->args() == 1)
-                                {
-                                                delay(100);
-                                                ESP.restart();
-                                } });
+                                delay(100);
+                                ESP.restart(); });
 
     server.on("/heap", HTTP_GET, [](AsyncWebServerRequest *request)
               { request->send(200, "text/plain", String(ESP.getFreeHeap())); });

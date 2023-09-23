@@ -15,17 +15,17 @@ void task_appManager(void *)
 void setup()
 {
     bool initResult = hal.init();
-    if(hal.pref.getBool("oobe", false) == false)
-    {
-        appManager.gotoApp("oobe");
-        ESP.restart();
-    }
     alarms.load();
     alarms.check();
     Serial.println(ESP.getFreeHeap());
     searchForLuaAPP();
     Serial.println(ESP.getFreeHeap());
     xTaskCreate(task_appManager, "appManager", 20480, NULL, 1, NULL);
+    if(hal.pref.getInt("oobe", 0) <= 2)
+    {
+        appManager.gotoApp("oobe");
+        return;
+    }
     hal.getTime();
     if (hal.timeinfo.tm_year > (2016 - 1900))
     {

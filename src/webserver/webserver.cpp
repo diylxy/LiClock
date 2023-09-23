@@ -312,7 +312,8 @@ void beginWebServer()
 
     server.on("/conf", HTTP_POST, [](AsyncWebServerRequest *request)
               {
-                                deserializeJson(config, request->arg((size_t)0));
+                Serial.println(request->getParam("json", true, false)->value());
+                                deserializeJson(config, request->getParam(0)->value());
                                 request->send(200, "text/plain", "OK");
                                 hal.saveConfig(); });
 
@@ -352,11 +353,4 @@ void updateWebServer()
 {
     ws.cleanupClients();
     delay(300);
-    /*
-    ws.textAll("Hello there\n");
-    delay(1000);
-    */
 }
-
-///////////////////////////////////////////////
-///////下面是文件管理

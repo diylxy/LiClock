@@ -22,6 +22,8 @@ public:
         title = "电源";
         description = "电源选项";
         image = power_bits;
+        _showInList = false;
+        _reentrant = false;
     }
     void setup();
 };

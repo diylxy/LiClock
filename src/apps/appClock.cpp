@@ -35,7 +35,6 @@ public:
         title = "天气时钟";
         description = "默认主页应用";
         image = clock_cloud_bits;
-        _showInList = false;
     }
     void setup();
 

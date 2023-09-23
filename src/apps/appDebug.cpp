@@ -24,6 +24,8 @@ public:
         title = "Debug";
         description = "Debug专用";
         image = debug_bits;
+        _showInList = false;
+        _reentrant = false;
     }
     void setup();
 };
@@ -31,6 +33,7 @@ static AppDebug app;
 
 void AppDebug::setup()
 {
+    alarms.alarm();
     int res = GUI::msgbox_number("test", 4, 0);
     display.setCursor(20, 20);
     display.println(res);

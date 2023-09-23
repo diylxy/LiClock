@@ -194,6 +194,9 @@ void HAL::ReqWiFiConfig()
         if (digitalRead(PIN_BUTTONC) == 0)
         {
             WiFi.disconnect(true);
+            config[PARAM_CLOCKONLY] = "1";
+            hal.saveConfig();
+            ESP.restart();
             break;
         }
         delay(5);
@@ -205,7 +208,7 @@ void HAL::ReqWiFiConfig()
     }
     if (WiFi.isConnected() == false)
     {
-        config[PARAM_CLOCKONLY] = true;
+        config[PARAM_CLOCKONLY] = "1";
         hal.saveConfig();
         ESP.restart();
     }

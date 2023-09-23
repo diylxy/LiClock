@@ -72,17 +72,7 @@ public:
         validAppID++;
     }
     AppBase *getPtrByName(const char *appName);
-    AppBase *getRealClock()
-    {
-        if (config[PARAM_CLOCKONLY] == "1")
-        {
-            return getPtrByName("clockonly");
-        }
-        else
-        {
-            return getPtrByName("clock");
-        }
-    }
+    AppBase *getRealClock();
     void gotoApp(AppBase *appPtr);
     void gotoApp(const char *appName)
     {
@@ -93,10 +83,10 @@ public:
         }
     }
     void gotoAppBoot(const char *appName);
-    bool recover();
+    bool recover(AppBase *home = NULL);
     void goBack();
-    void showAppList(int page); // 显示Applist
-    AppBase *appSelector();     // 显示Applist并等待用户输入
+    void showAppList(int page);                    // 显示Applist
+    AppBase *appSelector(bool showHidden = false); // 显示Applist并等待用户输入
     void update();
     String parameter = "";                        // 传递的参数，会在goto目标app的setup执行完后自动清空
     String result = "";                           // 传递的返回值，不会自动清空

@@ -824,7 +824,7 @@
                     </div>
                     <div id="toolsArea" class="row globalContainer alert-primary shadow-4">
                         <div>
-                            <button type="button" class="btn btn-warning" id="btnUploadAndRun">上传并运行</button>
+                            <button type="button" class="btn btn-warning" id="btnDebug">调试</button>
                             <button type="button" class="btn btn-info" id="btnClearTerminal">清空终端</button>
                             <button type="button" class="btn btn-danger" id="btnForceStop">强行停止</button>
                             <button type="button" class="btn btn-primary" data-mdb-toggle="modal"
@@ -1035,8 +1035,28 @@
             xhr.send();
             displayJson(0, "已发送请求");
         }
+        function uploadText(str) {
+            var formdata = new FormData();
+            var strblob = new Blob([str], { type: 'text/plain' });
+            formdata.append("data", strblob, "/webtmp/main.lua");
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/edit');
+            xhr.onreadystatechange = function () {
+                if (xhr1.readyState == 4) {
+                    if (xhr1.status == 200) {
+                        displayJson(0, "Lua代码区上传成功");
+                    }
+                    else {
+                        displayJson(1, "Lua代码区上传失败");
+                    }
+                }
+            }
+            xhr.send(formdata);
+        }
         function createApp(name, conf) {
             console.log(name, conf);
+            var textarea_code = document.getElementById('textarea_code');
+            uploadText(textarea_code.value);
             var formdata = new FormData();
             var strblob = new Blob([conf], { type: 'text/plain' });
             formdata.append("data", strblob, "/webtmp/conf.lua");
@@ -1252,37 +1272,6 @@
             });
         }
         document.getElementById('btnUpload').onclick = upload;
-        function uploadText(str) {
-            var formdata = new FormData();
-            var strblob = new Blob([str], { type: 'text/plain' });
-            formdata.append("data", strblob, "/webtmp/main.lua");
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', '/edit');
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState == 4) {
-                    if (xhr.status == 200) {
-                        var xhr1 = new XMLHttpRequest();
-                        xhr1.open('GET', '/rundebug', true);
-                        xhr1.onreadystatechange = function () {
-                            if (xhr1.readyState == 4) {
-                                if (xhr1.status == 200) {
-                                    displayJson(0, "Lua上传成功并已开始运行");
-                                }
-                                else {
-                                    displayJson(1, "Lua上传成功，但未运行");
-                                }
-                            }
-                        };
-                        xhr1.send();
-                    }
-                    else {
-                        displayJson(1, "上传失败！");
-                    }
-                }
-            }
-            xhr.send(formdata);
-            displayJson(0, "已发送请求");
-        }
         var btnClearTerminal = document.getElementById('btnClearTerminal');
         btnClearTerminal.onclick = function () {
             var terminal = document.getElementById('textarea_terminal');
@@ -1305,11 +1294,28 @@
             xhr.send();
             displayJson(0, "已发送请求");
         }
-        var btnUploadAndRun = document.getElementById("btnUploadAndRun");
-        btnUploadAndRun.onclick = function () {
+        function runDebug(){
+            const xhr1 = new XMLHttpRequest();
+            xhr1.open('GET', '/rundebug');
+            xhr1.onreadystatechange = function () {
+            if (xhr1.readyState == 4) {
+                if (xhr1.status == 200) {
+                        displayJson(0, "已开始运行");
+                    }
+                }
+                else
+                {
+                    displayJson(1, "运行失败");
+                }
+            }
+            xhr1.send();
+        }
+        function btnDebug() {
             var textarea_code = document.getElementById('textarea_code');
             uploadText(textarea_code.value);
+            runDebug();
         }
+        document.getElementById('btnDebug').onclick = btnDebug;
         var btnMkdirConfirm = document.getElementById('btnMkdirConfirm');
         btnMkdirConfirm.onclick = function () {
             var input_Mkdir = document.getElementById('input_Mkdir');

@@ -25,13 +25,19 @@ int weather_hour24(lua_State *L)
     }
     lua_newtable(L);
     lua_pushstring(L, weather.hour24[index].date);
+    lua_setfield(L, -2, "date");
     lua_pushinteger(L, weather.hour24[index].weathernum);
+    lua_setfield(L, -2, "weathernum");
     lua_pushinteger(L, weather.hour24[index].temperature);
+    lua_setfield(L, -2, "temperature");
     lua_pushinteger(L, weather.hour24[index].windspeed);
+    lua_setfield(L, -2, "windspeed");
     lua_pushinteger(L, weather.hour24[index].winddirection);
+    lua_setfield(L, -2, "winddirection");
     lua_pushinteger(L, weather.hour24[index].rain);
+    lua_setfield(L, -2, "rain");
     lua_pushinteger(L, weather.hour24[index].humidity);
-    lua_settable(L, 2);
+    lua_setfield(L, -2, "humidity");
     return 1;
 }
 
@@ -42,8 +48,8 @@ int weather_rain(lua_State *L)
     for (int i = 0; i < 120; i++)
     {
         lua_pushinteger(L, weather.rain[i]);
+        lua_rawseti(L, -2, i);
     }
-    lua_settable(L, 1);
     return 1;
 }
 
@@ -58,9 +64,11 @@ int weather_five_days(lua_State *L)
     int i = luaL_checkinteger(L, 1);
     lua_newtable(L);
     lua_pushinteger(L, weather.five_days[i].weathernum);
+    lua_setfield(L, -2, "weathernum");
     lua_pushinteger(L, weather.five_days[i].max);
+    lua_setfield(L, -2, "max");
     lua_pushinteger(L, weather.five_days[i].min);
-    lua_settable(L, 2);
+    lua_setfield(L, -2, "min");
     return 1;
 }
 
@@ -69,10 +77,13 @@ int weather_realtime(lua_State *L)
     lua_settop(L, 0);
     lua_newtable(L);
     lua_pushinteger(L, weather.realtime.weathernum);
+    lua_setfield(L, -2, "weathernum");
     lua_pushinteger(L, weather.realtime.temperature);
+    lua_setfield(L, -2, "temperature");
     lua_pushinteger(L, weather.realtime.humidity);
+    lua_setfield(L, -2, "humidity");
     lua_pushnumber(L, weather.realtime.pressure);
-    lua_settable(L, 1);
+    lua_setfield(L, -2, "pressure");
     return 1;
 }
 

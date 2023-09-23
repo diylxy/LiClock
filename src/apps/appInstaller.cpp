@@ -12,6 +12,7 @@ public:
         description = "Lua应用管理器";
         image = NULL;
         peripherals_requested = PERIPHERALS_SD_BIT;
+        _showInList = false;
     }
     std::list<String> appNames;
     int getAppSize(const String path, bool fromTF = false);

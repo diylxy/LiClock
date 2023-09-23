@@ -18,7 +18,7 @@ static const menu_item settings_menu_main[] =
         {NULL, "时间设置"},
         {NULL, "闹钟设置"},
         {NULL, "网络设置"},
-        {NULL, "外设设置"},
+        {NULL, "重新扫描外设"},
         {NULL, "其它设置"},
         {NULL, "关于"},
         {NULL, NULL},
@@ -63,7 +63,6 @@ static const menu_item settings_menu_other[] =
         {NULL, "天气更新间隔"},
         {NULL, "主屏幕应用选择"},
         {NULL, "已安装应用管理"},
-        {NULL, "系统信息"},
         {NULL, "恢复出厂设置"},
         {NULL, NULL},
 };
@@ -82,6 +81,7 @@ public:
         title = "设置";
         description = "简单的设置";
         image = settings_bits;
+        noDefaultEvent = true;
     }
     void setup();
     void menu_time();
@@ -122,8 +122,8 @@ void AppSettings::setup()
             menu_network();
             break;
         case 4:
-            // 外设设置
-            menu_peripheral();
+            // 重新扫描外设
+            peripherals.check();
             break;
         case 5:
             // 其它设置
@@ -229,9 +229,32 @@ void AppSettings::menu_alarm()
         {NULL, NULL},
         {NULL, NULL},
         {NULL, NULL},
+        {NULL, "闹钟铃声"},
         {NULL, NULL},
     };
-    char alarm_buf[5][20];
+    const menu_item settings_menu_alarm_sub[] = {
+        {NULL, "返回"},
+        {NULL, "时间"},
+        {NULL, "重复周期"},
+        {NULL, NULL},
+    };
+    const menu_item settings_menu_alarm_time[] = {
+        {NULL, "返回"},
+        {NULL, "关闭"},
+        {NULL, "单次"},
+        {NULL, "周一到周五"},
+        {NULL, "周六日"},
+        {NULL, "周一"},
+        {NULL, "周二"},
+        {NULL, "周三"},
+        {NULL, "周四"},
+        {NULL, "周五"},
+        {NULL, "周六"},
+        {NULL, "周日"},
+        {NULL, "手动输入"},
+        {NULL, NULL},
+    };
+    char alarm_buf[5][30];
     char alarm_buf_week[25];
     char bit_week[7] = {0};
     while (end == false && hasToApp == false)
@@ -239,20 +262,85 @@ void AppSettings::menu_alarm()
         // 读取闹钟设置
         for (int i = 0; i < 5; ++i)
         {
-            if (alarms.alarm_table[i].time == 0)
+            if (alarms.alarm_table[i].enable == 0)
             {
-                sprintf(alarm_buf[i], "%d：未设置", i + 1);
+                sprintf(alarm_buf[i], "%d：%02d:%02d，关闭", i + 1, alarms.alarm_table[i].time / 60, alarms.alarm_table[i].time % 60, alarms.getEnable(alarms.alarm_table + i).c_str());
             }
             else
             {
-                sprintf(alarm_buf[i], "%d：%02d:%02d", i + 1, alarms.alarm_table[i].time / 60, alarms.alarm_table[i].time % 60);
+                sprintf(alarm_buf[i], "%d：%02d:%02d,%s", i + 1, alarms.alarm_table[i].time / 60, alarms.alarm_table[i].time % 60, alarms.getEnable(alarms.alarm_table + i).c_str());
             }
             settings_menu_alarm[i + 1].title = alarm_buf[i];
         }
         res = GUI::menu("闹钟设置", settings_menu_alarm);
         if (res == 0)
             break;
+        if (res == 6)
+        {
+            const char *str = GUI::fileDialog("请选择闹钟铃声文件", false, ".buz");
+            if (str)
+            {
+                hal.pref.putString(SETTINGS_PARAM_ALARM_TONE, String(str));
+            }
+            else
+            {
+                if (GUI::msgbox_yn("你选择了返回", "是否使用默认铃声，或者保留之前的设置", "使用默认", "取消"))
+                {
+                    hal.pref.remove(SETTINGS_PARAM_ALARM_TONE);
+                }
+            }
+        }
+        int selected = res - 1;
+        res = GUI::menu(alarm_buf[selected], settings_menu_alarm_sub);
+        switch (res)
+        {
+        case 0:
+            break;
+        case 1:
+        {
+            alarms.alarm_table[selected].time = GUI::msgbox_time("请输入闹钟时间", alarms.alarm_table[selected].time);
+            if (alarms.alarm_table[selected].enable == 0)
+                alarms.alarm_table[selected].enable = ALARM_ENABLE_ONCE;
+            break;
+        }
+        case 2:
+        {
+            int res;
+            res = GUI::menu("请选择重复周期", settings_menu_alarm_time);
+            enum alarm_enable_enum res_table[] = {
+                ALARM_DISABLE,
+                ALARM_ENABLE_ONCE,
+                (enum alarm_enable_enum)0b00111110,
+                (enum alarm_enable_enum)0b01000001,
+                ALARM_ENABLE_MONDAY,
+                ALARM_ENABLE_TUESDAY,
+                ALARM_ENABLE_WEDNESDAY,
+                ALARM_ENABLE_THURSDAY,
+                ALARM_ENABLE_FRIDAY,
+                ALARM_ENABLE_SATDAY,
+                ALARM_ENABLE_SUNDAY,
+            };
+            switch (res)
+            {
+            case 0:
+                break;
+            case 12:
+            {
+                int time = GUI::msgbox_number("输入重复周期Bitmap", 3, alarms.alarm_table[selected].enable);
+                alarms.alarm_table[selected].enable = (enum alarm_enable_enum)(time % 256);
+            }
+            break;
+            default:
+                alarms.alarm_table[selected].enable = (enum alarm_enable_enum)(res_table[(res - 1) % 11]);
+                break;
+            }
+        }
+        break;
+        default:
+            break;
+        }
     }
+    alarms.save();
 }
 
 // 网络设置
@@ -286,56 +374,17 @@ void AppSettings::menu_network()
             break;
         case 5:
             // 退出Bilibili账号
-            break;
-        default:
-            break;
-        }
-    }
-}
-
-// 外设设置
-void AppSettings::menu_peripheral()
-{
-    int res = 0;
-    bool end = false;
-    while (end == false && hasToApp == false)
-    {
-        res = GUI::menu("外设设置", settings_menu_peripheral);
-        switch (res)
-        {
-        case 0:
-            end = true;
-            break;
-        case 1:
-            // 重新扫描外设
-            peripherals.check();
-            break;
-        case 2:
-            // AHT20
-            if (peripherals.checkAvailable(PERIPHERALS_AHT20_BIT) == 0)
+            if (LittleFS.exists("/blCookies.txt"))
             {
-                toApp = "demoaht20";
-                hasToApp = true;
-                end = true;
+                LittleFS.remove("/blCookies.txt");
+                GUI::msgbox("完成", "Bilibili账户登录信息已删除");
+                break;
             }
-            break;
-        case 3:
-            // BMP280
-            if (peripherals.checkAvailable(PERIPHERALS_BMP280_BIT) == 0)
+            else
             {
-                toApp = "demobmp280";
-                hasToApp = true;
-                end = true;
+                GUI::msgbox("提示", "Bilibili Cookies不存在");
+                break;
             }
-            break;
-        case 4:
-            // SGP30
-            break;
-        case 5:
-            // DS3231
-            break;
-        case 6:
-            // SD卡
             break;
         default:
             break;
@@ -386,14 +435,27 @@ void AppSettings::menu_other()
             }
         case 3:
             // 主屏幕应用选择
-            break;
+            {
+                AppBase *tmp = appManager.appSelector(true);
+                if (tmp)
+                {
+                    Serial.println(tmp->name);
+                    if (GUI::msgbox_yn("警告", "选择不兼容的App可能会导致无法开机，是否确认？") == true)
+                    {
+                        hal.pref.putString(SETTINGS_PARAM_HOME_APP, tmp->name);
+                        GUI::msgbox("设置成功", "重启或下次唤醒后生效");
+                    }
+                }
+                break;
+            }
         case 4:
             // 已安装应用管理
+            toApp = "installer";
+            hasToApp = true;
+            end = true;
+            return;
             break;
-        case 6:
-            // 系统信息
-            break;
-        case 7:
+        case 5:
             // 恢复出厂设置
             {
                 if (GUI::msgbox_yn("此操作不可撤销", "是否恢复出厂设置？"))

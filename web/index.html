@@ -180,7 +180,7 @@
         $.each(formData, function (index, field) {
           json[field.name] = field.value;
         });
-        var jsonStr = JSON.stringify(json);
+        var jsonStr = 'json=' + JSON.stringify(json);
         var xhr = new XMLHttpRequest();
         xhr.open("POST", "/conf", true);
         xhr.onreadystatechange = function () {

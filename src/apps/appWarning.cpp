@@ -24,6 +24,8 @@ public:
         title = "天气预警";
         description = "天气预警信息";
         image = weather_warning_bits;
+        _showInList = false;
+        _reentrant = false;
     }
     void setup();
 };

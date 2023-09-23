@@ -15,6 +15,7 @@ namespace GUI
     void msgbox(const char *title, const char *msg);
     bool msgbox_yn(const char *title, const char *msg, const char *yes = NULL, const char *no = NULL);
     int msgbox_number(const char *title, uint16_t digits, int pre_value); // 注意digits，1表示一位，2表示两位，程序中减一
+    int msgbox_time(const char *title, int pre_value);
     int menu(const char *title, const menu_item options[], int16_t ico_w = 8, int16_t ico_h = 8);
     void drawLBM(int16_t x, int16_t y,const char *filename, uint16_t color);
     // fileManager.cpp

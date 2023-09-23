@@ -96,7 +96,7 @@ void lua_execute(const char *filename)
 {
     if (luaL_dofile(L, filename))
     {
-        printf("Error: %s\n", lua_tostring(L, -1));
+        lua_printf("运行错误: %s\n", lua_tostring(L, -1));
         lua_pop(L, 1);
     }
     // luaL_dostring(L, "display.clearScreen()\ndisplay.display()\nprint(\"lua_execute\")\nbuzzer.append(1000, 100)\n");

@@ -286,13 +286,13 @@ namespace GUI
                 // 减
                 if (waitLongPress(PIN_BUTTONL))
                 {
-                    if (current_digit == 0)
+                    if (current_digit == digits)
                     {
-                        current_digit = digits;
+                        current_digit = 0;
                     }
                     else
                     {
-                        --current_digit;
+                        current_digit++;
                     }
                 }
                 else
@@ -306,13 +306,13 @@ namespace GUI
                 // 加
                 if (waitLongPress(PIN_BUTTONR))
                 {
-                    if (current_digit == digits)
+                    if (current_digit == 0)
                     {
-                        current_digit = 0;
+                        current_digit = digits;
                     }
                     else
                     {
-                        current_digit++;
+                        --current_digit;
                     }
                 }
                 else
@@ -379,6 +379,116 @@ namespace GUI
         hal.unhookButton();
         display.display(); // 全局刷新一次
         return currentNumber;
+    }
+    int msgbox_time(const char *title, int pre_value)
+    {
+        constexpr int window_w = 120;
+        constexpr int window_h = 48;
+        constexpr int start_x = (296 - window_w) / 2;
+        constexpr int start_y = (128 - window_h) / 2;
+        constexpr int input_x = start_x + 5;
+        constexpr int input_y = start_y + 18;
+        constexpr int input_w = window_w - 10;
+        constexpr int input_h = window_h - 18 - 3;
+        char timeBuffer[4];
+        int16_t digit_add[4] = {1, 10, 60, 600};
+        hal.hookButton();
+        push_buffer();
+        uint8_t current_digit = 0; // 0：个位
+        int current_value = pre_value;
+        bool changed = true;
+        while (1)
+        {
+            if (digitalRead(PIN_BUTTONL) == LOW)
+            {
+                // 减
+                if (waitLongPress(PIN_BUTTONL))
+                {
+                    if (current_digit == 3)
+                    {
+                        current_digit = 0;
+                    }
+                    else
+                    {
+                        current_digit++;
+                    }
+                }
+                else
+                {
+                    current_value -= digit_add[current_digit];
+                    if(current_value <= 0)
+                    {
+                        current_value = 0;
+                    }
+                }
+                changed = true;
+            }
+            else if (digitalRead(PIN_BUTTONR) == LOW)
+            {
+                // 加
+                if (waitLongPress(PIN_BUTTONR))
+                {
+                    if (current_digit == 0)
+                    {
+                        current_digit = 3;
+                    }
+                    else
+                    {
+                        --current_digit;
+                    }
+                }
+                else
+                {
+                    current_value += digit_add[current_digit];
+                    if(current_value >= 24*60)
+                    {
+                        current_value = 24*60 - 1;
+                    }
+                }
+                changed = true;
+            }
+            else if (digitalRead(PIN_BUTTONC) == LOW)
+            {
+                if (waitLongPress(PIN_BUTTONC))
+                {
+                    current_value = pre_value;
+                    changed = true;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            if (changed)
+            {
+                timeBuffer[3] = (current_value / 60) / 10;
+                timeBuffer[2] = (current_value / 60) % 10;
+                timeBuffer[1] = (current_value % 60) / 10;
+                timeBuffer[0] = (current_value % 60) % 10;
+                // 计算当前位置
+                changed = false;
+                display.fillRoundRect(start_x, start_y, window_w, window_h, 3, 1);
+                GUI::drawWindowsWithTitle(title, start_x, start_y, window_w, window_h);
+                display.drawRoundRect(input_x, input_y, input_w, input_h, 3, 0);
+                display.setFont(&FreeSans9pt7b);
+                display.setTextColor(0);
+                display.setCursor(input_x + 4, input_y + (input_h - 12) / 2 + 12);
+                for (int i = 3; i >= 0; --i)
+                {
+                    if (i == current_digit)
+                    {
+                        display.drawFastHLine(display.getCursorX(), display.getCursorY() + 2, 10, 0);
+                    }
+                    display.print(timeBuffer[i], DEC);
+                }
+                display.displayWindow(start_x, start_y, window_w, window_h);
+            }
+            delay(10);
+        }
+        pop_buffer();
+        hal.unhookButton();
+        display.display(); // 全局刷新一次
+        return current_value;
     }
     void drawLBM(int16_t x, int16_t y, const char *filename, uint16_t color)
     {

@@ -34,3 +34,15 @@
 */
 #define SETTINGS_PARAM_LAST_EBOOK_PAGE "p5"
 
+/**
+ * 自定义主屏幕App
+*/
+#define SETTINGS_PARAM_HOME_APP "boot"
+
+/**
+ * 自定义闹钟铃声文件
+ * 字符串，铃声是.buz文件
+ * 如果是空则为“滴滴”声音
+*/
+#define SETTINGS_PARAM_ALARM_TONE "p6"
+

@@ -33,6 +33,23 @@ AppBase *AppManager::getPtrByName(const char *appName)
     return NULL;
 }
 
+AppBase *AppManager::getRealClock()
+{
+    String bootapp = hal.pref.getString(SETTINGS_PARAM_HOME_APP, "");
+    if (bootapp == "")
+    {
+        hal.pref.putString(SETTINGS_PARAM_HOME_APP, "clockonly");
+        bootapp = "clockonly";
+    }
+    if (appManager.getPtrByName(bootapp.c_str()) == NULL)
+    {
+        Serial.println("严重错误 之前设置的App不存在，使用默认时钟App");
+        hal.pref.putString(SETTINGS_PARAM_HOME_APP, "clockonly");
+        bootapp = "clockonly";
+    }
+    return getPtrByName(bootapp.c_str());
+}
+
 void AppManager::gotoApp(AppBase *appPtr)
 {
     if (appPtr == NULL)
@@ -80,18 +97,21 @@ static const uint8_t wifiIcon[] = {
     0x00, 0x00};
 static AppBase *realAppList[MAX_APP_COUNT];
 static int realAppCount = 0;
-void buildAppList()
+void buildAppList(bool showHidden)
 {
     realAppCount = 0;
     for (int16_t i = 0; i < tail; i++)
     {
-        if (appList[i]->_showInList == false)
+        if (showHidden == false)
         {
-            continue;
-        }
-        if (peripherals.checkAvailable(appList[i]->peripherals_requested) != 0)
-        {
-            continue;
+            if (appList[i]->_showInList == false)
+            {
+                continue;
+            }
+            if (peripherals.checkAvailable(appList[i]->peripherals_requested) != 0)
+            {
+                continue;
+            }
         }
         realAppList[realAppCount] = appList[i];
         realAppCount++;
@@ -172,11 +192,11 @@ void AppManager::showAppList(int page)
         u8g2Fonts.drawUTF8(x + x_font_offset, y + 45, realAppList[pagebase + i]->title);
     }
 }
-AppBase *AppManager::appSelector()
+AppBase *AppManager::appSelector(bool showHidden)
 {
     bool finished = false; // 是否完成选择，用于超过一页的情况
     int currentPage = 0;
-    buildAppList();
+    buildAppList(showHidden);
     int totalPage = realAppCount / 11;
     if (realAppCount % 11)
         ++totalPage;
@@ -461,7 +481,18 @@ void AppManager::update()
         {
             realNextWakeup = 0;
         }
-
+        if (realNextWakeup == 0)
+        {
+            realNextWakeup = alarms.getNextWakeupMinute() * 60;
+        }
+        else
+        {
+            int currentTime = alarms.getNextWakeupMinute();
+            if(currentTime != 0)
+            {
+                realNextWakeup = min(realNextWakeup, currentTime * 60);
+            }
+        }
         hal.noDeepSleep = noDeepSleep;
         if (noDeepSleep == true)
         {
@@ -533,13 +564,16 @@ void AppManager::gotoAppBoot(const char *appName)
     gotoApp(appName);
 }
 
-bool AppManager::recover()
+bool AppManager::recover(AppBase *home)
 {
     if (latest_appname[0] != 0)
     {
         Serial.print("重新打开上个APP：");
         Serial.println(latest_appname);
-        appStack.push(getRealClock());
+        if (home != NULL)
+            appStack.push(home);
+        else
+            appStack.push(getRealClock());
         gotoApp(latest_appname);
         return true;
     }

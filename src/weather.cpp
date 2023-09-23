@@ -82,7 +82,7 @@ int8_t Weather::refresh()
     if (httpCode == HTTP_CODE_OK)
     {
         DynamicJsonDocument doc(50000);
-        auto s = http.getStream();
+        auto s = http.getString();
         deserializeJson(doc, s);
         if (doc["status"] != "ok")
         { // API失效
@@ -131,6 +131,7 @@ int8_t Weather::refresh()
         }
         for (uint8_t i = 0; i < 4; ++i)
         {
+            Serial.println(doc["result"]["daily"]["temperature"][i]["date"].as<String>());
             five_days[i].max = int16_t(doc["result"]["daily"]["temperature"][i]["max"].as<float>() * 10);
             five_days[i].min = int16_t(doc["result"]["daily"]["temperature"][i]["min"].as<float>() * 10);
             five_days[i].weathernum = codeToNum(doc["result"]["daily"]["skycon"][i]["value"].as<String>().c_str());

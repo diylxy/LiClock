@@ -34,8 +34,8 @@ void LuaAppWrapper::init()
     {
         Serial.print("文件存在: ");
         Serial.println(path);
-        // closeLua();
-        openLua();
+        closeLua();
+        openLua_simple();
         lua_pushstring(L, "无标题");
         lua_setglobal(L, "title");
         lua_pushinteger(L, PIN_BUTTONC);
@@ -88,6 +88,7 @@ void LuaAppWrapper::init()
             image = _image;
         }
         _showInList = true;
+        closeLua();
     }
 }
 static void luawrapper_lightsleep()

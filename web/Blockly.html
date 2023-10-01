@@ -3,11 +3,9 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Blockly IDE-天气时钟</title>
-    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
-    <script src="https://unpkg.com/blockly/blocks_compressed.js"></script>
-    <script src="https://unpkg.com/blockly/lua_compressed"></script>
-    <script src="https://unpkg.com/blockly/msg/zh-hans.js"></script>
+    <title>Blockly IDE - 天气时钟</title>
+    <script src="/js/jss2.js"></script>
+    <link rel="stylesheet" href="/css/csss.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
         #textarea_code {
@@ -675,6 +673,179 @@
             </block>
             <block type="display_setfullwindow"></block>
         </category>
+        <category name="APP管理" colour="#995ba5">
+            <block type="appmanager_gotoapp">
+                <value name="appName">
+                    <block type="text">
+                        <field name="TEXT"></field>
+                    </block>
+                </value>
+            </block>
+            <block type="appmanager_goback" />
+            <block type="appmanager_nextwakeup">
+                <value name="next">
+                    <shadow type="math_number">
+                        <field name="NUM">60</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+        <category name="蜂鸣器" colour="#5ba58c">
+            <block type="buzzer_append">
+                <value name="freq">
+                    <shadow type="math_number">
+                        <field name="NUM">2000</field>
+                    </shadow>
+                </value>
+                <value name="duri">
+                    <shadow type="math_number">
+                        <field name="NUM">100</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="buzzer_playfile">
+                <value name="filename">
+                    <shadow type="text">
+                        <field name="TEXT">./a.buz</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="buzzer_forcestop"></block>
+        </category>
+        <category name="GUI" colour="#a5745b">
+            <block type="gui_waitlongpress">
+                <field name="btn">35</field>
+            </block>
+            <block type="gui_autoindentdraw">
+                <value name="from">
+                    <shadow type="math_number">
+                        <field name="NUM">2</field>
+                    </shadow>
+                </value>
+                <value name="to">
+                    <shadow type="math_number">
+                        <field name="NUM">296</field>
+                    </shadow>
+                </value>
+                <value name="str">
+                    <shadow type="text">
+                        <field name="TEXT">一些汉字</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="gui_drawwindowswithtitle">
+                <value name="str">
+                    <shadow type="text">
+                        <field name="TEXT"></field>
+                    </shadow>
+                </value>
+                <value name="x">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="y">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="w">
+                    <shadow type="math_number">
+                        <field name="NUM">296</field>
+                    </shadow>
+                </value>
+                <value name="h">
+                    <shadow type="math_number">
+                        <field name="NUM">128</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="gui_msgbox">
+                <value name="title">
+                    <shadow type="text">
+                        <field name="TEXT"></field>
+                    </shadow>
+                </value>
+                <value name="content">
+                    <shadow type="text">
+                        <field name="TEXT"></field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="gui_msgbox_yn">
+                <value name="title">
+                    <shadow type="text">
+                        <field name="TEXT"></field>
+                    </shadow>
+                </value>
+                <value name="content">
+                    <shadow type="text">
+                        <field name="TEXT"></field>
+                    </shadow>
+                </value>
+                <value name="yes">
+                    <shadow type="text">
+                        <field name="TEXT">确认（右）</field>
+                    </shadow>
+                </value>
+                <value name="no">
+                    <shadow type="text">
+                        <field name="TEXT">取消（左）</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="gui_msgbox_number">
+                <value name="title">
+                    <shadow type="text">
+                        <field name="TEXT"></field>
+                    </shadow>
+                </value>
+                <value name="digits">
+                    <shadow type="math_number">
+                        <field name="NUM">3</field>
+                    </shadow>
+                </value>
+                <value name="pre">
+                    <shadow type="math_number">
+                        <field name="NUM">128</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="gui_menu">
+                <value name="title">
+                    <shadow type="text">
+                        <field name="TEXT"></field>
+                    </shadow>
+                </value>
+                <value name="list">
+                    <shadow type="lists_create_with">
+                        <mutation items="3"></mutation>
+                        <value name="ADD0">
+                            <shadow type="text">
+                                <field name="TEXT">菜单项1</field>
+                            </shadow>
+                        </value>
+                        <value name="ADD1">
+                            <shadow type="text">
+                                <field name="TEXT">菜单项2</field>
+                            </shadow>
+                        </value>
+                        <value name="ADD2">
+                            <shadow type="text">
+                                <field name="TEXT">菜单项3</field>
+                            </shadow>
+                        </value>
+                    </shadow>
+                </value>
+            </block>
+            <block type="gui_filedialog">
+                <value name="title">
+                    <shadow type="text">
+                        <field name="TEXT"></field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
         <sep></sep>
         <category name="变量" colour="#a55b80" custom="VARIABLE"></category>
         <category name="函数" colour="#995ba5" custom="PROCEDURE"></category>
@@ -913,11 +1084,10 @@
                 };
                 reader.readAsText(selectedFile);
             });
-
         }
 
     </script>
-    <script src="js/toolbox_display.js"></script>
+    <script src="js/jss3.js"></script>
     <!--websocket-->
     <script>
         var socket = new WebSocket('ws://' + document.domain + '/ws');
@@ -1042,8 +1212,8 @@
             const xhr = new XMLHttpRequest();
             xhr.open('POST', '/edit');
             xhr.onreadystatechange = function () {
-                if (xhr1.readyState == 4) {
-                    if (xhr1.status == 200) {
+                if (xhr.readyState == 4) {
+                    if (xhr.status == 200) {
                         displayJson(0, "Lua代码区上传成功");
                     }
                     else {
@@ -1294,17 +1464,16 @@
             xhr.send();
             displayJson(0, "已发送请求");
         }
-        function runDebug(){
+        function runDebug() {
             const xhr1 = new XMLHttpRequest();
             xhr1.open('GET', '/rundebug');
             xhr1.onreadystatechange = function () {
-            if (xhr1.readyState == 4) {
-                if (xhr1.status == 200) {
+                if (xhr1.readyState == 4) {
+                    if (xhr1.status == 200) {
                         displayJson(0, "已开始运行");
                     }
                 }
-                else
-                {
+                else {
                     displayJson(1, "运行失败");
                 }
             }

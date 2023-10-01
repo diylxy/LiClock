@@ -8,6 +8,7 @@
         "sstream": "cpp",
         "ff.h": "c",
         "lrodefs.h": "c",
-        "lualib.h": "c"
+        "lualib.h": "c",
+        "lauxlib.h": "c"
     }
 }

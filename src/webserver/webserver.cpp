@@ -8,14 +8,16 @@
 #include "index.h"
 #include "csss.h"
 #include "jss.h"
+#include "jss2.h"
 #include "favicon.h"
-#include "blocky.h"
-#include "toolbox_display.h"
+#include "blockly.h"
+#include "jss3.h"
 ////////////////////////////下面是lua部分//////////////////////////
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 TaskHandle_t lua_server_handle = NULL;
-bool serverRunning = false;
+static bool serverRunning = false;
+bool LuaRunning = false;            //全局变量，表示Lua服务器是否运行，用于防止调试时误退出
 extern "C" void lua_printf(const char *format, ...)
 {
     va_list argptr;
@@ -34,9 +36,11 @@ extern "C" void lua_printf(const char *format, ...)
 }
 static void task_lua_server(void *)
 {
+    LuaRunning = true;
     lua_execute("/littlefs/webtmp/main.lua");
     lua_printf("[Lua程序结束]\n");
     lua_server_handle = NULL;
+    LuaRunning = false;
     vTaskDelete(NULL);
 }
 
@@ -45,6 +49,7 @@ void luaExecuteHandler(AsyncWebServerRequest *request)
 {
     closeLua();
     openLua();
+    setPath("/littlefs/webtmp");
     xTaskCreate(task_lua_server, "lua_server", 10240, NULL, 0, &lua_server_handle);
     request->send(200, "text/plain", "OK");
 }
@@ -59,6 +64,7 @@ void luaTerminateHandler(AsyncWebServerRequest *request)
     closeLua();
     ws.textAll("\n[Lua语言服务任务已被删除]\n");
     request->send(200, "text/plain", "OK");
+    LuaRunning = false;
 }
 
 void rmrfHandler(AsyncWebServerRequest *request)
@@ -209,6 +215,7 @@ void beginWebServer()
     }
     server.onNotFound([](AsyncWebServerRequest *request)
                       {
+                        /*
         Serial.printf("NOT_FOUND: ");
         if(request->method() == HTTP_GET)
             Serial.printf("GET");
@@ -251,18 +258,21 @@ void beginWebServer()
                 Serial.printf("_GET[%s]: %s\n", p->name().c_str(), p->value().c_str());
             }
         }
+        */
 
-        request->send(404); });
+        //request->send(404);
+        request->redirect("http://192.168.4.1");
+         });
     ws.onEvent(onWsEvent);
     server.addHandler(&ws);
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
               { 
-                AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", (const uint8_t *)__index_html_gz, __index_html_gz_len);
+                AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", (const uint8_t *)__web_index_html_gz, __web_index_html_gz_len);
                 response->addHeader("Content-Encoding", "gzip");
                 request->send(response); });
-    server.on("/blocky", HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on("/blockly", HTTP_GET, [](AsyncWebServerRequest *request)
               { 
-                AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", (const uint8_t *)__Blocky_html_gz, __Blocky_html_gz_len);
+                AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", (const uint8_t *)__web_Blockly_html_gz, __web_Blockly_html_gz_len);
                 response->addHeader("Content-Encoding", "gzip");
                 request->send(response); });
     server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -272,17 +282,22 @@ void beginWebServer()
                 request->send(response); });
     server.on("/css/csss.css", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-                AsyncWebServerResponse *response = request->beginResponse_P(200, "text/css", (const uint8_t *)__csss_css_gz, __csss_css_gz_len);
+                AsyncWebServerResponse *response = request->beginResponse_P(200, "text/css", (const uint8_t *)__web_css_csss_css_gz, __web_css_csss_css_gz_len);
                 response->addHeader("Content-Encoding", "gzip");
                 request->send(response); });
     server.on("/js/jss.js", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-                AsyncWebServerResponse *response = request->beginResponse_P(200, "application/javascript", (const uint8_t *)__jss_js_gz, __jss_js_gz_len);
+                AsyncWebServerResponse *response = request->beginResponse_P(200, "application/javascript", (const uint8_t *)__web_js_jss_js_gz, __web_js_jss_js_gz_len);
                 response->addHeader("Content-Encoding", "gzip");
                 request->send(response); });
-    server.on("/js/toolbox_display.js", HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on("/js/jss2.js", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-                AsyncWebServerResponse *response = request->beginResponse_P(200, "application/javascript", (const uint8_t *)__js_toolbox_display_js_gz, __js_toolbox_display_js_gz_len);
+                AsyncWebServerResponse *response = request->beginResponse_P(200, "application/javascript", (const uint8_t *)__web_js_jss2_js_gz, __web_js_jss2_js_gz_len);
+                response->addHeader("Content-Encoding", "gzip");
+                request->send(response); });
+    server.on("/js/jss3.js", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+                AsyncWebServerResponse *response = request->beginResponse_P(200, "application/javascript", (const uint8_t *)__web_js_jss3_js_gz, __web_js_jss3_js_gz_len);
                 response->addHeader("Content-Encoding", "gzip");
                 request->send(response); });
 

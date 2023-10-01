@@ -110,15 +110,20 @@ static int gui_menu(lua_State *L)
         // 现在table在栈顶
         lua_pushinteger(L, i + 1);              // 压入位置
         lua_gettable(L, -2);                    // 总表在-2，栈顶是当前菜单项
-        options[i].title = lua_tostring(L, -1); // 读取标题
+        options[i].title = new char[40];
+        strncpy((char *)options[i].title, lua_tostring(L, -1), 40); // 读取标题
         options[i].icon = NULL;
-        lua_pop(L, 1);          
+        lua_pop(L, 1);
     }
-    options[len + 1].title = NULL;
-    options[len + 1].icon = NULL;
+    options[len].title = NULL;
+    options[len].icon = NULL;
     int ret = GUI::menu(title, options);
+    for (int i = 0; i < len; i++)
+    {
+        delete[] options[i].title;
+    }
     delete[] options;
-    lua_pushinteger(L, ret);
+    lua_pushinteger(L, ret + 1);
     return 1;
 }
 

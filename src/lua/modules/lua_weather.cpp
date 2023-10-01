@@ -4,6 +4,7 @@ extern const char *err_invalid_param;
 
 int weather_refresh(lua_State *L)
 {
+    hal.autoConnectWiFi();
     weather.refresh();
     return 0;
 }
@@ -145,7 +146,7 @@ static const luaL_Reg _lualib[] = {
     {NULL, NULL},
 };
 
-extern "C" int luaopen_weather(void)
+extern "C" int luaopen_weather(lua_State *L)
 {
     luaL_newlib(L, _lualib);
     return 1;

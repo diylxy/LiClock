@@ -42,7 +42,7 @@ static const luaL_Reg _lualib[] = {
     {NULL, NULL},
 };
 
-extern "C" int luaopen_appmanager(void)
+extern "C" int luaopen_appmanager(lua_State *L)
 {
     luaL_newlib(L, _lualib);
     return 1;

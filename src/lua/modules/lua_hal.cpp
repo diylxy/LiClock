@@ -65,6 +65,12 @@ int hal_powerOff(lua_State *L)
     return 0;
 }
 
+int hal_reboot(lua_State *L)
+{
+    ESP.restart();
+    return 0;
+}
+
 int hal_detachAllButtonEvents(lua_State *L)
 {
     hal.detachAllButtonEvents();
@@ -81,6 +87,7 @@ static const luaL_Reg _lualib[] =
         {"getTime", hal_getTime},
         {"autoConnectWiFi", hal_autoConnectWiFi},
         {"powerOff", hal_powerOff},
+        {"reboot", hal_reboot},
         {"detachAllButtonEvents", hal_detachAllButtonEvents},
         {NULL, NULL},
 };

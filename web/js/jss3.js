@@ -602,7 +602,7 @@ lua.luaGenerator.forBlock['display_settextcolor'] = function (block, generator) 
 };
 
 lua.luaGenerator.forBlock['display_setbackgroundcolor'] = function (block, generator) {
-  var dropdown_color = block.getFieldValue('color');
+  var dropdown_color = colorToNum(block.getFieldValue('color'));
   var code = 'display.setBackgroundColor(' + dropdown_color + ')\n';
   return code;
 };
@@ -615,22 +615,22 @@ lua.luaGenerator.forBlock['display_print'] = function (block, generator) {
 
 lua.luaGenerator.forBlock['display_getcursorx'] = function (block, generator) {
   var code = 'display.getCursorX()';
-  return [code, lua.ATOMIC];
+  return [code, lua.Order.ATOMIC];
 };
 
 lua.luaGenerator.forBlock['display_getcursory'] = function (block, generator) {
   var code = 'display.getCursorY()';
-  return [code, lua.ATOMIC];
+  return [code, lua.Order.ATOMIC];
 };
 
 lua.luaGenerator.forBlock['display_u8g2getcursorx'] = function (block, generator) {
   var code = 'display.u8g2GetCursorX()';
-  return [code, lua.ATOMIC];
+  return [code, lua.Order.ATOMIC];
 };
 
 lua.luaGenerator.forBlock['display_u8g2getcursory'] = function (block, generator) {
   var code = 'display.u8g2GetCursorY()';
-  return [code, lua.ATOMIC];
+  return [code, lua.Order.ATOMIC];
 };
 
 lua.luaGenerator.forBlock['display_u8g2print'] = function (block, generator) {
@@ -644,6 +644,337 @@ lua.luaGenerator.forBlock['display_drawlbm'] = function (block, generator) {
   var value_pos_y1 = generator.valueToCode(block, 'pos_y1', lua.Order.ATOMIC);
   var value_file = generator.valueToCode(block, 'file', lua.Order.ATOMIC);
   var dropdown_color = colorToNum(block.getFieldValue('color'));
-  var code = 'display.u8g2Print(' + value_pos_x1 + ', ' + value_pos_y1 + ', ' + value_file + ', ' + dropdown_color + ')\n';
+  var code = 'gui.drawLBM(' + value_pos_x1 + ', ' + value_pos_y1 + ', ' + value_file + ', ' + dropdown_color + ')\n';
   return code;
+};
+// AppManager
+Blockly.Blocks['appmanager_gotoapp'] = {
+  init: function() {
+    this.appendValueInput("appName")
+        .setCheck("String")
+        .appendField("跳转到App");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(315);
+ this.setTooltip("不会立即结束此App，在调试时无效");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['appmanager_goback'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("返回上个App");
+    this.setPreviousStatement(true, null);
+    this.setColour(315);
+ this.setTooltip("同时立即结束此App，在调试时无效");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['appmanager_nextwakeup'] = {
+  init: function() {
+    this.appendValueInput("next")
+        .setCheck("Number")
+        .appendField("设置间隔");
+    this.appendDummyInput()
+        .appendField("秒后唤醒");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(315);
+ this.setTooltip("设置为0则永不自动唤醒");
+ this.setHelpUrl("");
+  }
+};
+lua.luaGenerator.forBlock['appmanager_gotoapp'] = function(block, generator) {
+  var value_appname = generator.valueToCode(block, 'appName', lua.Order.ATOMIC);
+  var code = 'appManager.gotoApp(' + value_appname + ')\n';
+  return code;
+};
+
+lua.luaGenerator.forBlock['appmanager_goback'] = function(block, generator) {
+  var code = 'appManager.goBack()\nreturn\n';
+  return code;
+};
+
+lua.luaGenerator.forBlock['appmanager_nextwakeup'] = function(block, generator) {
+  var value_next = generator.valueToCode(block, 'next', lua.Order.ATOMIC);
+  var code = 'appManager.nextWakeup(' + value_next + ')\n';
+  return code;
+};
+//Buzzer
+Blockly.Blocks['buzzer_append'] = {
+  init: function() {
+    this.appendValueInput("freq")
+        .setCheck("Number")
+        .appendField("使蜂鸣器发出");
+    this.appendValueInput("duri")
+        .setCheck("Number")
+        .appendField("Hz的声音，持续");
+    this.appendDummyInput()
+        .appendField("毫秒");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(165);
+ this.setTooltip("异步");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['buzzer_playfile'] = {
+  init: function() {
+    this.appendValueInput("filename")
+        .setCheck("String")
+        .appendField("播放buz文件：");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(165);
+ this.setTooltip("异步");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['buzzer_forcestop'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("立即终止蜂鸣器播放");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(165);
+ this.setTooltip("并清空播放队列");
+ this.setHelpUrl("");
+  }
+};
+lua.luaGenerator.forBlock['buzzer_append'] = function(block, generator) {
+  var value_freq = generator.valueToCode(block, 'freq', lua.Order.ATOMIC);
+  var value_duri = generator.valueToCode(block, 'duri', lua.Order.ATOMIC);
+  var code = 'buzzer.append(' + value_freq + ', ' + value_duri + ')\n';
+  return code;
+};
+
+lua.luaGenerator.forBlock['buzzer_playfile'] = function(block, generator) {
+  var value_filename = generator.valueToCode(block, 'filename', lua.Order.ATOMIC);
+  var code = 'buzzer.playFile(' + value_filename + ')\n';
+  return code;
+};
+
+lua.luaGenerator.forBlock['buzzer_forcestop'] = function(block, generator) {
+  var code = 'buzzer.forceStop()\n';
+  return code;
+};
+//GUI
+Blockly.Blocks['gui_waitlongpress'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("正在长按")
+        .appendField(new Blockly.FieldDropdown([["左键","35"], ["中键","34"], ["右键","39"]]), "btn");
+    this.setOutput(true, null);
+    this.setColour(0);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['gui_autoindentdraw'] = {
+  init: function() {
+    this.appendValueInput("from")
+        .setCheck("Number")
+        .appendField("在x=");
+    this.appendValueInput("to")
+        .setCheck("Number")
+        .appendField("到");
+    this.appendValueInput("str")
+        .setCheck("String")
+        .appendField("范围内自动换行地显示");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(0);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['gui_drawwindowswithtitle'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("画一个窗口框架");
+    this.appendValueInput("str")
+        .setCheck("String")
+        .appendField("标题为");
+    this.appendValueInput("x")
+        .setCheck("Number")
+        .appendField("左上角x=");
+    this.appendValueInput("y")
+        .setCheck("Number")
+        .appendField("左上角y=");
+    this.appendValueInput("w")
+        .setCheck("Number")
+        .appendField("宽=");
+    this.appendValueInput("h")
+        .setCheck("Number")
+        .appendField("高=");
+    this.setInputsInline(false);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(0);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['gui_msgbox'] = {
+  init: function() {
+    this.appendValueInput("title")
+        .setCheck("String")
+        .appendField("弹出标题为");
+    this.appendValueInput("content")
+        .setCheck("String")
+        .appendField("内容为");
+    this.appendDummyInput()
+        .appendField("的消息框");
+    this.setInputsInline(false);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(0);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['gui_msgbox_yn'] = {
+  init: function() {
+    this.appendValueInput("title")
+        .setCheck("String")
+        .appendField("弹出标题为");
+    this.appendValueInput("content")
+        .setCheck("String")
+        .appendField("内容为");
+    this.appendDummyInput()
+        .appendField("的选择框，");
+    this.appendValueInput("yes")
+        .setCheck("String")
+        .appendField("确认按钮显示");
+    this.appendValueInput("no")
+        .setCheck("String")
+        .appendField("取消按钮显示");
+    this.setInputsInline(false);
+    this.setOutput(true, "Boolean");
+    this.setColour(0);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['gui_msgbox_number'] = {
+  init: function() {
+    this.appendValueInput("title")
+        .setCheck("String")
+        .appendField("以");
+    this.appendValueInput("digits")
+        .setCheck("Number")
+        .appendField("为标题输入");
+    this.appendValueInput("pre")
+        .setCheck("Number")
+        .appendField("位数，预输入");
+    this.setInputsInline(true);
+    this.setOutput(true, "Number");
+    this.setColour(0);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['gui_menu'] = {
+  init: function() {
+    this.appendValueInput("title")
+        .setCheck("String")
+        .appendField("弹出标题为：");
+    this.appendValueInput("list")
+        .setCheck("Array")
+        .appendField("的菜单");
+    this.setInputsInline(false);
+    this.setOutput(true, "Number");
+    this.setColour(0);
+ this.setTooltip("并返回选择的项目ID");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['gui_filedialog'] = {
+  init: function() {
+    this.appendValueInput("title")
+        .setCheck("String")
+        .appendField("弹出标题为：");
+    this.appendDummyInput()
+        .appendField("的文件菜单");
+    this.setInputsInline(false);
+    this.setOutput(true, "String");
+    this.setColour(0);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+lua.luaGenerator.forBlock['gui_waitlongpress'] = function(block, generator) {
+  var dropdown_btn = block.getFieldValue('btn');
+  // TODO: Assemble lua into code variable.
+  var code = 'gui.waitLongpress(' + dropdown_btn + ')';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['gui_autoindentdraw'] = function(block, generator) {
+  var value_from = generator.valueToCode(block, 'from', lua.Order.ATOMIC);
+  var value_to = generator.valueToCode(block, 'to', lua.Order.ATOMIC);
+  var value_str = generator.valueToCode(block, 'str', lua.Order.ATOMIC);
+  var code = 'gui.autoIndentDraw(' + value_str + ', ' + value_to + ', ' + value_from + ')\n';
+  return code;
+};
+
+lua.luaGenerator.forBlock['gui_drawwindowswithtitle'] = function(block, generator) {
+  var value_str = generator.valueToCode(block, 'str', lua.Order.ATOMIC);
+  var value_x = generator.valueToCode(block, 'x', lua.Order.ATOMIC);
+  var value_y = generator.valueToCode(block, 'y', lua.Order.ATOMIC);
+  var value_w = generator.valueToCode(block, 'w', lua.Order.ATOMIC);
+  var value_h = generator.valueToCode(block, 'h', lua.Order.ATOMIC);
+  var code = 'gui.drawWindowsWithTitle(' + value_str + ', ' + value_x + ', ' + value_y + ', ' + value_w + ', ' + value_h + ')\n';
+  return code;
+};
+
+lua.luaGenerator.forBlock['gui_msgbox'] = function(block, generator) {
+  var value_title = generator.valueToCode(block, 'title', lua.Order.ATOMIC);
+  var value_content = generator.valueToCode(block, 'content', lua.Order.ATOMIC);
+  var code = 'gui.msgbox(' + value_title + ', ' + value_content + ')\n';
+  return code;
+};
+
+lua.luaGenerator.forBlock['gui_msgbox_yn'] = function(block, generator) {
+  var value_title = generator.valueToCode(block, 'title', lua.Order.ATOMIC);
+  var value_content = generator.valueToCode(block, 'content', lua.Order.ATOMIC);
+  var value_yes = generator.valueToCode(block, 'yes', lua.Order.ATOMIC);
+  var value_no = generator.valueToCode(block, 'no', lua.Order.ATOMIC);
+  var code = 'gui.msgbox_yn(' + value_title + ', ' + value_content + ', ' + value_yes + ', ' + value_no + ')';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['gui_msgbox_number'] = function(block, generator) {
+  var value_title = generator.valueToCode(block, 'title', lua.Order.ATOMIC);
+  var value_digits = generator.valueToCode(block, 'digits', lua.Order.ATOMIC);
+  var value_pre = generator.valueToCode(block, 'pre', lua.Order.ATOMIC);
+  var code = 'gui.msgbox_number(' + value_title + ',' + value_digits + ', ' + value_pre + ')';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['gui_menu'] = function(block, generator) {
+  var value_title = generator.valueToCode(block, 'title', lua.Order.ATOMIC);
+  var value_list = generator.valueToCode(block, 'list', lua.Order.ATOMIC);
+  // TODO: Assemble lua into code variable.
+  var code = 'gui.menu(' + value_title + ', ' + value_list + ')';
+  // TODO: Change ORDER_NONE to the correct strength.
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['gui_filedialog'] = function(block, generator) {
+  var value_title = generator.valueToCode(block, 'title', lua.Order.ATOMIC);
+  var code = 'gui.fileDialog(' + value_title + ')';
+  return [code, lua.Order.ATOMIC];
 };

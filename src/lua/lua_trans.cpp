@@ -2,7 +2,7 @@
 
 const char *err_invalid_param = "参数个数不符";
 lua_State *L = NULL; // 公用Lua虚拟机状态
-char __mypath[101];
+extern char __mypath[101];
 
 static int common_delay(lua_State *L)
 {
@@ -72,7 +72,13 @@ static int common_pinMode(lua_State *L)
     pinMode(pin, mode);
     return 0;
 }
-
+void openLua_simple()
+{
+    if (L)
+        return;
+    Serial.println("Lua 部分初始化");
+    L = luaL_newstate();
+}
 void openLua()
 {
     if (L)

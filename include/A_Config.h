@@ -69,6 +69,8 @@ extern bool force_full_update;
 extern int part_refresh_count;
 extern uint8_t night_sleep;          // 夜间模式屏幕状态，0：不在夜间模式，1：晚安，2：早上好
 extern uint8_t night_sleep_today; // 今天是否进入过夜间模式
+extern bool LuaRunning;            //全局变量，表示Lua服务器是否运行，用于防止调试时误退出
+
 #define PARAM_GPS "p1"
 #define PARAM_FULLUPDATE "p2"
 #define PARAM_SLEEPATNIGHT "p3"

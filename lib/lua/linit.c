@@ -43,6 +43,7 @@ int luaopen_peri_aht(lua_State *L);
 int luaopen_peri_bmp(lua_State *L);
 int luaopen_peri_sgp(lua_State *L);
 int luaopen_weather(lua_State *L);
+int luaopen_http(lua_State *L);
 /*
 ** these libs are loaded by lua.c and are readily available to any Lua
 ** program
@@ -67,6 +68,7 @@ static const luaL_Reg loadedlibs[] = {
   {"bmp", luaopen_peri_bmp},
   {"sgp", luaopen_peri_sgp},
   {"weather", luaopen_weather},
+  {"http", luaopen_http},
   {NULL, NULL}
 };
 

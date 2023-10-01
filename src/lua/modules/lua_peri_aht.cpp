@@ -16,7 +16,7 @@ static const luaL_Reg _lualib[] = {
     {NULL, NULL},
 };
 
-extern "C" int luaopen_peri_aht(void)
+extern "C" int luaopen_peri_aht(lua_State *L)
 {
     luaL_newlib(L, _lualib);
     return 1;

@@ -36,6 +36,7 @@ int8_t Alarm::getNext(uint16_t week, uint16_t now)
         {
             if (alarm_table[i].time > now)
             {
+                // TODO!!!
                 if (next == -1)
                 {
                     next = i;
@@ -268,7 +269,7 @@ void Alarm::check()
         if (tmp != next_alarm_to)
         {
             alarm();
-            if((alarm_table[next_alarm_to].enable == 0))
+            if(alarm_table[next_alarm_to].enable == 0x80)
             {
                 alarm_table[next_alarm_to].enable = ALARM_DISABLE;
                 save();

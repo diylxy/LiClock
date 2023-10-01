@@ -151,6 +151,10 @@ void HAL::WiFiConfigManual()
         dnsServer.processNextRequest();
         updateWebServer();
         delay(5);
+        if (WiFi.softAPgetStationNum() == 0)
+        {
+            last_millis = millis();
+        }
         if (millis() - last_millis > 600000) // 10分钟超时
         {
             Serial.println("手动配置超时");
@@ -162,9 +166,15 @@ void HAL::WiFiConfigManual()
             hal.powerOff(false);
             ESP.restart();
         }
-        if(digitalRead(PIN_BUTTONC) == 0 || digitalRead(PIN_BUTTONL) == 0 || digitalRead(PIN_BUTTONR) == 0)
+        if (LuaRunning)
+            continue;
+        if (digitalRead(PIN_BUTTONL) == 0)
         {
-            ESP.restart();
+            if (GUI::waitLongPress(PIN_BUTTONL))
+            {
+                ESP.restart();
+                break;
+            }
         }
     }
 }

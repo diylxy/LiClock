@@ -39,7 +39,7 @@ int hal_timeinfo(lua_State *L)
     lua_pushinteger(L, hal.timeinfo.tm_hour);
     lua_pushinteger(L, hal.timeinfo.tm_min);
     lua_pushinteger(L, hal.timeinfo.tm_sec);
-    return 1;
+    return 7;
 }
 
 int hal_getTime(lua_State *L)

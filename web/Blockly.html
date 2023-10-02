@@ -846,6 +846,136 @@
                 </value>
             </block>
         </category>
+        <category name="硬件" colour="#5ba55b">
+            <block type="hal_vcc"></block>
+            <block type="hal_usbpluggedin"></block>
+            <block type="hal_ischarging"></block>
+            <block type="hal_now"></block>
+            <block type="hal_timeinfo"></block>
+            <block type="hal_gettime"></block>
+            <block type="hal_autoconnectwifi"></block>
+            <block type="hal_poweroff">
+                <field name="message">true</field>
+            </block>
+            <block type="hal_reboot"></block>
+        </category>
+        <category name="HTTP(S)" colour="#5b67a5">
+            <block type="http_begin">
+                <value name="url">
+                    <shadow type="text">
+                        <field name="TEXT">http://www.example.com</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="http_addheader">
+                <value name="header">
+                    <shadow type="text">
+                        <field name="TEXT">Content-Type</field>
+                    </shadow>
+                </value>
+                <value name="content">
+                    <shadow type="text">
+                        <field name="TEXT">application/json</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="http_request">
+                <field name="type">GET</field>
+                <value name="url">
+                    <shadow type="text">
+                        <field name="TEXT"></field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="http_text"></block>
+            <block type="http_code"></block>
+            <block type="http_end"></block>
+        </category>
+        <category name="外设" colour="#5b80a5">
+            <block type="peri_aht_get"></block>
+            <block type="peri_bmp_get">
+                <value name="NAME">
+                    <shadow type="math_number">
+                        <field name="NUM">101325</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="peri_sgp_get"></block>
+        </category>
+        <category name="天气" colour="#00bfff">
+            <block type="weather_refresh"></block>
+            <block type="weather_hour24">
+                <field name="type">weathernum</field>
+                <value name="hour">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="weather_realtime">
+                <field name="type">weathernum</field>
+            </block>
+            <block type="weather_five_days">
+                <field name="type">weathernum</field>
+                <value name="day">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="weather_rain"></block>
+            <block type="weather_desc1"></block>
+            <block type="weather_desc2"></block>
+            <block type="weather_hasalert"></block>
+            <block type="weather_alert"></block>
+            <block type="weather_alerttitle"></block>
+            <block type="weather_alertpubtime"></block>
+            <block type="weather_lastupdate"></block>
+        </category>
+        <category name="通用" colour="#a5745b">
+            <block type="common_delay">
+                <value name="ms">
+                    <shadow type="math_number">
+                        <field name="NUM">500</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="common_digitalwrite">
+                <value name="pin">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+                <value name="val">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="common_digitalread">
+                <value name="pin">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="common_analogread">
+                <value name="pin">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="common_pinmode">
+                <field name="NAME">0x03</field>
+                <value name="pin">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="tostring"></block>
+        </category>
         <sep></sep>
         <category name="变量" colour="#a55b80" custom="VARIABLE"></category>
         <category name="函数" colour="#995ba5" custom="PROCEDURE"></category>
@@ -877,6 +1007,7 @@
                         data-mdb-target="#modalNewFolder"><i class="fa fa-folder fa-lg" aria-hidden="true"></i></button>
                     <button type="button" class="btn btn-primary" id="btnGoBack">上级目录</button>
                     <button type="button" class="btn btn-warning" id="btnUpload">上传</button>
+                    <input type="file" id="fileInput" style="visibility: hidden; width: 0px;height: 0px;">
                     <button type="button" class="btn btn-danger" id="btnDeleteFolder">删除文件夹</button>
                     <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">关闭</button>
                 </div>
@@ -893,13 +1024,17 @@
                 </div>
                 <div class="modal-body" id="filePreviewBody">
                 </div>
+                <canvas id="canvas" width="592" height="256" style="display: none;">
+                    你的游览器不支持 canvas , 换一个吧。
+                </canvas>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-info" data-mdb-dismiss="modal" id="btnRename">重命名</button>
                     <button type="button" class="btn btn-info" data-mdb-dismiss="modal"
                         id="btnDownloadPreview">下载</button>
-                    <button type="button" class="btn btn-danger" data-mdb-dismiss="modal"
-                        id="btnDeletePreview">删除</button>
-                    <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-danger" data-mdb-toggle="modal"
+                        data-mdb-target="#modalFileList" id="btnDeletePreview">删除</button>
+                    <button type="button" class="btn btn-secondary" data-mdb-toggle="modal"
+                        data-mdb-target="#modalFileList">返回</button>
                 </div>
             </div>
         </div>
@@ -942,9 +1077,10 @@
                         placeholder="请输入新文件名"></input>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" data-mdb-dismiss="modal"
-                        id="btnRenameConfirm">确认</button>
+                    <button type="button" class="btn btn-secondary" data-mdb-toggle="modal"
+                        data-mdb-target="#modalFileList">取消</button>
+                    <button type="button" class="btn btn-primary" data-mdb-toggle="modal"
+                        data-mdb-target="#modalFileList" id="btnRenameConfirm">确认</button>
                 </div>
             </div>
         </div>
@@ -961,7 +1097,8 @@
                         placeholder="请输入新文件夹名"></input>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-mdb-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-secondary" data-mdb-toggle="modal"
+                        data-mdb-target="#modalFileList">取消</button>
                     <button type="button" class="btn btn-primary" data-mdb-toggle="modal"
                         data-mdb-target="#modalFileList" id="btnMkdirConfirm">确认</button>
                 </div>
@@ -985,7 +1122,7 @@
                     <div id="toolsArea" class="row globalContainer alert-primary shadow-4">
                         <div>
                             <button id="btnSave" class="btn btn-primary">保存工程</button>
-                            <input type="file" id="fileInput" style="visibility: hidden; width: 0px;height: 0px;">
+                            <input type="file" id="fileInputLd" style="visibility: hidden; width: 0px;height: 0px;">
                             <button id="btnLoad" class="btn btn-primary">加载工程</button>
                             <button type="button" class="btn btn-info" data-mdb-toggle="modal"
                                 data-mdb-target="#modalFileList" id="btnOpenFileManager">
@@ -1070,20 +1207,19 @@
             // 当你结束使用某个 URL 对象之后，应该通过调用这个方法来让浏览器知道不用在内存中继续保留对这个文件的引用了。
             URL.revokeObjectURL(objectURL)
         }
+        var fileInputLd = document.getElementById("fileInputLd");
+        fileInputLd.addEventListener("change", function (event) {
+            var selectedFile = event.target.files[0];  // 获取用户选择的文件
+            console.log("用户选择的文件：", selectedFile);
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var contents = e.target.result;
+                Blockly.serialization.workspaces.load(JSON.parse(contents), demoWorkspace);
+            };
+            reader.readAsText(selectedFile);
+        });
         btnLoad.onclick = () => {
-            var fileInput = document.getElementById("fileInput");
-            fileInput.click();  // 模拟点击文件输入框
-
-            fileInput.addEventListener("change", function (event) {
-                var selectedFile = event.target.files[0];  // 获取用户选择的文件
-                console.log("用户选择的文件：", selectedFile);
-                var reader = new FileReader();
-                reader.onload = function (e) {
-                    var contents = e.target.result;
-                    Blockly.serialization.workspaces.load(JSON.parse(contents), demoWorkspace);
-                };
-                reader.readAsText(selectedFile);
-            });
+            fileInputLd.click();  // 模拟点击文件输入框
         }
 
     </script>
@@ -1170,11 +1306,11 @@
                     if (xhr.status == 200) {
                         displayJson(0, "文件夹已创建");
                         gotodir(filename);
-                        refreshFileList();
                     }
                     else {
                         displayJson(1, "文件夹创建失败");
                     }
+                    refreshFileList();
                 }
             };
             xhr.send();
@@ -1182,7 +1318,7 @@
         }
         function downloadFile(content, fileName) {
             var aEle = document.createElement("a");// 创建a标签
-            aEle.download = fileName;// 设置下载文件的文件名
+            aEle.download = '/edit?edit=' + fileName;// 设置下载文件的文件名
             aEle.href = content;// content为后台返回的下载地址
             aEle.target = '_blank';
             aEle.click();
@@ -1200,12 +1336,13 @@
                     else {
                         displayJson(1, "重命名失败");
                     }
+                    refreshFileList();
                 }
             };
             xhr.send();
             displayJson(0, "已发送请求");
         }
-        function uploadText(str) {
+        function uploadText(str, run) {
             var formdata = new FormData();
             var strblob = new Blob([str], { type: 'text/plain' });
             formdata.append("data", strblob, "/webtmp/main.lua");
@@ -1214,7 +1351,24 @@
             xhr.onreadystatechange = function () {
                 if (xhr.readyState == 4) {
                     if (xhr.status == 200) {
-                        displayJson(0, "Lua代码区上传成功");
+                        if (run) {
+                            const xhr1 = new XMLHttpRequest();
+                            xhr1.open('GET', '/rundebug');
+                            xhr1.onreadystatechange = function () {
+                                if (xhr1.readyState == 4) {
+                                    if (xhr1.status == 200) {
+                                        displayJson(0, "已开始运行");
+                                    }
+                                }
+                                else {
+                                    displayJson(1, "运行失败，但代码上传成功");
+                                }
+                            }
+                            xhr1.send();
+                        }
+                        else {
+                            displayJson(0, "代码已上传");
+                        }
                     }
                     else {
                         displayJson(1, "Lua代码区上传失败");
@@ -1226,7 +1380,7 @@
         function createApp(name, conf) {
             console.log(name, conf);
             var textarea_code = document.getElementById('textarea_code');
-            uploadText(textarea_code.value);
+            uploadText(textarea_code.value, false);
             var formdata = new FormData();
             var strblob = new Blob([conf], { type: 'text/plain' });
             formdata.append("data", strblob, "/webtmp/conf.lua");
@@ -1349,6 +1503,12 @@
                                 currentFileName = element["name"];
                                 prev = document.getElementById('openFilePreview');
                                 prev.click();
+                                if (currentFilePath.endsWith('.lbm')) {
+                                    drawLBM('/edit?edit=' + currentFilePath)
+                                }
+                                else {
+                                    clearLBM()
+                                }
                             }
                         }
                         else {
@@ -1402,44 +1562,45 @@
         btnOpenFileManager.onclick = function () {
             refreshFileList();
         }
-        function upload() {
-            var fileInput = document.getElementById("fileInput");
-            fileInput.click();  // 模拟点击文件输入框
-            fileInput.addEventListener("change", function (event) {
-                var selectedFile = event.target.files[0];  // 获取用户选择的文件
-                console.log("用户选择的文件：", selectedFile);
-                let formData = new FormData();
-                var tmp = cwd;
-                if (tmp != '/')
-                    tmp += '/';
-                tmp += String(selectedFile.name);
-                formData.append("data", event.target.files[0], tmp);
-                console.log(tmp);
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST', '/edit');
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState == 4) {
-                        if (xhr.status == 200) {
-                            displayJson(0, "上传成功！");
-                        }
-                        else {
-                            displayJson(1, "上传失败！");
-                        }
+        var fileInput = document.getElementById("fileInput");
+        fileInput.addEventListener("change", function (event) {
+            var selectedFile = event.target.files[0];  // 获取用户选择的文件
+            console.log("用户选择的文件：", selectedFile);
+            let formData = new FormData();
+            var tmp = cwd;
+            if (tmp != '/')
+                tmp += '/';
+            tmp += String(selectedFile.name);
+            formData.append("data", event.target.files[0], tmp);
+            console.log(tmp);
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/edit');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4) {
+                    if (xhr.status == 200) {
+                        displayJson(0, "上传成功！");
+                        refreshFileList()
+                    }
+                    else {
+                        displayJson(1, "上传失败！");
                     }
                 }
-                xhr.upload.onprogress = function (event) {
-                    var uploadProgress = document.getElementById('uploadProgress');
-                    var prog = String((event.loaded / event.total) * 100);
-                    uploadProgress.style = 'width: ' + prog + '%;';
-                    uploadProgress.innerHTML = prog + "%";
-                    if (prog == "100")
-                        uploadProgress.className = "progress-bar bg-success";
-                    else
-                        uploadProgress.className = "progress-bar";
-                };
-                xhr.send(formData);
-                displayJson(0, "已发送请求");
-            });
+            }
+            xhr.upload.onprogress = function (event) {
+                var uploadProgress = document.getElementById('uploadProgress');
+                var prog = String(Math.ceil((event.loaded / event.total) * 100));
+                uploadProgress.style = 'width: ' + prog + '%;';
+                uploadProgress.innerHTML = prog + "%";
+                if (prog == "100")
+                    uploadProgress.className = "progress-bar bg-success";
+                else
+                    uploadProgress.className = "progress-bar";
+            };
+            xhr.send(formData);
+            displayJson(0, "已发送请求");
+        });
+        function upload() {
+            fileInput.click();  // 模拟点击文件输入框
         }
         document.getElementById('btnUpload').onclick = upload;
         var btnClearTerminal = document.getElementById('btnClearTerminal');
@@ -1481,8 +1642,8 @@
         }
         function btnDebug() {
             var textarea_code = document.getElementById('textarea_code');
-            uploadText(textarea_code.value);
-            runDebug();
+            uploadText(textarea_code.value, true);
+            //runDebug();
         }
         document.getElementById('btnDebug').onclick = btnDebug;
         var btnMkdirConfirm = document.getElementById('btnMkdirConfirm');
@@ -1491,6 +1652,64 @@
             if (input_Mkdir.value.trim() != "") {
                 mkdir(input_Mkdir.value.trim());
             }
+        }
+        function clearLBM() {
+            document.getElementById("canvas").style.display = "none";
+            var canvas = document.querySelector('#canvas')
+            var ctx = canvas.getContext('2d');
+            ctx.fillStyle = "rgba(255,255,255,1)";
+            ctx.fillRect(0, 0, 296 * 2, 128 * 2)
+        }
+        function drawLBM(url) {
+            document.getElementById("canvas").style.display = "inline";
+            var canvas = document.querySelector('#canvas')
+            var ctx = canvas.getContext('2d');
+            function drawDot(x, y) {
+                ctx.fillStyle = "rgba(0,0,0,1)";
+                ctx.fillRect(x * 2, y * 2, 2, 2)
+            }
+            function clearCanvas() {
+                if (canvas.getContext) {
+                    ctx.fillStyle = "rgba(255,255,255,1)";
+                    ctx.fillRect(0, 0, 296 * 2, 128 * 2)
+                    ctx.fillStyle = "rgba(255,255,0,0.1)";
+                    ctx.fillRect(0, 0, 296 * 2, 128 * 2)
+                } else {
+                    console.log('不支持getContext');
+                }
+            }
+            clearCanvas()
+            let xhr = new XMLHttpRequest();
+            xhr.open('get', url, true);  //url为地址链接
+            xhr.responseType = "blob";
+            xhr.onload = function () {
+                if (this.status == 200) {
+                    //承受二进制文件流
+                    var res = this.response;
+                    const buff = res.arrayBuffer()
+                    buff.then(function (value) {
+                        const uInt8 = new Uint8Array(value)
+                        ctx.fillStyle = "rgba(0,0,0,0.1)";
+                        var w = uInt8[0] + uInt8[1] * 256
+                        var h = uInt8[2] + uInt8[3] * 256
+                        var size = uInt8.length - 4
+                        var x = (296 - w) / 2
+                        var y = (128 - h) / 2
+                        ctx.fillRect(x * 2, y * 2, w * 2, h * 2)
+                        var real_w = Math.ceil(w / 8) * 8
+                        for (i = 0; i < h; ++i) {
+                            for (j = 0; j < w; ++j) {
+                                pos = i * (real_w / 8) + Math.floor(j / 8) + 4
+                                bit = 1 << (j % 8)
+                                if ((uInt8[pos] & bit) != 0) {
+                                    drawDot(x + j, y + i);
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            xhr.send();
         }
     </script>
 </body>

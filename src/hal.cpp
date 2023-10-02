@@ -170,11 +170,9 @@ void HAL::WiFiConfigManual()
             continue;
         if (digitalRead(PIN_BUTTONL) == 0)
         {
-            if (GUI::waitLongPress(PIN_BUTTONL))
-            {
-                ESP.restart();
-                break;
-            }
+            while(digitalRead(PIN_BUTTONL) == 0)delay(20);
+            ESP.restart();
+            break;
         }
     }
 }
@@ -415,7 +413,7 @@ void HAL::update(void)
     adc = analogRead(PIN_ADC);
     adc = adc * 6600 / 4096;
     VCC = adc;
-    if (adc > 4400)
+    if (adc > 4300)
     {
         USBPluggedIn = true;
     }

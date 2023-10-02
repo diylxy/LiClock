@@ -17,7 +17,7 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 TaskHandle_t lua_server_handle = NULL;
 static bool serverRunning = false;
-bool LuaRunning = false;            //全局变量，表示Lua服务器是否运行，用于防止调试时误退出
+bool LuaRunning = false; // 全局变量，表示Lua服务器是否运行，用于防止调试时误退出
 extern "C" void lua_printf(const char *format, ...)
 {
     va_list argptr;
@@ -50,7 +50,7 @@ void luaExecuteHandler(AsyncWebServerRequest *request)
     closeLua();
     openLua();
     setPath("/littlefs/webtmp");
-    xTaskCreate(task_lua_server, "lua_server", 10240, NULL, 0, &lua_server_handle);
+    xTaskCreate(task_lua_server, "lua_server", 40960, NULL, 0, &lua_server_handle);
     request->send(200, "text/plain", "OK");
 }
 
@@ -260,9 +260,15 @@ void beginWebServer()
         }
         */
 
-        //request->send(404);
-        request->redirect("http://192.168.4.1");
-         });
+        // request->send(404);
+        if(WiFi.softAPgetStationNum() != 0)
+        {
+            request->redirect("http://192.168.4.1");
+        }
+        else
+        {
+            request->send(404);
+        } });
     ws.onEvent(onWsEvent);
     server.addHandler(&ws);
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)

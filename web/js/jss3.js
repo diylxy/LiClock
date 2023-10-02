@@ -917,7 +917,7 @@ Blockly.Blocks['gui_filedialog'] = {
 };
 lua.luaGenerator.forBlock['gui_waitlongpress'] = function(block, generator) {
   var dropdown_btn = block.getFieldValue('btn');
-  // TODO: Assemble lua into code variable.
+
   var code = 'gui.waitLongpress(' + dropdown_btn + ')';
   return [code, lua.Order.ATOMIC];
 };
@@ -967,14 +967,676 @@ lua.luaGenerator.forBlock['gui_msgbox_number'] = function(block, generator) {
 lua.luaGenerator.forBlock['gui_menu'] = function(block, generator) {
   var value_title = generator.valueToCode(block, 'title', lua.Order.ATOMIC);
   var value_list = generator.valueToCode(block, 'list', lua.Order.ATOMIC);
-  // TODO: Assemble lua into code variable.
+
   var code = 'gui.menu(' + value_title + ', ' + value_list + ')';
-  // TODO: Change ORDER_NONE to the correct strength.
+  
   return [code, lua.Order.ATOMIC];
 };
 
 lua.luaGenerator.forBlock['gui_filedialog'] = function(block, generator) {
   var value_title = generator.valueToCode(block, 'title', lua.Order.ATOMIC);
   var code = 'gui.fileDialog(' + value_title + ')';
+  return [code, lua.Order.ATOMIC];
+};
+//HAL
+Blockly.Blocks['hal_vcc'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("电源电压");
+    this.setOutput(true, "Number");
+    this.setColour(135);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['hal_usbpluggedin'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("USB已插入");
+    this.setOutput(true, "Boolean");
+    this.setColour(135);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['hal_ischarging'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("正在充电");
+    this.setOutput(true, "Boolean");
+    this.setColour(135);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['hal_now'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("当前UTC时间");
+    this.setOutput(true, "Number");
+    this.setColour(135);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['hal_timeinfo'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("当前时间（List）");
+    this.setOutput(true, "Array");
+    this.setColour(135);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['hal_gettime'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("重新读取RTC时间");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(135);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['hal_autoconnectwifi'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("自动连接WiFi");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(135);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['hal_poweroff'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("关机，")
+        .appendField(new Blockly.FieldDropdown([["并显示“已关机”","true"], ["但不改变屏幕内容","false"]]), "message");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(135);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['hal_reboot'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("重启");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(135);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+lua.luaGenerator.forBlock['hal_vcc'] = function(block, generator) {
+
+  var code = 'hal.VCC()';
+  
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['hal_usbpluggedin'] = function(block, generator) {
+
+  var code = 'hal.USBPluggedIn()';
+  
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['hal_ischarging'] = function(block, generator) {
+
+  var code = 'hal.isCharging()';
+  
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['hal_now'] = function(block, generator) {
+
+  var code = 'hal.now()';
+  
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['hal_timeinfo'] = function(block, generator) {
+
+  var code = 'hal.timeinfo()';
+  
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['hal_gettime'] = function(block, generator) {
+
+  var code = 'hal.getTime()\n';
+  return code;
+};
+
+lua.luaGenerator.forBlock['hal_autoconnectwifi'] = function(block, generator) {
+
+  var code = 'hal.autoConnectWiFi()\n';
+  return code;
+};
+
+lua.luaGenerator.forBlock['hal_poweroff'] = function(block, generator) {
+  var dropdown_message = block.getFieldValue('message');
+
+  var code = 'hal.powerOff(' + dropdown_message +')\n';
+  return code;
+};
+
+lua.luaGenerator.forBlock['hal_reboot'] = function(block, generator) {
+
+  var code = 'hal.reboot()\n';
+  return code;
+};
+//HTTP
+Blockly.Blocks['http_begin'] = {
+  init: function() {
+    this.appendValueInput("url")
+        .setCheck("String")
+        .appendField("初始化连接到HTTP(S)网址");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+ this.setTooltip("请在发送请求前调用，不支持多线程");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['http_addheader'] = {
+  init: function() {
+    this.appendValueInput("header")
+        .setCheck("String")
+        .appendField("添加HTTP头");
+    this.appendValueInput("content")
+        .setCheck("String")
+        .appendField("内容");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+ this.setTooltip("请在初始化HTTP后使用");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['http_request'] = {
+  init: function() {
+    this.appendValueInput("url")
+        .setCheck("String")
+        .appendField("发送")
+        .appendField(new Blockly.FieldDropdown([["GET","GET"], ["POST","POST"], ["HEAD","HEAD"], ["PUT","PUT"], ["PATCH","PATCH"], ["OPTIONS","OPTIONS"], ["DELETE","DELETE"], ["CONNECT","CONNECT"], ["TRACE","TRACE"]]), "type")
+        .appendField("到服务器，POST参数：");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+ this.setTooltip("不支持多线程");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['http_text'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("HTTP响应文本");
+    this.setOutput(true, "String");
+    this.setColour(230);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['http_code'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("HTTP响应码");
+    this.setOutput(true, "Number");
+    this.setColour(230);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['http_end'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("结束使用HTTP(S)");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+lua.luaGenerator.forBlock['http_begin'] = function(block, generator) {
+  var value_url = generator.valueToCode(block, 'url', lua.Order.ATOMIC);
+  var code = 'http.begin(' + value_url + ')\n';
+  return code;
+};
+
+lua.luaGenerator.forBlock['http_addheader'] = function(block, generator) {
+  var value_header = generator.valueToCode(block, 'header', lua.Order.ATOMIC);
+  var value_content = generator.valueToCode(block, 'content', lua.Order.ATOMIC);
+  var code = 'http.addHeader(' + value_header + ', ' + value_content +')\n';
+  return code;
+};
+
+lua.luaGenerator.forBlock['http_request'] = function(block, generator) {
+  var dropdown_type = block.getFieldValue('type');
+  var value_url = generator.valueToCode(block, 'url', lua.Order.ATOMIC);
+  var code = 'http.request(\'' + dropdown_type + '\', ' + value_url +')\n';
+  return code;
+};
+
+lua.luaGenerator.forBlock['http_text'] = function(block, generator) {
+  var code = 'http.text()';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['http_code'] = function(block, generator) {
+  var code = 'http.code()';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['http_end'] = function(block, generator) {
+  var code = 'http.stop()\n';
+  return code;
+};
+//外设
+Blockly.Blocks['peri_aht_get'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("读取AHT20传感器数据");
+    this.setOutput(true, "Array");
+    this.setColour(195);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['peri_bmp_get'] = {
+  init: function() {
+    this.appendValueInput("NAME")
+        .setCheck("Number")
+        .appendField("读取BMP280传感器数据，使用基准海平面气压");
+    this.appendDummyInput()
+        .appendField("Pa");
+    this.setOutput(true, "Array");
+    this.setColour(195);
+ this.setTooltip("气压，温度，海拔");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['peri_sgp_get'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("读取SGP30传感器数据");
+    this.setOutput(true, "Array");
+    this.setColour(195);
+ this.setTooltip("TVOC和eCO2");
+ this.setHelpUrl("");
+  }
+};
+lua.luaGenerator.forBlock['peri_aht_get'] = function(block, generator) {
+  var code = 'aht.get()';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['peri_bmp_get'] = function(block, generator) {
+  var value_name = generator.valueToCode(block, 'NAME', lua.Order.ATOMIC);
+  var code = 'bmp.get(' + value_name + ')';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['peri_sgp_get'] = function(block, generator) {
+  var code = 'sgp.get()';
+  return [code, lua.Order.ATOMIC];
+};
+//weather
+Blockly.Blocks['weather_refresh'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("立即更新天气");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(230);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['weather_hour24'] = {
+  init: function() {
+    this.appendValueInput("hour")
+        .setCheck("Number")
+        .appendField("读取");
+    this.appendDummyInput()
+        .appendField("小时后的")
+        .appendField(new Blockly.FieldDropdown([["天气类型","weathernum"], ["温度","temperature"], ["湿度","humidity"], ["风速","windspeed"], ["风向","winddirection"], ["降水量","rain"], ["日期","date"]]), "type");
+    this.setOutput(true, null);
+    this.setColour(230);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['weather_realtime'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("读取现在的")
+        .appendField(new Blockly.FieldDropdown([["天气类型","weathernum"], ["温度","temperature"], ["湿度","humidity"], ["气压","pressure"]]), "type");
+    this.setOutput(true, null);
+    this.setColour(230);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['weather_five_days'] = {
+  init: function() {
+    this.appendValueInput("day")
+        .setCheck("Number")
+        .appendField("读取");
+    this.appendDummyInput()
+        .appendField("天后的")
+        .appendField(new Blockly.FieldDropdown([["天气类型","weathernum"], ["最高气温","max"], ["最低气温","min"]]), "type");
+    this.setOutput(true, null);
+    this.setColour(230);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['weather_rain'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("120分钟降水数据");
+    this.setOutput(true, "Array");
+    this.setColour(230);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['weather_desc1'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("天气自然语言描述");
+    this.setOutput(true, "String");
+    this.setColour(230);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['weather_desc2'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("降水自然语言描述");
+    this.setOutput(true, "String");
+    this.setColour(230);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['weather_hasalert'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("有天气预警");
+    this.setOutput(true, "Boolean");
+    this.setColour(230);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['weather_alert'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("天气预警内容");
+    this.setOutput(true, "String");
+    this.setColour(230);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['weather_alerttitle'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("天气预警标题");
+    this.setOutput(true, "String");
+    this.setColour(230);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['weather_alertpubtime'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("天气预警发布时间");
+    this.setOutput(true, "Number");
+    this.setColour(230);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['weather_lastupdate'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("天气更新时间");
+    this.setOutput(true, "Number");
+    this.setColour(230);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+lua.luaGenerator.forBlock['weather_refresh'] = function(block, generator) {
+  var code = 'weather.refresh()\n';
+  return code;
+};
+
+lua.luaGenerator.forBlock['weather_hour24'] = function(block, generator) {
+  var value_hour = generator.valueToCode(block, 'hour', lua.Order.ATOMIC);
+  var dropdown_type = block.getFieldValue('type');
+  var code = 'weather.hour24(' + value_hour + ')[\'' + dropdown_type + '\']';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['weather_realtime'] = function(block, generator) {
+  var dropdown_type = block.getFieldValue('type');
+  var code = 'weather.realtime()[\'' + dropdown_type + '\']';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['weather_five_days'] = function(block, generator) {
+  var value_day = generator.valueToCode(block, 'day', lua.Order.ATOMIC);
+  var dropdown_type = block.getFieldValue('type');
+  var code = 'weather.five_days(' + value_day + ')[\'' + dropdown_type + '\']';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['weather_rain'] = function(block, generator) {
+  var code = 'weather.rain()';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['weather_desc1'] = function(block, generator) {
+  var code = 'weather.desc1()';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['weather_desc2'] = function(block, generator) {
+  var code = 'weather.desc2()';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['weather_hasalert'] = function(block, generator) {
+  var code = 'weather.hasAlert()';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['weather_alert'] = function(block, generator) {
+  var code = 'weather.alert()';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['weather_alerttitle'] = function(block, generator) {
+  var code = 'weather.alertTitle()';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['weather_alertpubtime'] = function(block, generator) {
+  var code = 'weather.alertPubTime()';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['weather_lastupdate'] = function(block, generator) {
+  var code = 'weather.lastupdate()';
+  return [code, lua.Order.ATOMIC];
+};
+//通用
+Blockly.Blocks['common_delay'] = {
+  init: function() {
+    this.appendValueInput("ms")
+        .setCheck("Number")
+        .appendField("程序暂停");
+    this.appendDummyInput()
+        .appendField("毫秒");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(15);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['common_digitalwrite'] = {
+  init: function() {
+    this.appendValueInput("pin")
+        .setCheck("Number")
+        .appendField("设置");
+    this.appendValueInput("val")
+        .setCheck("Number")
+        .appendField("管脚电平为");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(15);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['common_digitalread'] = {
+  init: function() {
+    this.appendValueInput("pin")
+        .setCheck("Number")
+        .appendField("读取");
+    this.appendDummyInput()
+        .appendField("管脚电平");
+    this.setInputsInline(true);
+    this.setOutput(true, "Number");
+    this.setColour(15);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['common_analogread'] = {
+  init: function() {
+    this.appendValueInput("pin")
+        .setCheck("Number")
+        .appendField("读取");
+    this.appendDummyInput()
+        .appendField("管脚模拟量");
+    this.setInputsInline(true);
+    this.setOutput(true, "Number");
+    this.setColour(15);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['common_pinmode'] = {
+  init: function() {
+    this.appendValueInput("pin")
+        .setCheck("Number")
+        .appendField("设置");
+    this.appendDummyInput()
+        .appendField("管脚功能为")
+        .appendField(new Blockly.FieldDropdown([["输出","0x03"], ["输入上拉","0x05"], ["输入下拉","0x09"], ["开漏","0x10"], ["开漏输出","0x12"], ["模拟输出","0xC0"]]), "NAME");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(15);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Blocks['tostring'] = {
+  init: function() {
+    this.appendValueInput("obj")
+        .setCheck(null)
+        .appendField("转化为文本类型");
+    this.setOutput(true, "String");
+    this.setColour(165);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+lua.luaGenerator.forBlock['common_delay'] = function(block, generator) {
+  var value_ms = generator.valueToCode(block, 'ms', lua.Order.ATOMIC);
+  var code = 'delay(' + value_ms + ')\n';
+  return code;
+};
+
+lua.luaGenerator.forBlock['common_digitalwrite'] = function(block, generator) {
+  var value_pin = generator.valueToCode(block, 'pin', lua.Order.ATOMIC);
+  var value_val = generator.valueToCode(block, 'val', lua.Order.ATOMIC);
+  var code = 'digitalWrite(' + value_pin + ', ' + value_val + ')\n';
+  return code;
+};
+
+lua.luaGenerator.forBlock['common_digitalread'] = function(block, generator) {
+  var value_pin = generator.valueToCode(block, 'pin', lua.Order.ATOMIC);
+  var code = 'digitalRead(' + value_pin + ')';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['common_analogread'] = function(block, generator) {
+  var value_pin = generator.valueToCode(block, 'pin', lua.Order.ATOMIC);
+  var code = 'analogRead(' + value_pin + ')';
+  return [code, lua.Order.ATOMIC];
+};
+
+lua.luaGenerator.forBlock['common_pinmode'] = function(block, generator) {
+  var value_pin = generator.valueToCode(block, 'pin', lua.Order.ATOMIC);
+  var dropdown_name = block.getFieldValue('NAME');
+  var code = 'pinMode(' + value_pin + ', ' + dropdown_name + ')\n';
+  return code;
+};
+
+lua.luaGenerator.forBlock['tostring'] = function(block, generator) {
+  var value_obj = generator.valueToCode(block, 'obj', lua.Order.ATOMIC);
+  var code = 'tostring(' + value_obj + ')';
   return [code, lua.Order.ATOMIC];
 };

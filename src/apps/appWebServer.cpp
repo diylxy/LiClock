@@ -43,7 +43,7 @@ void AppWebserver::setup()
         beginWebServer();
         u8g2Fonts.printf("请在浏览器中打开以下网址\n");
         u8g2Fonts.printf("http://%s\n", WiFi.localIP().toString().c_str());
-        u8g2Fonts.printf("长按左键重启\n");
+        u8g2Fonts.printf("Lua未运行时按左键重启\n");
         display.display(true);
         while (1)
         {
@@ -52,25 +52,14 @@ void AppWebserver::setup()
                 continue;
             if (digitalRead(PIN_BUTTONL) == 0)
             {
-                if (GUI::waitLongPress(PIN_BUTTONL))
-                {
-                    ESP.restart();
-                    break;
-                }
+                while(digitalRead(PIN_BUTTONL) == 0)delay(20);
+                ESP.restart();
+                break;
             }
         }
     }
     else
     {
-        display.clearScreen();
-        u8g2Fonts.setCursor(0, 15);
-        u8g2Fonts.setFontMode(1);
-        u8g2Fonts.printf("将启动临时SoftAP和HTTP服务器\n");
-        u8g2Fonts.printf("请按照屏幕提示操作\n");
-        u8g2Fonts.printf("长按左键重启\n");
-        u8g2Fonts.printf("10分钟后如果无人连接则自动重启\n");
-        display.display(false);
-        delay(3000);
         hal.WiFiConfigManual();
         ESP.restart();
     }

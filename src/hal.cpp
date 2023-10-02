@@ -298,6 +298,9 @@ bool HAL::init()
             powerOff(false);
             ESP.restart();
         }
+    }
+    if(LittleFS.exists("/config.json") == false)
+    {
         Serial.println("正在写入默认配置");
         File f = LittleFS.open("/config.json", "w");
         f.print(DEFAULT_CONFIG);

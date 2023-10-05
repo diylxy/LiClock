@@ -442,7 +442,22 @@ void AppSettings::menu_other()
                     Serial.println(tmp->name);
                     if (GUI::msgbox_yn("警告", "选择不兼容的App可能会导致无法开机，是否确认？") == true)
                     {
-                        hal.pref.putString(SETTINGS_PARAM_HOME_APP, tmp->name);
+                        if(strcmp(tmp->name, "clock") == 0)
+                        {
+                            config[PARAM_CLOCKONLY] = "0";
+                            hal.saveConfig();
+                            hal.pref.putString(SETTINGS_PARAM_HOME_APP, "clock");
+                        }
+                        else if(strcmp(tmp->name, "clockonly") == 0)
+                        {
+                            config[PARAM_CLOCKONLY] = "0";
+                            hal.saveConfig();
+                            hal.pref.putString(SETTINGS_PARAM_HOME_APP, "clock");
+                        }
+                        else
+                        {
+                            hal.pref.putString(SETTINGS_PARAM_HOME_APP, tmp->name);
+                        }
                         GUI::msgbox("设置成功", "重启或下次唤醒后生效");
                     }
                 }
@@ -466,10 +481,12 @@ void AppSettings::menu_other()
                         u8g2Fonts.drawUTF8(30, 40, "正在格式化NVS存储");
                         display.display();
                         nvs_flash_erase();
+                        display.clearScreen();
                         u8g2Fonts.drawUTF8(30, 40, "正在格式化LittleFS存储");
                         display.display(true);
                         LittleFS.end();
                         LittleFS.format();
+                        display.clearScreen();
                         u8g2Fonts.drawUTF8(30, 40, "完成，正在重启");
                         display.display(true);
                         ESP.restart();

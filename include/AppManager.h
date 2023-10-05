@@ -95,6 +95,7 @@ public:
     bool noDeepSleep = false;                     // 禁止进入DeepSleep模式
     uint32_t nextWakeup = 0;                      // 预定下次唤醒，注意如果是deepsleep唤醒需要重新设置
     void attachLocalEvent();                      // 附加appManager按钮事件
+    String bootapp;
 };
 
 extern AppManager appManager;

@@ -1271,6 +1271,15 @@ stage2:
     u8g2Fonts.drawUTF8(40, 85, "网络连接");
     display.display(true);
     hal.pref.putInt("oobe", 2);
+    if(config[PARAM_CLOCKONLY] == "1" && hal.pref.getInt("oobe", 0) == 2)
+    {
+        display.clearScreen();
+        u8g2Fonts.drawUTF8(95, 100, "使用离线模式，重启中...");
+        display.display(true);
+        hal.pref.putString(SETTINGS_PARAM_HOME_APP, "clock");
+        hal.pref.putInt("oobe", 3);
+        ESP.restart();
+    }
     hal.autoConnectWiFi();
     u8g2Fonts.drawUTF8(40, 100, "NTP同步");
     display.display(true);

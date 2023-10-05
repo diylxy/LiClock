@@ -35,16 +35,23 @@ AppBase *AppManager::getPtrByName(const char *appName)
 
 AppBase *AppManager::getRealClock()
 {
-    String bootapp = hal.pref.getString(SETTINGS_PARAM_HOME_APP, "");
+    bootapp = hal.pref.getString(SETTINGS_PARAM_HOME_APP, "");
     if (bootapp == "")
     {
-        hal.pref.putString(SETTINGS_PARAM_HOME_APP, "clockonly");
-        bootapp = "clockonly";
+        hal.pref.putString(SETTINGS_PARAM_HOME_APP, "clock");
+        bootapp = "clock";
+    }
+    if(bootapp == "clock")
+    {
+        if(config[PARAM_CLOCKONLY] == "1")
+        {
+            bootapp = "clockonly";
+        }
     }
     if (appManager.getPtrByName(bootapp.c_str()) == NULL)
     {
         Serial.println("严重错误 之前设置的App不存在，使用默认时钟App");
-        hal.pref.putString(SETTINGS_PARAM_HOME_APP, "clockonly");
+        hal.pref.putString(SETTINGS_PARAM_HOME_APP, "clock");
         bootapp = "clockonly";
     }
     return getPtrByName(bootapp.c_str());
@@ -574,6 +581,15 @@ bool AppManager::recover(AppBase *home)
             appStack.push(home);
         else
             appStack.push(getRealClock());
+        if(strcmp(latest_appname, "clock") == 0)
+        {
+            if(strcmp(home->name, "clockonly") == 0)
+            {
+                Serial.println("已设置离线模式，此App被替换为clockonly");
+                gotoApp("clockonly");
+                return true;
+            }
+        }
         gotoApp(latest_appname);
         return true;
     }

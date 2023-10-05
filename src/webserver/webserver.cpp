@@ -206,7 +206,21 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
         }
     }
 }
-
+static void sendreq(AsyncWebServerRequest *request, const char *mime, const uint8_t *name, unsigned int len)
+{
+    const char *buildTime = __DATE__ " " __TIME__ " GMT";
+    if (request->header("If-Modified-Since").equals(buildTime))
+    {
+        request->send(304);
+    }
+    else
+    {
+        AsyncWebServerResponse *response = request->beginResponse_P(200, mime, name, len);
+        response->addHeader("Content-Encoding", "gzip");
+        response->addHeader("Last-Modified", buildTime);
+        request->send(response);
+    }
+}
 void beginWebServer()
 {
     if (LittleFS.exists("/webtmp") == false)
@@ -215,52 +229,6 @@ void beginWebServer()
     }
     server.onNotFound([](AsyncWebServerRequest *request)
                       {
-                        /*
-        Serial.printf("NOT_FOUND: ");
-        if(request->method() == HTTP_GET)
-            Serial.printf("GET");
-        else if(request->method() == HTTP_POST)
-            Serial.printf("POST");
-        else if(request->method() == HTTP_DELETE)
-            Serial.printf("DELETE");
-        else if(request->method() == HTTP_PUT)
-            Serial.printf("PUT");
-        else if(request->method() == HTTP_PATCH)
-            Serial.printf("PATCH");
-        else if(request->method() == HTTP_HEAD)
-            Serial.printf("HEAD");
-        else if(request->method() == HTTP_OPTIONS)
-            Serial.printf("OPTIONS");
-        else
-            Serial.printf("UNKNOWN");
-        Serial.printf(" http://%s%s\n", request->host().c_str(), request->url().c_str());
-
-        if(request->contentLength()){
-            Serial.printf("_CONTENT_TYPE: %s\n", request->contentType().c_str());
-            Serial.printf("_CONTENT_LENGTH: %u\n", request->contentLength());
-        }
-
-        int headers = request->headers();
-        int i;
-        for(i=0;i<headers;i++){
-            AsyncWebHeader* h = request->getHeader(i);
-            Serial.printf("_HEADER[%s]: %s\n", h->name().c_str(), h->value().c_str());
-        }
-
-        int params = request->params();
-        for(i=0;i<params;i++){
-            AsyncWebParameter* p = request->getParam(i);
-            if(p->isFile()){
-                Serial.printf("_FILE[%s]: %s, size: %u\n", p->name().c_str(), p->value().c_str(), p->size());
-            } else if(p->isPost()){
-                Serial.printf("_POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
-            } else {
-                Serial.printf("_GET[%s]: %s\n", p->name().c_str(), p->value().c_str());
-            }
-        }
-        */
-
-        // request->send(404);
         if(WiFi.softAPgetStationNum() != 0)
         {
             request->redirect("http://192.168.4.1");
@@ -272,52 +240,25 @@ void beginWebServer()
     ws.onEvent(onWsEvent);
     server.addHandler(&ws);
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-              { 
-                AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", (const uint8_t *)__web_index_html_gz, __web_index_html_gz_len);
-                response->addHeader("Content-Encoding", "gzip");
-                request->send(response); });
+              { sendreq(request, "text/html", __web_index_html_gz, __web_index_html_gz_len); });
     server.on("/blockly", HTTP_GET, [](AsyncWebServerRequest *request)
-              { 
-                AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", (const uint8_t *)__web_Blockly_html_gz, __web_Blockly_html_gz_len);
-                response->addHeader("Content-Encoding", "gzip");
-                request->send(response); });
+              { sendreq(request, "text/html", __web_Blockly_html_gz, __web_Blockly_html_gz_len); });
     server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
-                AsyncWebServerResponse *response = request->beginResponse_P(200, "image/x-icon", (const uint8_t *)__favicon_ico_gz, __favicon_ico_gz_len);
-                response->addHeader("Content-Encoding", "gzip");
-                request->send(response); });
+              { sendreq(request, "image/x-icon", __favicon_ico_gz, __favicon_ico_gz_len); });
     server.on("/css/csss.css", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
-                AsyncWebServerResponse *response = request->beginResponse_P(200, "text/css", (const uint8_t *)__web_css_csss_css_gz, __web_css_csss_css_gz_len);
-                response->addHeader("Content-Encoding", "gzip");
-                request->send(response); });
+              { sendreq(request, "text/css", __web_css_csss_css_gz, __web_css_csss_css_gz_len); });
     server.on("/js/jss.js", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
-                AsyncWebServerResponse *response = request->beginResponse_P(200, "application/javascript", (const uint8_t *)__web_js_jss_js_gz, __web_js_jss_js_gz_len);
-                response->addHeader("Content-Encoding", "gzip");
-                request->send(response); });
+              { sendreq(request, "application/javascript", __web_js_jss_js_gz, __web_js_jss_js_gz_len); });
     server.on("/js/jss2.js", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
-                AsyncWebServerResponse *response = request->beginResponse_P(200, "application/javascript", (const uint8_t *)__web_js_jss2_js_gz, __web_js_jss2_js_gz_len);
-                response->addHeader("Content-Encoding", "gzip");
-                request->send(response); });
+              { sendreq(request, "application/javascript", __web_js_jss2_js_gz, __web_js_jss2_js_gz_len); });
     server.on("/js/jss3.js", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
-                AsyncWebServerResponse *response = request->beginResponse_P(200, "application/javascript", (const uint8_t *)__web_js_jss3_js_gz, __web_js_jss3_js_gz_len);
-                response->addHeader("Content-Encoding", "gzip");
-                request->send(response); });
+              { sendreq(request, "application/javascript", __web_js_jss3_js_gz, __web_js_jss3_js_gz_len); });
 
     server.on("/info", HTTP_GET, [](AsyncWebServerRequest *request)
               {
                                 String message;
                                 message += "IP地址: ";
                                 message += WiFi.localIP().toString();
-                                refreshIPV6Addr();
-                                if(strcmp(ipv6_to_str(&ipv6global) ,"::") != 0)
-                                {
-                                                message += "<br/>IPv6地址: ";
-                                                message += ipv6_to_str(&ipv6global);
-                                }
                                 message += "<br/>MAC地址: ";
                                 message += WiFi.macAddress();
                                 message += "<br/>系统时间: ";
@@ -370,5 +311,5 @@ void beginWebServer()
 void updateWebServer()
 {
     ws.cleanupClients();
-    delay(300);
+    delay(100);
 }

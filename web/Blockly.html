@@ -1261,7 +1261,7 @@
         }
         function deleteFile(filename) {
             var xhr = new XMLHttpRequest();
-            xhr.open('DELETE', 'http://192.168.1.213/edit', true);
+            xhr.open('DELETE', '/edit', true);
             xhr.onreadystatechange = function () {
                 if (xhr.readyState == 4 && xhr.status == 200) {
                     var data = xhr.responseText;

@@ -1,5 +1,4 @@
 import mido
-import time
 
 midi_to_freq=[
     16,
@@ -130,7 +129,8 @@ midi_to_freq=[
     22350,
     23679,
     25087]
-mid = mido.MidiFile('/home/lxy/献给爱丽丝.mid')
+filename = input("请输入文件名")
+mid = mido.MidiFile(filename)
 channel = 0
 
 tempo = 500000
@@ -172,7 +172,7 @@ import struct
 2字节：频率
 2字节：时间
 """
-with open('献给爱丽丝.buz', 'wb') as f:
+with open(filename.replace(".mid", ".buz").replace(".midi", ".buz"), 'wb') as f:
     for i in range(len(music)):
         if i == 0 and music[i]['freq'] == 0:
             continue

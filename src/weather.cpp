@@ -76,13 +76,14 @@ int8_t Weather::refresh()
     http.addHeader("Accept", "*/*");
     http.addHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36");
 
+    hal.autoConnectWiFi();
     Serial.println("开始更新天气");
     int httpCode = http.GET();
 
     if (httpCode == HTTP_CODE_OK)
     {
         DynamicJsonDocument doc(50000);
-        auto s = http.getString();
+        auto s = http.getStream();
         deserializeJson(doc, s);
         if (doc["status"] != "ok")
         { // API失效

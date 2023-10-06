@@ -4,7 +4,6 @@ extern const char *err_invalid_param;
 
 int weather_refresh(lua_State *L)
 {
-    hal.autoConnectWiFi();
     weather.refresh();
     return 0;
 }

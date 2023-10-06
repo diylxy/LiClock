@@ -97,7 +97,7 @@
 
 // Limit nesting as the stack is likely to be small
 #  ifndef ARDUINOJSON_DEFAULT_NESTING_LIMIT
-#    define ARDUINOJSON_DEFAULT_NESTING_LIMIT 10
+#    define ARDUINOJSON_DEFAULT_NESTING_LIMIT 12
 #  endif
 
 // Number of bits to store the pointer to next node

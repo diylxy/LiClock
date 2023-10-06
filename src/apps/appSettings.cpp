@@ -61,6 +61,7 @@ static const menu_item settings_menu_other[] =
         {NULL, "返回上一级"},
         {NULL, "屏幕方向"},
         {NULL, "天气更新间隔"},
+        {NULL, "立即更新天气"},
         {NULL, "主屏幕应用选择"},
         {NULL, "已安装应用管理"},
         {NULL, "恢复出厂设置"},
@@ -434,6 +435,14 @@ void AppSettings::menu_other()
                 break;
             }
         case 3:
+            // 立即更新天气
+            {
+                String res = String(weather.refresh());
+                res = "代码：" + res;
+                GUI::msgbox("更新完成", res.c_str());
+                break;
+            }
+        case 4:
             // 主屏幕应用选择
             {
                 AppBase *tmp = appManager.appSelector(true);
@@ -463,14 +472,14 @@ void AppSettings::menu_other()
                 }
                 break;
             }
-        case 4:
+        case 5:
             // 已安装应用管理
             toApp = "installer";
             hasToApp = true;
             end = true;
             return;
             break;
-        case 5:
+        case 6:
             // 恢复出厂设置
             {
                 if (GUI::msgbox_yn("此操作不可撤销", "是否恢复出厂设置？"))

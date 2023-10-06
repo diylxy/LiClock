@@ -14,6 +14,9 @@ void task_appManager(void *)
 #include <LittleFS.h>
 void setup()
 {
+    ledcAttachPin(PIN_BUZZER, 0);
+    ledcWriteTone(0, 0);
+    ledcDetachPin(PIN_BUZZER);
     bool initResult = hal.init();
     alarms.load();
     alarms.check();

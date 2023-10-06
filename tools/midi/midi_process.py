@@ -129,52 +129,77 @@ midi_to_freq=[
     22350,
     23679,
     25087]
-filename = input("请输入文件名")
+filename = input("请输入文件名：")
+mode=input("请输入模式（1:最高音优先/2:最接近上个音符优先）：")
 mid = mido.MidiFile(filename)
-channel = 0
+max_len = 0
+def process(track, id):
+    global max_len
+    channel = 0
 
-tempo = 500000
-"""
-music_desc = {
-    'freq': 0,              #频率，0为休止符
-    'time': 0,              #毫秒
-}
-"""
-current_pressing = 0
-current_second = 0
-music = []
-for msg in mid.tracks[1]:
-    # Convert message time from absolute time
-    # in ticks to relative time in seconds.
-    if msg.time > 0:
-        delta = mido.tick2second(msg.time, mid.ticks_per_beat, tempo)
-    else:
-        delta = 0
-    
-    current_second += delta
-    if msg.type == 'set_tempo':
-        tempo = msg.tempo
-    elif msg.type == 'note_on' and msg.channel == channel:
-        if(delta >= 0.08):
-            # 上个音符已完成
-            music.append({'freq': current_pressing, 'time': round(current_second * 1000)})
-            current_second = 0
-        current_pressing = midi_to_freq[msg.note]
-    elif msg.type == 'note_off' and msg.channel == channel:
-        if msg.note == current_pressing:
-            current_pressing = 0
-print(music)
-#下面保存
-import struct
-"""
-文件格式：
-小端
-2字节：频率
-2字节：时间
-"""
-with open(filename.replace(".mid", ".buz").replace(".midi", ".buz"), 'wb') as f:
-    for i in range(len(music)):
-        if i == 0 and music[i]['freq'] == 0:
-            continue
-        f.write(struct.pack('<H', music[i]['freq']))
-        f.write(struct.pack('<H', music[i]['time']))
+    tempo = 500000
+    """
+    music_desc = {
+        'freq': 0,              #频率，0为休止符
+        'time': 0,              #毫秒
+    }
+    """
+    current_pressing = 0
+    current_second = 0
+    last_pressing = -1
+    music = []
+    for msg in track:
+        # Convert message time from absolute time
+        # in ticks to relative time in seconds.
+        if msg.time > 0:
+            delta = mido.tick2second(msg.time, mid.ticks_per_beat, tempo)
+        else:
+            delta = 0
+        
+        current_second += delta
+        if msg.type == 'set_tempo':
+            tempo = msg.tempo
+        elif msg.type == 'note_on':
+            if(current_second == 0):
+                if mode == "2":
+                    if(last_pressing != -1):
+                        if abs(current_pressing - last_pressing) < abs(midi_to_freq[msg.note] - last_pressing):
+                            continue
+                else:
+                    if current_pressing > midi_to_freq[msg.note]:
+                        continue
+            if(current_second >= 0.08):
+                # 上个音符已完成
+                music.append({'freq': current_pressing, 'time': round(current_second * 1000)})
+                current_second = 0
+                last_pressing = current_pressing
+            current_pressing = midi_to_freq[msg.note]
+        elif msg.type == 'note_off':
+            if msg.note == current_pressing:
+                current_pressing = 0
+    print(len(music))
+    #print(music)
+    if(len(music) == 0):
+        return
+    if(len(music) < max_len and len(music) < 100):
+        return
+    if len(music) > max_len:
+        max_len = len(music)
+    #下面保存
+    import struct
+    """
+    文件格式：
+    小端
+    2字节：频率
+    2字节：时间
+    """
+    with open(filename.replace(".mid", str(id) + ".buz").replace(".midi",  str(id) + ".buz"), 'wb') as f:
+        for i in range(len(music)):
+            if i == 0 and music[i]['freq'] == 0:
+                continue
+            f.write(struct.pack('<H', music[i]['freq']))
+            f.write(struct.pack('<H', min(music[i]['time'], 30000)))
+idx = 0
+for t in mid.tracks:
+    process(t, idx)
+    idx += 1

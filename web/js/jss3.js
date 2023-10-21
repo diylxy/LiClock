@@ -1527,6 +1527,21 @@ Blockly.Blocks['common_delay'] = {
   }
 };
 
+Blockly.Blocks['common_nextwakeup'] = {
+  init: function() {
+    this.appendValueInput("second")
+        .setCheck("Number")
+        .appendField("预定下次在");
+    this.appendDummyInput()
+        .appendField("秒后唤醒");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(0);
+ this.setTooltip("设置为0则禁止唤醒");
+ this.setHelpUrl("");
+  }
+};
+
 Blockly.Blocks['common_digitalwrite'] = {
   init: function() {
     this.appendValueInput("pin")
@@ -1606,6 +1621,12 @@ Blockly.Blocks['tostring'] = {
 lua.luaGenerator.forBlock['common_delay'] = function(block, generator) {
   var value_ms = generator.valueToCode(block, 'ms', lua.Order.ATOMIC);
   var code = 'delay(' + value_ms + ')\n';
+  return code;
+};
+
+lua.luaGenerator.forBlock['common_nextwakeup'] = function(block, generator) {
+  var value_second = generator.valueToCode(block, 'second', lua.Order.ATOMIC);
+  var code = 'nextWakeup(' + value_second + ')\n';
   return code;
 };
 

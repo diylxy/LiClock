@@ -39,6 +39,12 @@ public:
     int8_t refresh();
     uint16_t codeToNum(const char *code);
     weatherInfo24H *getWeather(uint8_t month, uint8_t date, uint8_t hour);
+    void getRealIndex(int hourNow, int *index_ptr)
+    {
+        unsigned tmp = lastupdate % 86400 / 3600;
+        if(hourNow >= tmp)
+            *index_ptr += (hourNow - tmp);
+    }
 
     /*
     数据说明

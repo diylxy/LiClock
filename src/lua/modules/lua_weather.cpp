@@ -4,6 +4,7 @@ extern const char *err_invalid_param;
 
 int weather_refresh(lua_State *L)
 {
+    lua_printf("[警告]受内存限制，在Web服务器运行时无法更新天气");
     weather.refresh();
     return 0;
 }
@@ -23,6 +24,7 @@ int weather_hour24(lua_State *L)
         lua_error(L);
         return 0;
     }
+    weather.getRealIndex(hal.timeinfo.tm_hour, &index);
     lua_newtable(L);
     lua_pushstring(L, weather.hour24[index].date);
     lua_setfield(L, -2, "date");

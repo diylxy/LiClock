@@ -1,3 +1,6 @@
+/**
+ * 此文件用于延时摄影
+*/
 #include "AppManager.h"
 static const uint8_t clock_cloud_bits[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0xf8, 0x1f, 0x00, 0x00, 0xfe, 0x7f, 0x00,
@@ -12,28 +15,28 @@ static const uint8_t clock_cloud_bits[] = {
     0x01, 0x00, 0xe0, 0x03, 0x01, 0x00, 0xe0, 0x01, 0x03, 0x00, 0x60, 0x00,
     0x06, 0x00, 0x30, 0x00, 0xfc, 0xff, 0x1f, 0x00};
 
-const char *dayOfWeek[] = {"日", "一", "二", "三", "四", "五", "六"};
-RTC_DATA_ATTR int part_refresh_count = 0;
-RTC_DATA_ATTR bool force_full_update = false;
-RTC_DATA_ATTR int last_alertPubTime = 0;
-static void appclock_exit()
+extern const char *dayOfWeek[];
+RTC_DATA_ATTR int part_refresh_count1 = 0;
+RTC_DATA_ATTR extern bool force_full_update;
+RTC_DATA_ATTR int tmp_minute = 15 * 60 + 40;
+static void AppClockDemo_exit()
 {
     force_full_update = true;
 }
-static void appclock_deepsleep()
+static void AppClockDemo_deepsleep()
 {
 }
 
-class AppClock : public AppBase
+class AppClockDemo : public AppBase
 {
 private:
     /* data */
 public:
-    AppClock()
+    AppClockDemo()
     {
-        name = "clock";
-        title = "天气时钟";
-        description = "默认主页应用";
+        name = "clockdemo";
+        title = "演示";
+        description = "tmp";
         image = clock_cloud_bits;
     }
     void setup();
@@ -170,72 +173,51 @@ private:
         hal.getTime();
         drawFrame();
         drawDateAndDesc(hal.timeinfo.tm_mon + 1, hal.timeinfo.tm_mday, hal.timeinfo.tm_wday);
-        drawPlot(hal.timeinfo.tm_hour, hal.timeinfo.tm_min);
-        drawTime(hal.timeinfo.tm_hour, hal.timeinfo.tm_min);
+        drawPlot(tmp_minute / 60, tmp_minute % 60);
+        drawTime(tmp_minute / 60, tmp_minute % 60);
     }
 };
-static AppClock app;
+static AppClockDemo app;
 static RTC_DATA_ATTR uint8_t NTPCounter = 0;
-void appclock_wakeup()
+void AppClockDemo_wakeup()
 {
     appManager.parameter = "p";
     app.setup();
     appManager.parameter = "";
 }
-void AppClock::setup()
+void AppClockDemo::setup()
 {
-    exit = appclock_exit;
-    deepsleep = appclock_deepsleep;
-    wakeup = appclock_wakeup;
-    int ntp_interval = hal.getNTPMinute();
+    exit = AppClockDemo_exit;
+    deepsleep = AppClockDemo_deepsleep;
+    wakeup = AppClockDemo_wakeup;
+    tmp_minute += 1;
+    hal.global_hour_offset = tmp_minute / 60 - 15;
+    if(tmp_minute == 1440)hal.powerOff();
     if (appManager.parameter == "p")
     {
-        ++NTPCounter;
-        if (NTPCounter < ntp_interval)
+        if (force_full_update == false && part_refresh_count1 <= 20)
         {
-            if (force_full_update == false && part_refresh_count < 15)
-            {
-                // 局部刷新
-                drawLayout();
-                display.display(true);
-                ++part_refresh_count;
-                appManager.noDeepSleep = false;
-                appManager.nextWakeup = 61 - hal.timeinfo.tm_sec;
-                Serial.println("Finished part");
-                return;
-            }
+            // 局部刷新
+            drawLayout();
+            display.display(true);
+            ++part_refresh_count1;
+            appManager.noDeepSleep = false;
+            appManager.nextWakeup = 3;
+            Serial.println("Finished part");
+            hal.global_hour_offset = 0;
+            return;
         }
     }
     // 局部刷新不需要下面这些初始化操作
     force_full_update = false;
-    part_refresh_count = 0;
+    part_refresh_count1 = 0;
     display.setFullWindow();
     display.fillScreen(GxEPD_WHITE);
     hal.getTime();
-    if (hal.timeinfo.tm_year < (2016 - 1900) || NTPCounter >= ntp_interval) // 等待NTP同步
-    {
-        NTPCounter = 0;
-        delay(20);
-        hal.autoConnectWiFi();
-        NTPSync();
-        hal.getTime();
-    }
-    if (hal.now < weather.lastupdate || hal.now - weather.lastupdate > 60 * atoi(config[PARAM_FULLUPDATE].as<const char *>()))
-    {
-        hal.autoConnectWiFi();
-        weather.refresh();
-    }
-    if (weather.hasAlert && weather.alertPubTime != last_alertPubTime)
-    {
-        last_alertPubTime = weather.alertPubTime;
-        appManager.gotoApp("warning");
-        force_full_update = true;
-        return;
-    }
     drawLayout();
     display.display(false);
     appManager.noDeepSleep = false;
-    appManager.nextWakeup = 61 - hal.timeinfo.tm_sec;
-    Serial.println("Finished full");
+    appManager.nextWakeup = 3;
+    hal.global_hour_offset = 0;
     return;
 }

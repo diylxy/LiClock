@@ -276,8 +276,16 @@ namespace GUI
         hal.hookButton();
         push_buffer();
         int currentNumber = pre_value;
-        int current_digit = 0; // 0：个位
+        int current_digit = digits; // 0：个位
         int current_digit_10pow = 1;
+        // 计算当前位置
+        if (current_digit != 0)
+        {
+            for (int i = 0; i < current_digit; ++i)
+            {
+                current_digit_10pow *= 10;
+            }
+        }
         bool changed = true;
         while (1)
         {
@@ -394,7 +402,7 @@ namespace GUI
         int16_t digit_add[4] = {1, 10, 60, 600};
         hal.hookButton();
         push_buffer();
-        uint8_t current_digit = 0; // 0：个位
+        uint8_t current_digit = 3;
         int current_value = pre_value;
         bool changed = true;
         while (1)

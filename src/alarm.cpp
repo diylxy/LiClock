@@ -41,6 +41,7 @@ int8_t Alarm::getNext(uint16_t week, uint16_t now)
                 {
                     next = i;
                     next_time = alarm_table[i].time;
+                    Serial.printf("[闹钟]id=%d, time=%d", next, next_time);
                 }
                 else
                 {
@@ -48,6 +49,7 @@ int8_t Alarm::getNext(uint16_t week, uint16_t now)
                     {
                         next = i;
                         next_time = alarm_table[i].time;
+                        Serial.printf("[闹钟]id=%d, time=%d", next, next_time);
                     }
                 }
             }
@@ -266,6 +268,7 @@ void Alarm::check()
     else
     {
         int8_t tmp = getNext(hal.timeinfo.tm_wday, hal.timeinfo.tm_hour * 60 + hal.timeinfo.tm_min);
+        Serial.printf("[闹钟]存在下一个闹钟：id=%d, tmp=%d", next_alarm_to, tmp);
         if (tmp != next_alarm_to)
         {
             alarm();

@@ -17,6 +17,19 @@ static int common_delay(lua_State *L)
     return 0;
 }
 
+static int common_NextWakeup(lua_State *L)
+{
+    if (lua_gettop(L) != 1)
+    {
+        lua_pushstring(L, err_invalid_param);
+        lua_error(L);
+        return 0;
+    }
+    int nwu = luaL_checkinteger(L, 1);
+    appManager.nextWakeup = nwu;
+    return 0;
+}
+
 static int common_digitalRead(lua_State *L)
 {
     if (lua_gettop(L) != 1)
@@ -72,6 +85,7 @@ static int common_pinMode(lua_State *L)
     pinMode(pin, mode);
     return 0;
 }
+
 void openLua_simple()
 {
     if (L)
@@ -79,6 +93,7 @@ void openLua_simple()
     Serial.println("Lua 部分初始化");
     L = luaL_newstate();
 }
+
 void openLua()
 {
     if (L)
@@ -88,6 +103,8 @@ void openLua()
     luaL_openlibs(L);
     lua_pushcfunction(L, common_delay);
     lua_setglobal(L, "delay");
+    lua_pushcfunction(L, common_NextWakeup);
+    lua_setglobal(L, "nextWakeup");
     lua_pushcfunction(L, common_digitalRead);
     lua_setglobal(L, "digitalRead");
     lua_pushcfunction(L, common_digitalWrite);

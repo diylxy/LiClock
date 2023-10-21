@@ -9,7 +9,7 @@ ESP32：wroom或solo-1或者其它封装和引脚兼容的模组，建议Flash�
 ## <center>软件使用说明
 
 ### 程序烧录
-手动编译，或者
+手动编译，或者  
 打开网址：[烧录工具](https://diylxy.github.io/LiClockWebFlash/)  
 ---
 ### 拨轮开关使用说明

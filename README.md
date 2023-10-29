@@ -7,7 +7,8 @@
 ESP32：wroom或者其它封装和引脚兼容的模组，建议Flash选大一点  
 ### **尽量不要买esp32-solo-1，虽然能用，但价格没有任何优势，除非用拆机件**  
 其它照着BOM买就行，买之前请认真阅读开源平台下面的DIY注意事项  
-
+### 淘宝购买链接[请看Wiki](https://github.com/diylxy/LiClock/wiki/%E5%85%83%E5%99%A8%E4%BB%B6%E8%B4%AD%E4%B9%B0)
+---
 ## <center>软件使用说明
 
 ### 程序烧录[请看Wiki](https://github.com/diylxy/LiClock/wiki/%E5%9B%BA%E4%BB%B6%E7%83%A7%E5%BD%95)  

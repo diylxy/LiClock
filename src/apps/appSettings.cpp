@@ -278,7 +278,7 @@ void AppSettings::menu_alarm()
             break;
         if (res == 6)
         {
-            const char *str = GUI::fileDialog("请选择闹钟铃声文件", false, ".buz");
+            const char *str = GUI::fileDialog("请选择闹钟铃声文件", false, "buz");
             if (str)
             {
                 hal.pref.putString(SETTINGS_PARAM_ALARM_TONE, String(str));

@@ -32,6 +32,7 @@ public:
     {
         return (peripherals_load & PERIPHERALS_SD_BIT) == PERIPHERALS_SD_BIT;
     }
+    void load_append(uint16_t bitmask);
     // 下面是传感器实例
     Adafruit_AHTX0 aht;
     Adafruit_BMP280 bmp;

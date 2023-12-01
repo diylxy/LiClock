@@ -5,6 +5,7 @@ extern const char *err_invalid_param;
 int peri_aht_get(lua_State *L)
 {
     sensors_event_t humidity, temp;
+    peripherals.load_append(PERIPHERALS_AHT20_BIT);
     peripherals.aht.getEvent(&humidity, &temp); // populate temp and humidity objects with fresh data
     lua_pushnumber(L, temp.temperature);
     lua_pushnumber(L, humidity.relative_humidity);

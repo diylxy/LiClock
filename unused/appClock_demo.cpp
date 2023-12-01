@@ -181,9 +181,7 @@ static AppClockDemo app;
 static RTC_DATA_ATTR uint8_t NTPCounter = 0;
 void AppClockDemo_wakeup()
 {
-    appManager.parameter = "p";
     app.setup();
-    appManager.parameter = "";
 }
 void AppClockDemo::setup()
 {
@@ -193,7 +191,7 @@ void AppClockDemo::setup()
     tmp_minute += 1;
     hal.global_hour_offset = tmp_minute / 60 - 15;
     if(tmp_minute == 1440)hal.powerOff();
-    if (appManager.parameter == "p")
+    if (hal.wakeUpFromDeepSleep)
     {
         if (force_full_update == false && part_refresh_count1 <= 20)
         {

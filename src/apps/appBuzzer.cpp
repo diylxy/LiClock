@@ -21,7 +21,7 @@ void AppBuzzer::setup()
 {
     while (1)
     {
-        const char *path = GUI::fileDialog("请选择要播放的文件");
+        const char *path = GUI::fileDialog("请选择要播放的文件", false, "buz");
         if (path == NULL)
         {
             appManager.goBack();

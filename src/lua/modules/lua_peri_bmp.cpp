@@ -5,6 +5,7 @@ extern const char *err_invalid_param;
 int peri_bmp_get(lua_State *L)
 {
     float sea_press = weather.realtime.pressure;
+    peripherals.load_append(PERIPHERALS_BMP280_BIT);
     if(lua_gettop(L) == 1)
     {
         if(lua_isnumber(L, 1))

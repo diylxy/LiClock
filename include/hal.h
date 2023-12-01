@@ -105,6 +105,7 @@ public:
     bool noDeepSleep = false;
     bool SleepUpdateMutex = false;
     bool _hookButton = false; // 不要修改这个
+    bool wakeUpFromDeepSleep = false;
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     int _wakeupIO[2] = {PIN_BUTTONC, PIN_BUTTONL};
 

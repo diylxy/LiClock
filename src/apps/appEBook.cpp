@@ -41,7 +41,7 @@ public:
     char currentFilename[256];
     bool __eof = false;
 };
-RTC_DATA_ATTR uint32_t currentPage = 0; // 0:第一页
+RTC_DATA_ATTR uint32_t currentPage = -1; // 0:第一页
 static AppEBook app;
 static void appebook_exit()
 {
@@ -83,7 +83,7 @@ void AppEBook::setup()
     app.currentFilename[0] = 0;
     display.clearScreen();
     size_t s = hal.pref.getBytes(SETTINGS_PARAM_LAST_EBOOK, app.currentFilename, 256);
-    if (appManager.parameter == "")
+    if (hal.wakeUpFromDeepSleep == false || currentPage == -1)
     {
         currentPage = hal.pref.getInt(SETTINGS_PARAM_LAST_EBOOK_PAGE, 0);
         if (s == 0)
@@ -208,12 +208,14 @@ bool AppEBook::indexFile()
     }
     while (true)
     {
+    start:
         c = fgetc(currentFileHandle);
         if (c == EOF)
         {
             break;
         }
-        while(c == '\n')continue;
+        while (c == '\n' && x == 0 && y == 0)
+            goto start;
         offset++;
         int utf_bytes = 0;
         if (c & 0x80)
@@ -293,7 +295,7 @@ bool AppEBook::indexFile()
         if (y >= 128 - 14)
         {
             page++;
-            x = add_pending;
+            x = 0;
             y = 0;
             uint32_t pageOffset = offset - utf_bytes - 1;
             fwrite(&pageOffset, 4, 1, indexFileHandle);
@@ -383,13 +385,15 @@ void AppEBook::drawCurrentPage()
     // 自动换行
     while (true)
     {
+    start:
         int c = fgetc(currentFileHandle);
         if (c == EOF)
         {
             __eof = true;
             break;
         }
-        while(c == '\n')continue;
+        while (c == '\n' && x == 0 && y == 0)
+            goto start;
         int utf_bytes = 0;
         if (c & 0x80)
         {
@@ -427,7 +431,7 @@ void AppEBook::drawCurrentPage()
             }
             else
             {
-                GUI::msgbox("读文件错误", "非预期的UTF8编码");
+                Serial.println("非预期的UTF8编码");
                 break;
             }
         }

@@ -178,9 +178,7 @@ static AppClock app;
 static RTC_DATA_ATTR uint8_t NTPCounter = 0;
 void appclock_wakeup()
 {
-    appManager.parameter = "p";
     app.setup();
-    appManager.parameter = "";
 }
 void AppClock::setup()
 {
@@ -188,7 +186,7 @@ void AppClock::setup()
     deepsleep = appclock_deepsleep;
     wakeup = appclock_wakeup;
     int ntp_interval = hal.getNTPMinute();
-    if (appManager.parameter == "p")
+    if (hal.wakeUpFromDeepSleep)
     {
         ++NTPCounter;
         if (NTPCounter < ntp_interval)

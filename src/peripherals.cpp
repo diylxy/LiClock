@@ -150,6 +150,13 @@ bool Peripherals::load(uint16_t bitmask)
     peripherals_load = bitmask;
     return true;
 }
+void Peripherals::load_append(uint16_t bitmask)
+{
+    int tmp = peripherals_load;
+    if(tmp | bitmask == tmp)
+        return;
+    peripherals.load(bitmask | tmp);
+}
 
 void Peripherals::sleep()
 {

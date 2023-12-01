@@ -20,7 +20,7 @@ void setup()
     ledcAttachPin(PIN_BUZZER, 0);
     ledcWriteTone(0, 0);
     ledcDetachPin(PIN_BUZZER);
-    bool initResult = hal.init();
+    hal.init();
     alarms.load();
     alarms.check();
     Serial.println(ESP.getFreeHeap());
@@ -46,13 +46,11 @@ void setup()
         }
         hal.checkNightSleep();
     }
-    if (initResult == false)
-    {
-        appManager.parameter = "p";
-    }
     bool recoverLast = false;
+    hal.wakeUpFromDeepSleep = false;
     if (esp_sleep_get_wakeup_cause() != ESP_SLEEP_WAKEUP_UNDEFINED)
     {
+        hal.wakeUpFromDeepSleep = true;
         recoverLast = appManager.recover(appManager.getRealClock());
     }
     if (recoverLast == false)

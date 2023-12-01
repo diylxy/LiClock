@@ -4,6 +4,7 @@ extern const char *err_invalid_param;
 
 int sgp_get(lua_State *L)
 {
+    peripherals.load_append(PERIPHERALS_SGP30_BIT);
     if (peripherals.sgp.IAQmeasure())
     {
         lua_pushinteger(L, peripherals.sgp.TVOC);
@@ -19,6 +20,7 @@ int sgp_get(lua_State *L)
 
 int sgp_getRaw(lua_State *L)
 {
+    peripherals.load_append(PERIPHERALS_SGP30_BIT);
     if (peripherals.sgp.IAQmeasureRaw())
     {
         lua_pushinteger(L, peripherals.sgp.rawH2);
@@ -35,6 +37,7 @@ int sgp_getRaw(lua_State *L)
 int sgp_getIAQBaseline(lua_State *L)
 {
     uint16_t TVOC_base, eCO2_base;
+    peripherals.load_append(PERIPHERALS_SGP30_BIT);
     if (peripherals.sgp.getIAQBaseline(&eCO2_base, &TVOC_base))
     {
         lua_pushinteger(L, eCO2_base);
@@ -50,6 +53,7 @@ int sgp_getIAQBaseline(lua_State *L)
 
 int sgp_setIAQBaseline(lua_State *L)
 {
+    peripherals.load_append(PERIPHERALS_SGP30_BIT);
     if (lua_gettop(L) == 2)
     {
         if (lua_isnumber(L, 1) && lua_isnumber(L, 2))
@@ -81,6 +85,7 @@ static uint32_t getAbsoluteHumidity(float temperature, float humidity)
 
 int sgp_setHumidity(lua_State *L)
 {
+    peripherals.load_append(PERIPHERALS_SGP30_BIT);
     if (lua_gettop(L) == 2)
     {
         if (lua_isnumber(L, 1) && lua_isnumber(L, 2))

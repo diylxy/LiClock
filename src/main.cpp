@@ -1,4 +1,6 @@
 #include <A_Config.h>
+#include "soc/soc.h"
+#include "soc/rtc_cntl_reg.h"
 U8G2_FOR_ADAFRUIT_GFX u8g2Fonts;
 GxEPD2_BW<GxEPD2_290, GxEPD2_290::HEIGHT> display(GxEPD2_290(/*CS=5*/ CONFIG_SPI_CS, /*DC=*/CONFIG_PIN_DC, /*RST=*/CONFIG_PIN_RST, /*BUSY=*/CONFIG_PIN_BUSY)); // 注意：此类略微修改过，使用两个缓冲区
 DynamicJsonDocument config(1024);
@@ -14,6 +16,7 @@ void task_appManager(void *)
 #include <LittleFS.h>
 void setup()
 {
+    WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout detector
     ledcAttachPin(PIN_BUZZER, 0);
     ledcWriteTone(0, 0);
     ledcDetachPin(PIN_BUZZER);

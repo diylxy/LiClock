@@ -414,9 +414,9 @@ void HAL::update(void)
     getTime();
     long adc;
     adc = analogRead(PIN_ADC);
-    adc = adc * 6600 / 4096;
+    adc = adc * 7230 / 4096;
     VCC = adc;
-    if (adc > 4300)
+    if (adc > 4400)
     {
         USBPluggedIn = true;
     }

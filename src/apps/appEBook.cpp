@@ -213,6 +213,7 @@ bool AppEBook::indexFile()
         {
             break;
         }
+        while(c == '\n')continue;
         offset++;
         int utf_bytes = 0;
         if (c & 0x80)
@@ -388,6 +389,7 @@ void AppEBook::drawCurrentPage()
             __eof = true;
             break;
         }
+        while(c == '\n')continue;
         int utf_bytes = 0;
         if (c & 0x80)
         {

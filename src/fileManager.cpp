@@ -158,6 +158,8 @@ namespace GUI
                         {
                             if (strcmp(endsWidth, ext.c_str()) != 0)
                             {
+                                file.close();
+                                file = root.openNextFile();
                                 continue;
                             }
                         }

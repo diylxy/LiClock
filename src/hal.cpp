@@ -7,7 +7,7 @@ void task_hal_update(void *)
     {
         if (hal._hookButton)
         {
-            while (digitalRead(PIN_BUTTONR) == 0 || digitalRead(PIN_BUTTONL) == 0 || digitalRead(PIN_BUTTONC) == 0)
+            while (hal.btnr.isPressing() || hal.btnl.isPressing() || hal.btnc.isPressing())
             {
                 hal.btnr.tick();
                 hal.btnl.tick();
@@ -23,7 +23,7 @@ void task_hal_update(void *)
                 hal.update();
                 delay(10);
             }
-            while (digitalRead(PIN_BUTTONR) == 0 || digitalRead(PIN_BUTTONL) == 0 || digitalRead(PIN_BUTTONC) == 0)
+            while (hal.btnr.isPressing() || hal.btnl.isPressing() || hal.btnc.isPressing())
             {
                 delay(10);
             }
@@ -73,16 +73,29 @@ void HAL::loadConfig()
 void HAL::getTime()
 {
     int64_t tmp;
-    time(&now);
-    if (delta != 0 && lastsync < now)
+    if(peripherals.peripherals_current & PERIPHERALS_DS3231_BIT)
     {
-        // 下面修正时钟频率偏移
-        tmp = now - lastsync;
-        tmp *= delta;
-        tmp /= every;
-        now -= tmp;
+        timeinfo.tm_year = peripherals.rtc.getYear() + 2000;
+        timeinfo.tm_mon = peripherals.rtc.getMonth();
+        timeinfo.tm_mday = peripherals.rtc.getDate();
+        timeinfo.tm_hour = peripherals.rtc.getHour();
+        timeinfo.tm_min = peripherals.rtc.getMinute();
+        timeinfo.tm_sec = peripherals.rtc.getSecond();
+        timeinfo.tm_wday = peripherals.rtc.getDoW() - 1;
     }
-    localtime_r(&now, &timeinfo);
+    else
+    {
+        time(&now);
+        if (delta != 0 && lastsync < now)
+        {
+            // 下面修正时钟频率偏移
+            tmp = now - lastsync;
+            tmp *= delta;
+            tmp /= every;
+            now -= tmp;
+        }
+        localtime_r(&now, &timeinfo);
+    }
 }
 
 void HAL::WiFiConfigSmartConfig()
@@ -168,9 +181,10 @@ void HAL::WiFiConfigManual()
         }
         if (LuaRunning)
             continue;
-        if (digitalRead(PIN_BUTTONL) == 0)
+        if (hal.btnl.isPressing())
         {
-            while(digitalRead(PIN_BUTTONL) == 0)delay(20);
+            while (hal.btnl.isPressing())
+                delay(20);
             ESP.restart();
             break;
         }
@@ -191,15 +205,15 @@ void HAL::ReqWiFiConfig()
     uint32_t last_millis = millis();
     while (1)
     {
-        if (digitalRead(PIN_BUTTONL) == 0)
+        if (hal.btnl.isPressing())
         {
             WiFiConfigManual();
         }
-        if (digitalRead(PIN_BUTTONR) == 0)
+        if (hal.btnr.isPressing())
         {
             WiFiConfigSmartConfig();
         }
-        if (digitalRead(PIN_BUTTONC) == 0)
+        if (hal.btnc.isPressing())
         {
             WiFi.disconnect(true);
             config[PARAM_CLOCKONLY] = "1";
@@ -221,14 +235,111 @@ void HAL::ReqWiFiConfig()
         ESP.restart();
     }
 }
+#include "esp_spi_flash.h"
+#include "esp_rom_md5.h"
+#include "esp_partition.h"
+#define PARTITION_TOTAL 4
+#define PARTITIONS_OFFSET 0x8000
+#define PARTITION_SPIFFS (4 - 1)
+
+void test_littlefs_size(bool format = true)
+{
+    uint32_t size_request; // 存储目的分区大小
+    size_t size_physical = 0;
+    esp_flash_get_physical_size(esp_flash_default_chip, &size_physical);
+    size_request = size_physical - 0x300000 - 0x1000;
+    if (hal.pref.getUInt("size", 0) != size_request)
+    {
+        Serial.println("检测到分区大小不一致，正在格式化");
+        hal.pref.putUInt("size", size_request);
+        LittleFS.format();
+    }
+}
+void refresh_partition_table()
+{
+    md5_context_t ctx;
+    static uint8_t table[16 * 20];
+    static uint8_t table1[16 * 20];
+    esp_rom_md5_init(&ctx);
+    union
+    {
+        uint32_t size;
+        uint8_t size_byte[4];
+    } partition_size;
+    uint32_t size_request; // 存储目的分区大小
+    size_t size_physical = 0;
+    esp_flash_get_physical_size(esp_flash_default_chip, &size_physical);
+    size_request = size_physical - 0x300000 - 0x1000;
+    esp_flash_read(esp_flash_default_chip, table, 0x8000, sizeof(table));
+    memcpy(partition_size.size_byte, &table[16 * 2 * PARTITION_SPIFFS + 0x8], 4);
+    Serial.printf("当前LittleFS分区大小%d\n期望LittleFS分区大小%d\n", partition_size.size, size_request);
+    if (partition_size.size != size_request)
+    {
+        Serial.printf("正在修改分区表\n");
+        partition_size.size = size_request;
+        memcpy(&table[16 * 2 * PARTITION_SPIFFS + 0x8], partition_size.size_byte, 4);
+        Serial.println("正在计算MD5\n");
+        esp_rom_md5_update(&ctx, table, 16 * 2 * PARTITION_TOTAL);
+        esp_rom_md5_final(&table[16 * (2 * PARTITION_TOTAL + 1)], &ctx);
+        esp_flash_set_chip_write_protect(esp_flash_default_chip, false);
+        Serial.println("\n正在写入");
+        if (esp_flash_erase_region(esp_flash_default_chip, 0x8000, 0x1000) != ESP_OK)
+        {
+            Serial.println("擦除失败");
+            while (1)
+                vTaskDelay(1000);
+        }
+        if (esp_flash_write(esp_flash_default_chip, table, 0x8000, sizeof(table)) != ESP_OK)
+        {
+            Serial.println("写入失败");
+            while (1)
+                vTaskDelay(1000);
+        }
+        Serial.println("完成，正在校验结果");
+        esp_flash_read(esp_flash_default_chip, table1, 0x8000, sizeof(table1));
+        if (memcmp(table, table1, sizeof(table)) != 0)
+        {
+            Serial.println("校验失败");
+            while (1)
+                vTaskDelay(1000);
+        }
+        else
+        {
+            for (size_t i = 0; i < 16 * 12; i++)
+            {
+                Serial.printf("0x%02X ", table[i]);
+                if ((i + 1) % 16 == 0)
+                {
+                    Serial.println();
+                }
+            }
+        }
+        ESP.restart();
+    }
+}
 bool HAL::init()
 {
+    Serial.begin(115200);
     bool timeerr = false;
     bool initial = true;
     setenv("TZ", "CST-8", 1);
     tzset();
     // 读取时钟偏移
     pref.begin("clock");
+    int16_t total_gnd = 0;
+    total_gnd += digitalRead(PIN_BUTTONR);
+    total_gnd += digitalRead(PIN_BUTTONL);
+    total_gnd += digitalRead(PIN_BUTTONC);
+    if (total_gnd <= 1)
+    {
+        btnl._buttonPressed = 1;
+        btnr._buttonPressed = 1;
+        btnc._buttonPressed = 1;
+        btn_activelow = false;
+    }
+    else
+        btn_activelow = true;
+
     if (pref.getUInt("lastsync") == 0)
     {
         pref.putUInt("lastsync", 1);  // 上次同步时间的准确时间
@@ -236,6 +347,12 @@ bool HAL::init()
         pref.putInt("delta", 0);      // 这两次校准之间时钟偏差秒数，时钟时间-准确时间
         pref.putInt("upint", 2 * 60); // NTP同步间隔
     }
+    const esp_partition_t *p = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, "spiffs");
+    if (pref.getUInt("size", 0) != p->size)
+    {
+        pref.putUInt("size", p->size);
+    }
+    refresh_partition_table();
     lastsync = pref.getUInt("lastsync", 1); // 上次同步时间的准确时间
     every = pref.getInt("every", 100);      // 两次校准间隔多久
     delta = pref.getInt("delta", 0);        // 这两次校准之间时钟偏差秒数，时钟时间-准确时间
@@ -264,7 +381,6 @@ bool HAL::init()
     digitalWrite(PIN_BUZZER, 0);
 
     xTaskCreate(task_hal_update, "hal_update", 2048, NULL, 10, NULL);
-    Serial.begin(115200);
     WiFi.mode(WIFI_OFF);
     display.init(0, initial);
     display.setRotation(pref.getUChar(SETTINGS_PARAM_SCREEN_ORIENTATION, 3));
@@ -274,7 +390,7 @@ bool HAL::init()
     u8g2Fonts.setBackgroundColor(GxEPD_WHITE);
     u8g2Fonts.setFont(u8g2_font_wqy12_t_gb2312b);
     u8g2Fonts.begin(display);
-    if (digitalRead(PIN_BUTTONL) == 0 && (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED))
+    if (hal.btnl.isPressing() && (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED))
     {
         // 复位时检查左键是否按下，可以用于无限重启时临时关机
         powerOff(true);
@@ -298,8 +414,10 @@ bool HAL::init()
             powerOff(false);
             ESP.restart();
         }
+        test_littlefs_size(false);
     }
-    if(LittleFS.exists("/config.json") == false)
+    test_littlefs_size(true);
+    if (LittleFS.exists("/config.json") == false)
     {
         Serial.println("正在写入默认配置");
         File f = LittleFS.open("/config.json", "w");
@@ -345,8 +463,15 @@ void HAL::autoConnectWiFi()
 }
 static void set_sleep_set_gpio_interrupt()
 {
-    esp_sleep_enable_ext0_wakeup((gpio_num_t)hal._wakeupIO[0], 0);
-    esp_sleep_enable_ext1_wakeup((1LL << hal._wakeupIO[1]), ESP_EXT1_WAKEUP_ALL_LOW);
+    if (hal.btn_activelow)
+    {
+        esp_sleep_enable_ext0_wakeup((gpio_num_t)hal._wakeupIO[0], 0);
+        esp_sleep_enable_ext1_wakeup((1LL << hal._wakeupIO[1]), ESP_EXT1_WAKEUP_ALL_LOW);
+    }
+    else
+    {
+        esp_sleep_enable_ext1_wakeup((1ULL << PIN_BUTTONC) | (1ULL << PIN_BUTTONL) | (1ULL << PIN_BUTTONR), ESP_EXT1_WAKEUP_ANY_HIGH);
+    }
 }
 static void pre_sleep()
 {
@@ -408,10 +533,15 @@ void HAL::powerOff(bool displayMessage)
         esp_deep_sleep_start();
     }
 }
-
 void HAL::update(void)
 {
-    getTime();
+    static int count = 0;
+    if(count++ % 10 == 0)
+    {
+        count = 0;
+        getTime();
+    }
+    
     long adc;
     adc = analogRead(PIN_ADC);
     adc = adc * 7230 / 4096;

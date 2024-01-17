@@ -33,7 +33,7 @@ static AppWarning app;
 
 void AppWarning::setup()
 {
-    if(digitalRead(PIN_BUTTONL) == 0 || digitalRead(PIN_BUTTONR) == 0 || digitalRead(PIN_BUTTONC) == 0)
+    if(hal.btnl.isPressing() || hal.btnr.isPressing() || hal.btnc.isPressing())
     {
         appManager.goBack();
         return;

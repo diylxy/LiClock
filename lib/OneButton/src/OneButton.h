@@ -163,6 +163,9 @@ public:
    */
   bool isLongPressed() const { return _state == OCS_PRESS; };
 
+  int _buttonPressed = 0; // this is the level of the input pin when the button is pressed.
+                          // LOW if the button connects the input pin to GND when pressed.
+                          // HIGH if the button connects the input pin to VCC when pressed.
 
 private:
   int _pin = -1;                  // hardware pin number.
@@ -170,9 +173,6 @@ private:
   unsigned int _click_ms = 10;   // number of msecs before a click is detected.
   unsigned int _press_ms = 600;   // number of msecs before a long button press is detected
 
-  int _buttonPressed = 0; // this is the level of the input pin when the button is pressed.
-                          // LOW if the button connects the input pin to GND when pressed.
-                          // HIGH if the button connects the input pin to VCC when pressed.
 
   // These variables will hold functions acting as event source.
   callbackFunction _clickFunc = NULL;
@@ -248,6 +248,7 @@ public:
    * @return milliseconds from the start of the button press.
    */
   unsigned long getPressedMs() { return(millis() - _startTime); };
+  inline bool isPressing() {return digitalRead(_pin) == _buttonPressed;};
 };
 
 #endif

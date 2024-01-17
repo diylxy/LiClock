@@ -236,7 +236,7 @@ AppBase *AppManager::appSelector(bool showHidden)
         waitc = false;
         while (1)
         {
-            if (digitalRead(PIN_BUTTONL) == 0)
+            if (hal.btnl.isPressing())
             {
                 idleTime = 0;
                 selected--;
@@ -265,7 +265,7 @@ AppBase *AppManager::appSelector(bool showHidden)
                     }
                 }
             }
-            if (digitalRead(PIN_BUTTONR) == 0)
+            if (hal.btnr.isPressing())
             {
                 idleTime = 0;
                 selected++;
@@ -283,10 +283,10 @@ AppBase *AppManager::appSelector(bool showHidden)
                     }
                 }
             }
-            if (digitalRead(PIN_BUTTONC) == LOW)
+            if (hal.btnc.isPressing())
             {
                 delay(20);
-                if (digitalRead(PIN_BUTTONC) == LOW)
+                if (hal.btnc.isPressing())
                 {
                     if (GUI::waitLongPress(PIN_BUTTONC) == true)
                     {
@@ -318,7 +318,7 @@ AppBase *AppManager::appSelector(bool showHidden)
             if (waitc == true)
             {
                 waitc = false;
-                while (digitalRead(PIN_BUTTONC) == LOW)
+                while (hal.btnc.isPressing())
                     delay(10);
                 delay(10);
             }
@@ -464,7 +464,7 @@ void AppManager::update()
         updateAgain = false;
         return;
     }
-    if (digitalRead(PIN_BUTTONL) == 1 && digitalRead(PIN_BUTTONR) == 1 && digitalRead(PIN_BUTTONC) == 1 && hal.btnl.isIdle() == true && hal.btnr.isIdle() == true && hal.btnc.isIdle() == true)
+    if (hal.btnl.isPressing() == false && hal.btnr.isPressing() == false && hal.btnc.isPressing() == false && hal.btnl.isIdle() == true && hal.btnr.isIdle() == true && hal.btnc.isIdle() == true)
     {
         // 准备进入睡眠模式
         // 计算下一次唤醒时间

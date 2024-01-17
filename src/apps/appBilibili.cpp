@@ -131,7 +131,7 @@ static bool login()
         while (millis() - millisStart < 180000)
         {
             HTTPClient http;
-            if (digitalRead(PIN_BUTTONL) == 0)
+            if (hal.btnl.isPressing())
             {
                 Serial.println("cancel");
                 goto err;

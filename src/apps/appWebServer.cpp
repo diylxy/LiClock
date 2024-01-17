@@ -49,9 +49,9 @@ void AppWebserver::setup()
             updateWebServer();
             if (LuaRunning)
                 continue;
-            if (digitalRead(PIN_BUTTONL) == 0)
+            if (hal.btnl.isPressing())
             {
-                while(digitalRead(PIN_BUTTONL) == 0)delay(20);
+                while(hal.btnl.isPressing())delay(20);
                 ESP.restart();
                 break;
             }

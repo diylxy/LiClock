@@ -42,10 +42,11 @@ public:
     OneButton btnr = OneButton(PIN_BUTTONR);
     OneButton btnl = OneButton(PIN_BUTTONL);
     OneButton btnc = OneButton(PIN_BUTTONC);
+    bool btn_activelow = true;
     void hookButton()
     {
         _hookButton = true;
-        while (digitalRead(PIN_BUTTONR) == LOW || digitalRead(PIN_BUTTONL) == LOW || digitalRead(PIN_BUTTONC) == LOW)
+        while (btnr.isPressing() || btnl.isPressing() || btnc.isPressing())
         {
             delay(10);
         }
@@ -54,7 +55,7 @@ public:
     }
     void unhookButton()
     {
-        while (digitalRead(PIN_BUTTONR) == LOW || digitalRead(PIN_BUTTONL) == LOW || digitalRead(PIN_BUTTONC) == LOW)
+        while (btnr.isPressing() || btnl.isPressing() || btnc.isPressing())
         {
             delay(10);
         }

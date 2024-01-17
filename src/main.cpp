@@ -16,7 +16,7 @@ void task_appManager(void *)
 #include <LittleFS.h>
 void setup()
 {
-    WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout detector
+    WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
     ledcAttachPin(PIN_BUZZER, 0);
     ledcWriteTone(0, 0);
     ledcDetachPin(PIN_BUZZER);
@@ -26,8 +26,9 @@ void setup()
     Serial.println(ESP.getFreeHeap());
     searchForLuaAPP();
     Serial.println(ESP.getFreeHeap());
+
     xTaskCreate(task_appManager, "appManager", 20480, NULL, 1, NULL);
-    if(hal.pref.getInt("oobe", 0) <= 2)
+    if (hal.pref.getInt("oobe", 0) <= 2)
     {
         appManager.gotoApp("oobe");
         return;

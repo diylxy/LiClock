@@ -115,7 +115,7 @@ void AppEBook::setup()
             appManager.goBack();
     }
     gotoPage(currentPage);
-    if (digitalRead(PIN_BUTTONL) == 0)
+    if (hal.btnl.isPressing())
     {
         Serial.println("左键按下");
         if (currentPage == 0)
@@ -133,7 +133,7 @@ void AppEBook::setup()
             page_changed = true;
         }
     }
-    else if (digitalRead(PIN_BUTTONR) == 0)
+    else if (hal.btnr.isPressing())
     {
         Serial.println("右键按下");
         if (gotoPage(currentPage + 1) == false)
@@ -144,7 +144,7 @@ void AppEBook::setup()
                 // 打开菜单
                 openMenu();
                 display.display(true);
-                while (digitalRead(PIN_BUTTONL) == 0 || digitalRead(PIN_BUTTONR) == 0)
+                while (hal.btnl.isPressing() || hal.btnr.isPressing())
                 {
                     delay(10);
                 }
@@ -174,7 +174,7 @@ void AppEBook::setup()
         openMenu();
         display.display(true);
     }
-    while (digitalRead(PIN_BUTTONL) == 0 || digitalRead(PIN_BUTTONR) == 0)
+    while (hal.btnl.isPressing() || hal.btnr.isPressing())
     {
         delay(10);
     }

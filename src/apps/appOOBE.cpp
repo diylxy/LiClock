@@ -1211,7 +1211,7 @@ public:
 static AppOOBE app;
 void AppOOBE::waitClick()
 {
-    while (digitalRead(PIN_BUTTONC) && digitalRead(PIN_BUTTONL) && digitalRead(PIN_BUTTONR))
+    while (hal.btnl.isPressing() == false && hal.btnr.isPressing() == false && hal.btnc.isPressing() == false)
         delay(10);
 }
 void AppOOBE::setup()

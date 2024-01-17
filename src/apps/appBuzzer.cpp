@@ -29,7 +29,7 @@ void AppBuzzer::setup()
         }
         buzzer.playFile(path);
         display.display(false); // 全局刷新一次
-        while (digitalRead(PIN_BUTTONC) == 1 && digitalRead(PIN_BUTTONL) == 1 && digitalRead(PIN_BUTTONR) == 1 && buzzer.hasNote())
+        while (hal.btnl.isPressing() == false && hal.btnr.isPressing() == false && hal.btnc.isPressing() == false && buzzer.hasNote())
         {
             delay(100);
         }

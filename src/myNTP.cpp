@@ -80,7 +80,18 @@ void NTPSync()
     struct timeval tv;
     tv.tv_sec = timenow;
     tv.tv_usec = 0;
-
+    if(peripherals.peripherals_current & PERIPHERALS_DS3231_BIT)
+    {
+        tm t;
+        localtime_r(&timenow, &t);
+        peripherals.rtc.setDoW(t.tm_wday + 1);
+        peripherals.rtc.setYear(t.tm_year - 2000);
+        peripherals.rtc.setMonth(t.tm_mon);
+        peripherals.rtc.setDate(t.tm_mday);
+        peripherals.rtc.setHour(t.tm_hour);
+        peripherals.rtc.setMinute(t.tm_min);
+        peripherals.rtc.setSecond(t.tm_sec);
+    }
     time_t now;
 
     time(&now);

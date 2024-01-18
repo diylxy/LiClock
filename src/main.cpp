@@ -20,7 +20,7 @@ void setup()
     hal.init();
     alarms.load();
     alarms.check();
-    Serial.print("当前CPU频率：");
+    Serial.print("当前CPU频率(MHz): ");
     Serial.println(ESP.getCpuFreqMHz());
     xTaskCreate(task_appManager, "appManager", 20480, NULL, 1, NULL);
     if (hal.pref.getInt("oobe", 0) <= 2)

@@ -560,6 +560,7 @@ void AppManager::clearTimer()
 void AppManager::attachLocalEvent()
 {
     hal.detachAllButtonEvents();
+    Serial.println("正在更新按键事件");
     hal.btnc.attachLongPressStart([](void *scope)
                                   {if( ((AppManager *)scope)->currentApp->noDefaultEvent == false) ((AppManager *)scope)->method = APPMANAGER_SHOWAPPSELECTOR; },
                                   this);

@@ -13,14 +13,17 @@ int peri_bmp_get(lua_State *L)
             sea_press = luaL_checknumber(L, 1);
         }
     }
+    xSemaphoreTake(peripherals.i2cMutex, portMAX_DELAY);
     if (peripherals.bmp.takeForcedMeasurement())
     {
         lua_pushnumber(L, peripherals.bmp.readPressure());
         lua_pushnumber(L, peripherals.bmp.readTemperature());
         lua_pushnumber(L, peripherals.bmp.readAltitude(sea_press / 100));
+        xSemaphoreGive(peripherals.i2cMutex);
     }
     else
     {
+        xSemaphoreGive(peripherals.i2cMutex);
         lua_pushstring(L, "测量失败");
         return 1;
     }

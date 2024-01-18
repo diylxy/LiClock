@@ -24,6 +24,7 @@ public:
     uint16_t peripherals_load = 0;    // 当前已经加载的外设
     void check();                              // 重新检测外设情况
     void init();                               // 系统加载时从闪存加载外设信息
+    void initSGP();                             // 初始化SGP30
     uint16_t checkAvailable(uint16_t bitmask); // 检测请求的外设是否存在，如果存在则返回0,否则返回缺失的外设
     bool load(uint16_t bitmask);           // 按照bitmask加载外设
     void sleep();                              // 进入休眠模式，禁用所有外设
@@ -38,5 +39,6 @@ public:
     Adafruit_BMP280 bmp;
     Adafruit_SGP30 sgp;
     DS3231 rtc;
+    SemaphoreHandle_t i2cMutex = NULL;
 };
 extern Peripherals peripherals;

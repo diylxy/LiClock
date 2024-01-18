@@ -7,7 +7,7 @@ namespace GUI
     {
         for (int16_t i = 0; i < 60; ++i)
         {
-            if (digitalRead(btn) == 1)
+            if (digitalRead(btn) == hal.btn_activelow)
                 return false;
             delay(10);
         }

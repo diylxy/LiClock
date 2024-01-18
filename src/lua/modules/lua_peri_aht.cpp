@@ -6,7 +6,9 @@ int peri_aht_get(lua_State *L)
 {
     sensors_event_t humidity, temp;
     peripherals.load_append(PERIPHERALS_AHT20_BIT);
+    xSemaphoreTake(peripherals.i2cMutex, portMAX_DELAY);
     peripherals.aht.getEvent(&humidity, &temp); // populate temp and humidity objects with fresh data
+    xSemaphoreGive(peripherals.i2cMutex);
     lua_pushnumber(L, temp.temperature);
     lua_pushnumber(L, humidity.relative_humidity);
     return 2;

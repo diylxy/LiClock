@@ -16,6 +16,7 @@ void task_hal_update(void *)
             }
             hal.btnr.tick();
             hal.btnl.tick();
+            hal.btnc.tick();
             while (hal._hookButton)
             {
                 while (hal.SleepUpdateMutex)
@@ -75,6 +76,7 @@ void HAL::getTime()
     int64_t tmp;
     if (peripherals.peripherals_current & PERIPHERALS_DS3231_BIT)
     {
+        xSemaphoreTake(peripherals.i2cMutex, portMAX_DELAY);
         timeinfo.tm_year = peripherals.rtc.getYear() + 2000;
         timeinfo.tm_mon = peripherals.rtc.getMonth();
         timeinfo.tm_mday = peripherals.rtc.getDate();
@@ -83,6 +85,7 @@ void HAL::getTime()
         timeinfo.tm_sec = peripherals.rtc.getSecond();
         timeinfo.tm_wday = peripherals.rtc.getDoW() - 1;
         now = mktime(&timeinfo);
+        xSemaphoreGive(peripherals.i2cMutex);
     }
     else
     {
@@ -327,14 +330,17 @@ void refresh_partition_table()
 }
 bool HAL::init()
 {
-    Serial.begin(115200);
+    int16_t total_gnd = 0;
     bool timeerr = false;
     bool initial = true;
+    Serial.begin(115200);
     setenv("TZ", "CST-8", 1);
     tzset();
     // 读取时钟偏移
     pref.begin("clock");
-    int16_t total_gnd = 0;
+    pinMode(PIN_BUTTONR, INPUT);
+    pinMode(PIN_BUTTONL, INPUT);
+    pinMode(PIN_BUTTONC, INPUT);
     total_gnd += digitalRead(PIN_BUTTONR);
     total_gnd += digitalRead(PIN_BUTTONL);
     total_gnd += digitalRead(PIN_BUTTONC);
@@ -346,8 +352,28 @@ bool HAL::init()
         btn_activelow = false;
     }
     else
+    {
+        ESP_LOGW("HAL", "此设备为旧版硬件，建议尽快升级以获得最佳体验。");
+        btnl._buttonPressed = 0;
+        btnr._buttonPressed = 0;
+        btnc._buttonPressed = 0;
         btn_activelow = true;
+    }
+    esp_task_wdt_init(portMAX_DELAY, false);
+    pinMode(PIN_CHARGING, INPUT);
+    pinMode(PIN_SD_CARDDETECT, INPUT_PULLUP);
+    pinMode(PIN_SDVDD_CTRL, OUTPUT);
+    digitalWrite(PIN_SDVDD_CTRL, 1);
+    digitalWrite(PIN_BUZZER, 0);
+    pinMode(PIN_BUZZER, OUTPUT);
+    digitalWrite(PIN_BUZZER, 0);
 
+    const esp_partition_t *p = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, "spiffs");
+    if (pref.getUInt("size", 0) != p->size)
+    {
+        pref.putUInt("size", p->size);
+    }
+    refresh_partition_table();
     if (pref.getUInt("lastsync") == 0)
     {
         pref.putUInt("lastsync", 1);  // 上次同步时间的准确时间
@@ -355,18 +381,13 @@ bool HAL::init()
         pref.putInt("delta", 0);      // 这两次校准之间时钟偏差秒数，时钟时间-准确时间
         pref.putInt("upint", 2 * 60); // NTP同步间隔
     }
-    const esp_partition_t *p = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, "spiffs");
-    if (pref.getUInt("size", 0) != p->size)
-    {
-        pref.putUInt("size", p->size);
-    }
-    refresh_partition_table();
     lastsync = pref.getUInt("lastsync", 1); // 上次同步时间的准确时间
     every = pref.getInt("every", 100);      // 两次校准间隔多久
     delta = pref.getInt("delta", 0);        // 这两次校准之间时钟偏差秒数，时钟时间-准确时间
     upint = pref.getInt("upint", 2 * 60);   // NTP同步间隔
-    getTime();
     // 系统“自检”
+    peripherals.init();
+    getTime();
     if ((timeinfo.tm_year < (2016 - 1900)))
     {
         timeerr = true;              // 需要同步时间
@@ -376,19 +397,7 @@ bool HAL::init()
     if (esp_sleep_get_wakeup_cause() != ESP_SLEEP_WAKEUP_UNDEFINED)
         initial = false;
     // 下面进行初始化
-    esp_task_wdt_init(portMAX_DELAY, false);
-    pinMode(PIN_BUTTONR, INPUT);
-    pinMode(PIN_BUTTONL, INPUT);
-    pinMode(PIN_BUTTONC, INPUT);
-    pinMode(PIN_CHARGING, INPUT);
-    pinMode(PIN_SD_CARDDETECT, INPUT_PULLUP);
-    pinMode(PIN_SDVDD_CTRL, OUTPUT);
-    digitalWrite(PIN_SDVDD_CTRL, 1);
-    digitalWrite(PIN_BUZZER, 0);
-    pinMode(PIN_BUZZER, OUTPUT);
-    digitalWrite(PIN_BUZZER, 0);
 
-    xTaskCreate(task_hal_update, "hal_update", 2048, NULL, 10, NULL);
     WiFi.mode(WIFI_OFF);
     display.init(0, initial);
     display.setRotation(pref.getUChar(SETTINGS_PARAM_SCREEN_ORIENTATION, 3));
@@ -396,7 +405,7 @@ bool HAL::init()
     u8g2Fonts.setFontMode(1);
     u8g2Fonts.setForegroundColor(GxEPD_BLACK);
     u8g2Fonts.setBackgroundColor(GxEPD_WHITE);
-    u8g2Fonts.setFont(u8g2_font_wqy12_t_gb2312b);
+    u8g2Fonts.setFont(u8g2_font_wqy12_t_gb2312);
     u8g2Fonts.begin(display);
     if (hal.btnl.isPressing() && (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED))
     {
@@ -434,8 +443,8 @@ bool HAL::init()
     }
     loadConfig();
     weather.begin();
-    peripherals.init();
     buzzer.init();
+    xTaskCreate(task_hal_update, "hal_update", 2048, NULL, 10, NULL);
     if (initial == false && timeerr == false)
     {
         return false;
@@ -549,7 +558,7 @@ void HAL::powerOff(bool displayMessage)
 void HAL::update(void)
 {
     static int count = 0;
-    if (count++ % 10 == 0)
+    if (count++ % 30 == 0)
     {
         count = 0;
         getTime();

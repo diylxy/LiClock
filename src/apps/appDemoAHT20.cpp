@@ -21,7 +21,9 @@ static AppDemoAHT20 app;
 void AppDemoAHT20::setup()
 {
     sensors_event_t humidity, temp;
+    xSemaphoreTake(peripherals.i2cMutex, portMAX_DELAY);
     peripherals.aht.getEvent(&humidity, &temp); // populate temp and humidity objects with fresh data
+    xSemaphoreGive(peripherals.i2cMutex);
     char buf[30];
     sprintf(buf, "温度: %g ℃\n相对湿度：%g% rH\n", temp.temperature,humidity.relative_humidity);
     Serial.println(buf);

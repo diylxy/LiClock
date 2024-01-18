@@ -1,12 +1,12 @@
 esptool.py --chip esp32 elf2image \
-  --flash_mode qio \
+  --flash_mode dio \
   --flash_freq 80m \
   --dont-append-digest \
   -o .pio/build/esp32solo1/firmware.bin \
   .pio/build/esp32solo1/firmware.elf
 
 esptool.py --chip esp32 elf2image \
-  --flash_mode qio \
+  --flash_mode dio \
   --flash_freq 80m \
   --dont-append-digest \
   -o .pio/build/esp32solo1/bootloader.bin \
@@ -14,7 +14,7 @@ esptool.py --chip esp32 elf2image \
 
 esptool.py --chip esp32 merge_bin \
   -o LiClockWebFlash/webflash/bin/4M.bin \
-  --flash_mode qio \
+  --flash_mode dio \
   --flash_freq 80m \
   --flash_size 4MB \
   0x1000 .pio/build/esp32solo1/bootloader.bin \
@@ -24,7 +24,7 @@ esptool.py --chip esp32 merge_bin \
 
 esptool.py --chip esp32 merge_bin \
   -o LiClockWebFlash/webflash/bin/8M.bin \
-  --flash_mode qio \
+  --flash_mode dio \
   --flash_freq 80m \
   --flash_size 8MB \
   0x1000 .pio/build/esp32solo1/bootloader.bin \
@@ -34,7 +34,7 @@ esptool.py --chip esp32 merge_bin \
 
 esptool.py --chip esp32 merge_bin \
   -o LiClockWebFlash/webflash/bin/16M.bin \
-  --flash_mode qio \
+  --flash_mode dio \
   --flash_freq 80m \
   --flash_size 16MB \
   0x1000 .pio/build/esp32solo1/bootloader.bin \

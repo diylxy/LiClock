@@ -386,6 +386,16 @@ bool HAL::init()
     delta = pref.getInt("delta", 0);        // 这两次校准之间时钟偏差秒数，时钟时间-准确时间
     upint = pref.getInt("upint", 2 * 60);   // NTP同步间隔
     // 系统“自检”
+    WiFi.mode(WIFI_OFF);
+    display.epd2.startQueue();
+    display.init(0, initial);
+    display.setRotation(pref.getUChar(SETTINGS_PARAM_SCREEN_ORIENTATION, 3));
+    display.setTextColor(GxEPD_BLACK);
+    u8g2Fonts.setFontMode(1);
+    u8g2Fonts.setForegroundColor(GxEPD_BLACK);
+    u8g2Fonts.setBackgroundColor(GxEPD_WHITE);
+    u8g2Fonts.setFont(u8g2_font_wqy12_t_gb2312);
+    u8g2Fonts.begin(display);
     peripherals.init();
     getTime();
     if ((timeinfo.tm_year < (2016 - 1900)))
@@ -398,16 +408,6 @@ bool HAL::init()
         initial = false;
     // 下面进行初始化
 
-    WiFi.mode(WIFI_OFF);
-    display.epd2.startQueue();
-    display.init(0, initial);
-    display.setRotation(pref.getUChar(SETTINGS_PARAM_SCREEN_ORIENTATION, 3));
-    display.setTextColor(GxEPD_BLACK);
-    u8g2Fonts.setFontMode(1);
-    u8g2Fonts.setForegroundColor(GxEPD_BLACK);
-    u8g2Fonts.setBackgroundColor(GxEPD_WHITE);
-    u8g2Fonts.setFont(u8g2_font_wqy12_t_gb2312);
-    u8g2Fonts.begin(display);
     if (hal.btnl.isPressing() && (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED))
     {
         // 复位时检查左键是否按下，可以用于无限重启时临时关机

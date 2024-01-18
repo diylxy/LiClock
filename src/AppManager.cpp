@@ -41,9 +41,9 @@ AppBase *AppManager::getRealClock()
         hal.pref.putString(SETTINGS_PARAM_HOME_APP, "clock");
         bootapp = "clock";
     }
-    if(bootapp == "clock")
+    if (bootapp == "clock")
     {
-        if(config[PARAM_CLOCKONLY] == "1")
+        if (config[PARAM_CLOCKONLY] == "1")
         {
             bootapp = "clockonly";
         }
@@ -63,6 +63,20 @@ void AppManager::gotoApp(AppBase *appPtr)
         return;
     this->app_to = appPtr;
     method = APPMANAGER_GOTOAPP;
+}
+
+void AppManager::gotoApp(const char *appName)
+{
+    AppBase *appPtr = getPtrByName(appName);
+    if (appPtr != NULL)
+    {
+        gotoApp(appPtr);
+    }
+    else if (luaLoaded == false)
+    {
+        loadLuaApps();
+        gotoApp(appName);
+    }
 }
 
 void AppManager::goBack()
@@ -203,6 +217,7 @@ AppBase *AppManager::appSelector(bool showHidden)
 {
     bool finished = false; // 是否完成选择，用于超过一页的情况
     int currentPage = 0;
+    loadLuaApps();
     buildAppList(showHidden);
     int totalPage = realAppCount / 11;
     if (realAppCount % 11)
@@ -491,12 +506,12 @@ void AppManager::update()
         if (realNextWakeup == 0)
         {
             int now_min = hal.timeinfo.tm_hour * 60 + hal.timeinfo.tm_min;
-            realNextWakeup =  (alarms.getNextWakeupMinute() - now_min) * 60;
+            realNextWakeup = (alarms.getNextWakeupMinute() - now_min) * 60;
         }
         else
         {
             int currentTime = alarms.getNextWakeupMinute();
-            if(currentTime != 0)
+            if (currentTime != 0)
             {
                 int now_min = hal.timeinfo.tm_hour * 60 + hal.timeinfo.tm_min;
                 realNextWakeup = min(realNextWakeup, (alarms.getNextWakeupMinute() - now_min) * 60);
@@ -568,6 +583,15 @@ void AppManager::attachLocalEvent()
                                   { if( ((AppManager *)scope)->currentApp->noDefaultEvent == false) {((AppManager *)scope)->method = APPMANAGER_GOBACK; Serial.println("Back."); } },
                                   this);
 }
+void AppManager::loadLuaApps()
+{
+    if (luaLoaded == false)
+    {
+        Serial.println("延迟加载Lua APP列表");
+        searchForLuaAPP();
+        luaLoaded = true;
+    }
+}
 void AppManager::gotoAppBoot(const char *appName)
 {
     appStack.push(getRealClock());
@@ -584,9 +608,9 @@ bool AppManager::recover(AppBase *home)
             appStack.push(home);
         else
             appStack.push(getRealClock());
-        if(strcmp(latest_appname, "clock") == 0)
+        if (strcmp(latest_appname, "clock") == 0)
         {
-            if(strcmp(home->name, "clockonly") == 0)
+            if (strcmp(home->name, "clockonly") == 0)
             {
                 Serial.println("已设置离线模式，此App被替换为clockonly");
                 gotoApp("clockonly");

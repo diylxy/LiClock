@@ -18,12 +18,8 @@ void setup()
 {
     WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
     hal.init();
-    Serial.println(ESP.getFreeHeap());
     alarms.load();
     alarms.check();
-    Serial.println(ESP.getFreeHeap());
-    searchForLuaAPP();
-    Serial.println(ESP.getFreeHeap());
 
     xTaskCreate(task_appManager, "appManager", 20480, NULL, 1, NULL);
     if (hal.pref.getInt("oobe", 0) <= 2)

@@ -482,6 +482,11 @@ void AppManager::update()
     if (hal.btnl.isPressing() == false && hal.btnr.isPressing() == false && hal.btnc.isPressing() == false && hal.btnl.isIdle() == true && hal.btnr.isIdle() == true && hal.btnc.isIdle() == true)
     {
         // 准备进入睡眠模式
+        // 等待EPD2
+        if (display.epd2.isBusy())
+            return;
+        if(uxQueueMessagesWaiting(display.epd2.getQueue()) != 0)
+            return;
         // 计算下一次唤醒时间
         int realNextWakeup = 0;
         if (nextWakeup != 0)

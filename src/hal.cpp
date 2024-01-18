@@ -12,7 +12,7 @@ void task_hal_update(void *)
                 hal.btnr.tick();
                 hal.btnl.tick();
                 hal.btnc.tick();
-                delay(10);
+                delay(20);
             }
             hal.btnr.tick();
             hal.btnl.tick();
@@ -20,32 +20,32 @@ void task_hal_update(void *)
             while (hal._hookButton)
             {
                 while (hal.SleepUpdateMutex)
-                    delay(5);
+                    delay(10);
                 hal.update();
-                delay(10);
+                delay(20);
             }
             while (hal.btnr.isPressing() || hal.btnl.isPressing() || hal.btnc.isPressing())
             {
-                delay(10);
+                delay(20);
             }
         }
         while (hal.SleepUpdateMutex)
-            delay(5);
+            delay(10);
         hal.SleepUpdateMutex = true;
         hal.btnr.tick();
         hal.btnl.tick();
         hal.btnc.tick();
         hal.SleepUpdateMutex = false;
-        delay(10);
+        delay(20);
         while (hal.SleepUpdateMutex)
-            delay(5);
+            delay(10);
         hal.SleepUpdateMutex = true;
         hal.btnr.tick();
         hal.btnl.tick();
         hal.btnc.tick();
         hal.update();
         hal.SleepUpdateMutex = false;
-        delay(10);
+        delay(20);
     }
 }
 void HAL::saveConfig()
@@ -399,6 +399,7 @@ bool HAL::init()
     // 下面进行初始化
 
     WiFi.mode(WIFI_OFF);
+    display.epd2.startQueue();
     display.init(0, initial);
     display.setRotation(pref.getUChar(SETTINGS_PARAM_SCREEN_ORIENTATION, 3));
     display.setTextColor(GxEPD_BLACK);
@@ -502,6 +503,17 @@ static void pre_sleep()
     ledcDetachPin(PIN_BUZZER);
     digitalWrite(PIN_BUZZER, 0);
 }
+static void wait_display()
+{
+    while(uxQueueMessagesWaiting(display.epd2.getQueue()) > 0)
+    {
+        delay(10);
+    }
+    while(display.epd2.isBusy())
+    {
+        delay(10);
+    }
+}
 void HAL::goSleep(uint32_t sec)
 {
     hal.getTime();
@@ -516,6 +528,7 @@ void HAL::goSleep(uint32_t sec)
     nextSleep = nextSleep * 1000000UL;
     pre_sleep();
     esp_sleep_enable_timer_wakeup(nextSleep);
+    wait_display();
     delay(1);
     if (noDeepSleep)
     {
@@ -544,6 +557,8 @@ void HAL::powerOff(bool displayMessage)
     pre_sleep();
     WiFi.disconnect(true);
     set_sleep_set_gpio_interrupt();
+    wait_display();
+    delay(1);
     if (noDeepSleep)
     {
         esp_light_sleep_start();

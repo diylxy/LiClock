@@ -10,7 +10,7 @@ void task_appManager(void *)
     while (1)
     {
         appManager.update();
-        delay(10);
+        delay(20);
     }
 }
 #include <LittleFS.h>
@@ -20,7 +20,8 @@ void setup()
     hal.init();
     alarms.load();
     alarms.check();
-
+    Serial.print("当前CPU频率：");
+    Serial.println(ESP.getCpuFreqMHz());
     xTaskCreate(task_appManager, "appManager", 20480, NULL, 1, NULL);
     if (hal.pref.getInt("oobe", 0) <= 2)
     {

@@ -13,7 +13,7 @@ esptool.py --chip esp32 elf2image \
   ~/.platformio/packages/framework-arduino-solo1/tools/sdk/esp32/bin/bootloader_qio_80m.elf
 
 esptool.py --chip esp32 merge_bin \
-  -o release/firmware-4M.bin \
+  -o LiClockWebFlash/webflash/bin/4M.bin \
   --flash_mode qio \
   --flash_freq 80m \
   --flash_size 4MB \
@@ -23,7 +23,7 @@ esptool.py --chip esp32 merge_bin \
   0x10000 .pio/build/esp32solo1/firmware.bin
 
 esptool.py --chip esp32 merge_bin \
-  -o release/firmware-8M.bin \
+  -o LiClockWebFlash/webflash/bin/8M.bin \
   --flash_mode qio \
   --flash_freq 80m \
   --flash_size 8MB \
@@ -33,7 +33,7 @@ esptool.py --chip esp32 merge_bin \
   0x10000 .pio/build/esp32solo1/firmware.bin
 
 esptool.py --chip esp32 merge_bin \
-  -o release/firmware-16M.bin \
+  -o LiClockWebFlash/webflash/bin/16M.bin \
   --flash_mode qio \
   --flash_freq 80m \
   --flash_size 16MB \

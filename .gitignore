@@ -4,4 +4,3 @@
 .vscode/launch.json
 .vscode/ipch
 midi/__pycache__
-release/*

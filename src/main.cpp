@@ -17,9 +17,6 @@ void task_appManager(void *)
 void setup()
 {
     WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
-    ledcAttachPin(PIN_BUZZER, 0);
-    ledcWriteTone(0, 0);
-    ledcDetachPin(PIN_BUZZER);
     hal.init();
     alarms.load();
     alarms.check();

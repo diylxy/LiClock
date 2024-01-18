@@ -73,7 +73,7 @@ void HAL::loadConfig()
 void HAL::getTime()
 {
     int64_t tmp;
-    if(peripherals.peripherals_current & PERIPHERALS_DS3231_BIT)
+    if (peripherals.peripherals_current & PERIPHERALS_DS3231_BIT)
     {
         timeinfo.tm_year = peripherals.rtc.getYear() + 2000;
         timeinfo.tm_mon = peripherals.rtc.getMonth();
@@ -82,6 +82,7 @@ void HAL::getTime()
         timeinfo.tm_min = peripherals.rtc.getMinute();
         timeinfo.tm_sec = peripherals.rtc.getSecond();
         timeinfo.tm_wday = peripherals.rtc.getDoW() - 1;
+        now = mktime(&timeinfo);
     }
     else
     {
@@ -123,10 +124,17 @@ void HAL::WiFiConfigSmartConfig()
             ESP.restart();
         }
     }
-    Serial.println("WiFi connected");
-    config[PARAM_SSID] = WiFi.SSID();
-    config[PARAM_PASS] = WiFi.psk();
-    hal.saveConfig();
+    /*
+    void esp_dpp_start();
+    esp_dpp_start();
+    */
+    if (WiFi.waitForConnectResult() == WL_CONNECTED)
+    {
+        Serial.println("WiFi connected");
+        config[PARAM_SSID] = WiFi.SSID();
+        config[PARAM_PASS] = WiFi.psk();
+        hal.saveConfig();
+    }
 }
 
 #include <DNSServer.h>
@@ -473,6 +481,8 @@ static void set_sleep_set_gpio_interrupt()
         esp_sleep_enable_ext1_wakeup((1ULL << PIN_BUTTONC) | (1ULL << PIN_BUTTONL) | (1ULL << PIN_BUTTONR), ESP_EXT1_WAKEUP_ANY_HIGH);
     }
 }
+
+#include "driver/ledc.h"
 static void pre_sleep()
 {
     peripherals.sleep();
@@ -480,6 +490,7 @@ static void pre_sleep()
     display.hibernate();
     buzzer.waitForSleep();
     delay(10);
+    ledcDetachPin(PIN_BUZZER);
     digitalWrite(PIN_BUZZER, 0);
 }
 void HAL::goSleep(uint32_t sec)
@@ -496,11 +507,13 @@ void HAL::goSleep(uint32_t sec)
     nextSleep = nextSleep * 1000000UL;
     pre_sleep();
     esp_sleep_enable_timer_wakeup(nextSleep);
+    delay(1);
     if (noDeepSleep)
     {
         esp_light_sleep_start();
         display.init(0, false);
         peripherals.wakeup();
+        ledcAttachPin(PIN_BUZZER, 0);
     }
     else
     {
@@ -536,12 +549,12 @@ void HAL::powerOff(bool displayMessage)
 void HAL::update(void)
 {
     static int count = 0;
-    if(count++ % 10 == 0)
+    if (count++ % 10 == 0)
     {
         count = 0;
         getTime();
     }
-    
+
     long adc;
     adc = analogRead(PIN_ADC);
     adc = adc * 7230 / 4096;

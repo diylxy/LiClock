@@ -58,12 +58,14 @@ void AppClockOnly::setup()
 
     if (force_full_update || part_refresh_count > 20)
     {
+        Serial.printf("force full update:%d\npart_refresh_count:%d\n", force_full_update, part_refresh_count);
         display.display(false);
         force_full_update = false;
         part_refresh_count = 0;
     }
     else
     {
+        Serial.printf("force full update:%d\npart_refresh_count:%d\n", force_full_update, part_refresh_count);
         display.display(true);
         part_refresh_count++;
     }

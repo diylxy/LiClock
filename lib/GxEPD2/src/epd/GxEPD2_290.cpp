@@ -15,10 +15,14 @@
 GxEPD2_290::GxEPD2_290(int16_t cs, int16_t dc, int16_t rst, int16_t busy) : GxEPD2_EPD(cs, dc, rst, busy, HIGH, 10000000, WIDTH, HEIGHT, panel, hasColor, hasPartialUpdate, hasFastPartialUpdate)
 {
 }
+static RTC_DATA_ATTR bool _initial_refresh_1 = true;
 void GxEPD2_290::__clearScreen(uint8_t value)
 {
   _initial_write = false; // initial full screen buffer clean done
-  if (_initial_refresh)
+  Serial.println("Clear Screen");
+  Serial.printf("Value: %d\n", value);
+  Serial.printf("Initial Refresh: %d\n", _initial_refresh);
+  if (_initial_refresh_1)
   {
     _Init_Full();
     _setPartialRamArea(0, 0, WIDTH, HEIGHT);
@@ -29,6 +33,7 @@ void GxEPD2_290::__clearScreen(uint8_t value)
     }
     _Update_Full();
     _initial_refresh = false; // initial full update done
+    _initial_refresh_1 = false;
   }
   else
   {
@@ -57,7 +62,7 @@ void GxEPD2_290::__writeScreenBuffer(uint8_t value)
 {
   _initial_write = false; // initial full screen buffer clean done
   // this controller has no command to write "old data"
-  if (_initial_refresh)
+  if (_initial_refresh_1)
     __clearScreen(value);
   else
     _writeScreenBuffer(value);
@@ -254,19 +259,25 @@ void GxEPD2_290::__drawImagePart(const uint8_t *black, const uint8_t *color, int
 void GxEPD2_290::__refresh(bool partial_update_mode)
 {
   if (partial_update_mode)
+  {
+    Serial.println("Part Mode");
     __refresh(0, 0, WIDTH, HEIGHT);
+  }
   else
   {
+    Serial.println("Full Mode");
+    Serial.println(_initial_refresh_1);
     if (_using_partial_mode)
       _Init_Full();
     _Update_Full();
     _initial_refresh = false; // initial full update done
+    _initial_refresh_1 = false;
   }
 }
 
 void GxEPD2_290::__refresh(int16_t x, int16_t y, int16_t w, int16_t h)
 {
-  if (_initial_refresh)
+  if (_initial_refresh_1)
     return __refresh(false); // initial update needs be full update
   // intersection with screen
   int16_t w1 = x < 0 ? w + x : w;                             // reduce
@@ -532,6 +543,7 @@ static void task_gxEPD2_290(void *params)
 }
 void GxEPD2_290::startQueue()
 {
+  _initial_refresh = _initial_refresh_1;
   xTaskCreate(task_gxEPD2_290, "task_gxEPD2_290", 4096, NULL, 1, NULL);
 }
 QueueHandle_t GxEPD2_290::getQueue()

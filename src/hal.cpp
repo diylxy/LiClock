@@ -77,8 +77,8 @@ void HAL::getTime()
     if (peripherals.peripherals_current & PERIPHERALS_DS3231_BIT)
     {
         xSemaphoreTake(peripherals.i2cMutex, portMAX_DELAY);
-        timeinfo.tm_year = peripherals.rtc.getYear() + 2000;
-        timeinfo.tm_mon = peripherals.rtc.getMonth();
+        timeinfo.tm_year = peripherals.rtc.getYear() + 100;
+        timeinfo.tm_mon = peripherals.rtc.getMonth() - 1;
         timeinfo.tm_mday = peripherals.rtc.getDate();
         timeinfo.tm_hour = peripherals.rtc.getHour();
         timeinfo.tm_min = peripherals.rtc.getMinute();
@@ -529,7 +529,7 @@ void HAL::goSleep(uint32_t sec)
     pre_sleep();
     esp_sleep_enable_timer_wakeup(nextSleep);
     wait_display();
-    delay(1);
+    delay(10);
     if (noDeepSleep)
     {
         esp_light_sleep_start();
@@ -557,8 +557,7 @@ void HAL::powerOff(bool displayMessage)
     pre_sleep();
     WiFi.disconnect(true);
     set_sleep_set_gpio_interrupt();
-    wait_display();
-    delay(1);
+    delay(10);
     if (noDeepSleep)
     {
         esp_light_sleep_start();

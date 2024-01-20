@@ -510,8 +510,11 @@ void AppManager::update()
         }
         if (realNextWakeup == 0)
         {
-            int now_min = hal.timeinfo.tm_hour * 60 + hal.timeinfo.tm_min;
-            realNextWakeup = (alarms.getNextWakeupMinute() - now_min) * 60;
+            if(alarms.getNextWakeupMinute() != 0)
+            {
+                int now_min = hal.timeinfo.tm_hour * 60 + hal.timeinfo.tm_min;
+                realNextWakeup = (alarms.getNextWakeupMinute() - now_min) * 60;
+            }
         }
         else
         {

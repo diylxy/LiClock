@@ -280,6 +280,11 @@ void refresh_partition_table()
     uint32_t size_request; // 存储目的分区大小
     size_t size_physical = 0;
     esp_flash_get_physical_size(esp_flash_default_chip, &size_physical);
+    if(size_physical <= 0)
+    {
+        Serial.println("获取Flash大小失败");
+        return;
+    }
     size_request = size_physical - 0x300000 - 0x1000;
     esp_flash_read(esp_flash_default_chip, table, 0x8000, sizeof(table));
     memcpy(partition_size.size_byte, &table[16 * 2 * PARTITION_SPIFFS + 0x8], 4);
@@ -359,6 +364,7 @@ bool HAL::init()
         btnc._buttonPressed = 0;
         btn_activelow = true;
     }
+
     esp_task_wdt_init(portMAX_DELAY, false);
     pinMode(PIN_CHARGING, INPUT);
     pinMode(PIN_SD_CARDDETECT, INPUT_PULLUP);
@@ -367,6 +373,21 @@ bool HAL::init()
     digitalWrite(PIN_BUZZER, 0);
     pinMode(PIN_BUZZER, OUTPUT);
     digitalWrite(PIN_BUZZER, 0);
+    display.epd2.startQueue();
+    display.init(0, initial);
+    display.setRotation(pref.getUChar(SETTINGS_PARAM_SCREEN_ORIENTATION, 3));
+    display.setTextColor(GxEPD_BLACK);
+    u8g2Fonts.setFontMode(1);
+    u8g2Fonts.setForegroundColor(GxEPD_BLACK);
+    u8g2Fonts.setBackgroundColor(GxEPD_WHITE);
+    u8g2Fonts.setFont(u8g2_font_wqy12_t_gb2312);
+    u8g2Fonts.begin(display);
+    if (hal.btnl.isPressing() && (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED))
+    {
+        // 复位时检查左键是否按下，可以用于无限重启时临时关机
+        powerOff(true);
+        ESP.restart();
+    }
 
     const esp_partition_t *p = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, "spiffs");
     if (pref.getUInt("size", 0) != p->size)
@@ -387,15 +408,6 @@ bool HAL::init()
     upint = pref.getInt("upint", 2 * 60);   // NTP同步间隔
     // 系统“自检”
     WiFi.mode(WIFI_OFF);
-    display.epd2.startQueue();
-    display.init(0, initial);
-    display.setRotation(pref.getUChar(SETTINGS_PARAM_SCREEN_ORIENTATION, 3));
-    display.setTextColor(GxEPD_BLACK);
-    u8g2Fonts.setFontMode(1);
-    u8g2Fonts.setForegroundColor(GxEPD_BLACK);
-    u8g2Fonts.setBackgroundColor(GxEPD_WHITE);
-    u8g2Fonts.setFont(u8g2_font_wqy12_t_gb2312);
-    u8g2Fonts.begin(display);
     peripherals.init();
     getTime();
     if ((timeinfo.tm_year < (2016 - 1900)))
@@ -408,12 +420,6 @@ bool HAL::init()
         initial = false;
     // 下面进行初始化
 
-    if (hal.btnl.isPressing() && (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED))
-    {
-        // 复位时检查左键是否按下，可以用于无限重启时临时关机
-        powerOff(true);
-        ESP.restart();
-    }
     if (LittleFS.begin(false) == false)
     {
         display.fillScreen(GxEPD_WHITE);

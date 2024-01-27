@@ -43,7 +43,7 @@ const uint8_t *getBatteryIcon()
     {
         batteryIcon = battery_three_quarters_bits;
     }
-    else if (batteryLevel < 4200)
+    else if (batteryLevel < 4400)
     {
         batteryIcon = battery_full_bits;
     }

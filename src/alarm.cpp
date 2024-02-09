@@ -232,7 +232,7 @@ void Alarm::alarm()
     display.display();
     for (int16_t i = 0; i < 600; ++i)
     {
-        if (digitalRead(PIN_BUTTONC) == 0)
+        if (hal.btnc.isPressing())
         {
             break;
         }

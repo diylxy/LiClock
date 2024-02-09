@@ -11,6 +11,7 @@ void Peripherals::check()
     String msg = "";
     // 先检测I2C设备
     uint16_t i2cbitmask = 0;
+    xSemaphoreTake(i2cMutex, portMAX_DELAY);
     Wire.beginTransmission(AHTX0_I2CADDR_DEFAULT);
     if (Wire.endTransmission() == 0)
     {
@@ -35,6 +36,7 @@ void Peripherals::check()
         i2cbitmask |= PERIPHERALS_DS3231_BIT;
         msg += "DS3231高精度RTC\n";
     }
+    xSemaphoreGive(i2cMutex);
     Serial.printf("Peripherals check OK: 0x%02x\n", i2cbitmask);
     Serial.println(msg);
     GUI::msgbox("检测到的外设", msg.c_str());
@@ -47,19 +49,24 @@ void Peripherals::check()
 void Peripherals::init()
 {
     Wire.begin(PIN_SDA, PIN_SCL);
+    i2cMutex = xSemaphoreCreateMutex();
     SDSPI.begin(PIN_SD_SCLK, PIN_SD_MISO, PIN_SD_MOSI, -1);
     peripherals_current = hal.pref.getUShort(SETTINGS_PARAM_PHERIPHERAL_BITMASK, 0xffff);
     if (peripherals_current == 0xffff)
     {
         check();
     }
+}
+void Peripherals::initSGP()
+{
     if (peripherals_current & PERIPHERALS_SGP30_BIT && sgpInited == false)
     {
         if (!sgp.begin(&Wire, false))
         {
             Serial.println("Sensor not found :(");
-            while (1)
-                ;
+            xSemaphoreGive(i2cMutex);
+            check();
+            return;
         }
         Serial.print("Found SGP30 serial #");
         Serial.print(sgp.serialnumber[0], HEX);
@@ -68,7 +75,6 @@ void Peripherals::init()
         sgpInited = true;
     }
 }
-
 uint16_t Peripherals::checkAvailable(uint16_t bitmask)
 {
     return (peripherals_current & bitmask) ^ bitmask;
@@ -106,38 +112,54 @@ bool Peripherals::load(uint16_t bitmask)
         digitalWrite(PIN_SDVDD_CTRL, 1);
     }
     // 只有sgp和SD卡需要重新加载
-    if (bitmask & PERIPHERALS_SGP30_BIT && peripherals_current & PERIPHERALS_SGP30_BIT == 0)
+    if (bitmask & PERIPHERALS_SGP30_BIT && (peripherals_current & PERIPHERALS_SGP30_BIT) && (peripherals_load & PERIPHERALS_SGP30_BIT == 0))
     {
         Serial.println("[外设] 加载SGP30");
         // 需要加载sgp
+        xSemaphoreTake(i2cMutex, portMAX_DELAY);
+        if (!sgpInited)
+            initSGP();
         sgp.IAQinit();
+        xSemaphoreGive(i2cMutex);
     }
-    else if ((bitmask & PERIPHERALS_SGP30_BIT) == 0 && peripherals_current & PERIPHERALS_SGP30_BIT)
+    else if ((bitmask & PERIPHERALS_SGP30_BIT) == 0 && (peripherals_current & PERIPHERALS_SGP30_BIT) && (peripherals_load & PERIPHERALS_SGP30_BIT))
     {
+        xSemaphoreTake(i2cMutex, portMAX_DELAY);
+        if (!sgpInited)
+            initSGP();
         sgp.softReset();
+        xSemaphoreGive(i2cMutex);
     }
     // 之后检查有些可选外设
     //  尝试按需初始化外设
-    if (bitmask & PERIPHERALS_AHT20_BIT && peripherals_current & PERIPHERALS_AHT20_BIT && ahtInited == false)
+    if (bitmask & PERIPHERALS_AHT20_BIT && (peripherals_current & PERIPHERALS_AHT20_BIT) && ahtInited == false)
     {
         Serial.println("[外设] 首次加载AHT20");
+        xSemaphoreTake(i2cMutex, portMAX_DELAY);
         if (!aht.begin())
         {
+            xSemaphoreGive(i2cMutex);
             Serial.println("Could not find AHT? Check wiring");
             check();
         }
+        else
+            xSemaphoreGive(i2cMutex);
         ahtInited = true;
     }
     // if (!bmp.begin(BMP280_ADDRESS_ALT, BMP280_CHIPID)) {
     if (bitmask & PERIPHERALS_BMP280_BIT && peripherals_current & PERIPHERALS_BMP280_BIT && bmpInited == false)
     {
         Serial.println("[外设] 首次加载BMP280");
+        xSemaphoreTake(i2cMutex, portMAX_DELAY);
         if (!bmp.begin())
         {
+            xSemaphoreGive(i2cMutex);
             Serial.println(F("Could not find a valid BMP280 sensor, check wiring or "
                              "try a different address!"));
             check();
         }
+        else
+            xSemaphoreGive(i2cMutex);
         /* Default settings from datasheet. */
         bmp.setSampling(Adafruit_BMP280::MODE_FORCED,    /* Operating Mode. */
                         Adafruit_BMP280::SAMPLING_X2,    /* Temp. oversampling */
@@ -153,7 +175,7 @@ bool Peripherals::load(uint16_t bitmask)
 void Peripherals::load_append(uint16_t bitmask)
 {
     int tmp = peripherals_load;
-    if(tmp | bitmask == tmp)
+    if (tmp | bitmask == tmp)
         return;
     peripherals.load(bitmask | tmp);
 }
@@ -167,11 +189,17 @@ void Peripherals::sleep()
         delay(50);
         digitalWrite(PIN_SDVDD_CTRL, 1);
     }
+    if (i2cMutex == NULL)
+        return;
+    xSemaphoreTake(i2cMutex, portMAX_DELAY);
     if (peripherals_load & PERIPHERALS_SGP30_BIT)
     {
+        xSemaphoreGive(i2cMutex);
         sgp.softReset();
         delay(50);
     }
+    else
+        xSemaphoreGive(i2cMutex);
     // 这里不清除加载的设备，唤醒后自动重新加载
 }
 

@@ -41,9 +41,9 @@ AppBase *AppManager::getRealClock()
         hal.pref.putString(SETTINGS_PARAM_HOME_APP, "clock");
         bootapp = "clock";
     }
-    if(bootapp == "clock")
+    if (bootapp == "clock")
     {
-        if(config[PARAM_CLOCKONLY] == "1")
+        if (config[PARAM_CLOCKONLY] == "1")
         {
             bootapp = "clockonly";
         }
@@ -63,6 +63,20 @@ void AppManager::gotoApp(AppBase *appPtr)
         return;
     this->app_to = appPtr;
     method = APPMANAGER_GOTOAPP;
+}
+
+void AppManager::gotoApp(const char *appName)
+{
+    AppBase *appPtr = getPtrByName(appName);
+    if (appPtr != NULL)
+    {
+        gotoApp(appPtr);
+    }
+    else if (luaLoaded == false)
+    {
+        loadLuaApps();
+        gotoApp(appName);
+    }
 }
 
 void AppManager::goBack()
@@ -203,6 +217,7 @@ AppBase *AppManager::appSelector(bool showHidden)
 {
     bool finished = false; // 是否完成选择，用于超过一页的情况
     int currentPage = 0;
+    loadLuaApps();
     buildAppList(showHidden);
     int totalPage = realAppCount / 11;
     if (realAppCount % 11)
@@ -236,7 +251,7 @@ AppBase *AppManager::appSelector(bool showHidden)
         waitc = false;
         while (1)
         {
-            if (digitalRead(PIN_BUTTONL) == 0)
+            if (hal.btnl.isPressing())
             {
                 idleTime = 0;
                 selected--;
@@ -265,7 +280,7 @@ AppBase *AppManager::appSelector(bool showHidden)
                     }
                 }
             }
-            if (digitalRead(PIN_BUTTONR) == 0)
+            if (hal.btnr.isPressing())
             {
                 idleTime = 0;
                 selected++;
@@ -283,10 +298,10 @@ AppBase *AppManager::appSelector(bool showHidden)
                     }
                 }
             }
-            if (digitalRead(PIN_BUTTONC) == LOW)
+            if (hal.btnc.isPressing())
             {
                 delay(20);
-                if (digitalRead(PIN_BUTTONC) == LOW)
+                if (hal.btnc.isPressing())
                 {
                     if (GUI::waitLongPress(PIN_BUTTONC) == true)
                     {
@@ -318,7 +333,7 @@ AppBase *AppManager::appSelector(bool showHidden)
             if (waitc == true)
             {
                 waitc = false;
-                while (digitalRead(PIN_BUTTONC) == LOW)
+                while (hal.btnc.isPressing())
                     delay(10);
                 delay(10);
             }
@@ -464,9 +479,14 @@ void AppManager::update()
         updateAgain = false;
         return;
     }
-    if (digitalRead(PIN_BUTTONL) == 1 && digitalRead(PIN_BUTTONR) == 1 && digitalRead(PIN_BUTTONC) == 1 && hal.btnl.isIdle() == true && hal.btnr.isIdle() == true && hal.btnc.isIdle() == true)
+    if (hal.btnl.isPressing() == false && hal.btnr.isPressing() == false && hal.btnc.isPressing() == false && hal.btnl.isIdle() == true && hal.btnr.isIdle() == true && hal.btnc.isIdle() == true)
     {
         // 准备进入睡眠模式
+        // 等待EPD2
+        if (display.epd2.isBusy())
+            return;
+        if(uxQueueMessagesWaiting(display.epd2.getQueue()) != 0)
+            return;
         // 计算下一次唤醒时间
         int realNextWakeup = 0;
         if (nextWakeup != 0)
@@ -490,13 +510,16 @@ void AppManager::update()
         }
         if (realNextWakeup == 0)
         {
-            int now_min = hal.timeinfo.tm_hour * 60 + hal.timeinfo.tm_min;
-            realNextWakeup =  (alarms.getNextWakeupMinute() - now_min) * 60;
+            if(alarms.getNextWakeupMinute() != 0)
+            {
+                int now_min = hal.timeinfo.tm_hour * 60 + hal.timeinfo.tm_min;
+                realNextWakeup = (alarms.getNextWakeupMinute() - now_min) * 60;
+            }
         }
         else
         {
             int currentTime = alarms.getNextWakeupMinute();
-            if(currentTime != 0)
+            if (currentTime != 0)
             {
                 int now_min = hal.timeinfo.tm_hour * 60 + hal.timeinfo.tm_min;
                 realNextWakeup = min(realNextWakeup, (alarms.getNextWakeupMinute() - now_min) * 60);
@@ -560,12 +583,22 @@ void AppManager::clearTimer()
 void AppManager::attachLocalEvent()
 {
     hal.detachAllButtonEvents();
+    Serial.println("正在更新按键事件");
     hal.btnc.attachLongPressStart([](void *scope)
                                   {if( ((AppManager *)scope)->currentApp->noDefaultEvent == false) ((AppManager *)scope)->method = APPMANAGER_SHOWAPPSELECTOR; },
                                   this);
     hal.btnl.attachLongPressStart([](void *scope)
                                   { if( ((AppManager *)scope)->currentApp->noDefaultEvent == false) {((AppManager *)scope)->method = APPMANAGER_GOBACK; Serial.println("Back."); } },
                                   this);
+}
+void AppManager::loadLuaApps()
+{
+    if (luaLoaded == false)
+    {
+        Serial.println("延迟加载Lua APP列表");
+        searchForLuaAPP();
+        luaLoaded = true;
+    }
 }
 void AppManager::gotoAppBoot(const char *appName)
 {
@@ -583,9 +616,9 @@ bool AppManager::recover(AppBase *home)
             appStack.push(home);
         else
             appStack.push(getRealClock());
-        if(strcmp(latest_appname, "clock") == 0)
+        if (strcmp(latest_appname, "clock") == 0)
         {
-            if(strcmp(home->name, "clockonly") == 0)
+            if (strcmp(home->name, "clockonly") == 0)
             {
                 Serial.println("已设置离线模式，此App被替换为clockonly");
                 gotoApp("clockonly");

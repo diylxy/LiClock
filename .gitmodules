@@ -1,0 +1,3 @@
+[submodule "LiClockWebFlash"]
+	path = LiClockWebFlash
+	url = https://github.com/diylxy/LiClockWebFlash.git

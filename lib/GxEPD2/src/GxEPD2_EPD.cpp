@@ -134,7 +134,7 @@ void GxEPD2_EPD::_waitWhileBusy(const char *comment, uint16_t busy_time)
 {
   if (_busy >= 0)
   {
-    delay(1); // add some margin to become active
+    delay(busy_time - 10); // add some margin to become active
     unsigned long start = micros();
     while (1)
     {

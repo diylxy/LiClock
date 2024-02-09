@@ -43,7 +43,7 @@ static void RTCOffsetTimer()
     u8g2Fonts.printf("  %02d:%02d:%02d -> %02d:%02d:%02d\n", rtctime.tm_hour, rtctime.tm_min, rtctime.tm_sec, hal.timeinfo.tm_hour, hal.timeinfo.tm_min, hal.timeinfo.tm_sec);
     if (hal.lastsync != 1)
     {
-        u8g2Fonts.printf("  上次同步时Unix时间：%d\n", hal.lastsync);
+        u8g2Fonts.printf("  上次同步Unix时间：%d\n", hal.lastsync);
     }
     else
     {
@@ -56,6 +56,10 @@ static void RTCOffsetTimer()
     else
     {
         u8g2Fonts.printf("  RTC误差未知\n");
+    }
+    if(peripherals.peripherals_current & PERIPHERALS_DS3231_BIT)
+    {
+        u8g2Fonts.printf(" [ 误差数据为内置RTC ]\n [ 正在使用外部DS3231时钟源，误差补偿保持计算 ]\n");
     }
     display.display();
 }

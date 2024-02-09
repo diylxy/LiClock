@@ -102,7 +102,7 @@ static bool login()
     {
     RebuildQRCode:
         millisStart = millis();
-        Response = HTTPGET("https://passport.bilibili.com/qrcode/getLoginUrl");
+        Response = HTTPGET("https://passport.bilibili.com/x/passport-login/web/qrcode/generate");
         if (Response == "")
         {
             GUI::msgbox("错误", "二维码生成失败，请联系开发者");
@@ -113,7 +113,7 @@ static bool login()
         obj = doc.as<JsonObject>();
 
         URL = obj["data"]["url"].as<String>();
-        oauthKey = obj["data"]["oauthKey"].as<String>();
+        oauthKey = obj["data"]["qrcode_key"].as<String>();
         display.clearScreen();
         QRCode qrcode;
         uint8_t qrcodeData[qrcode_getBufferSize(7)];
@@ -130,19 +130,20 @@ static bool login()
         display.display(true);
         while (millis() - millisStart < 180000)
         {
+            Serial.print(".");
             HTTPClient http;
-            if (digitalRead(PIN_BUTTONL) == 0)
+            if (hal.btnl.isPressing())
             {
                 Serial.println("cancel");
                 goto err;
             }
             vTaskDelay(1000);
-            if (http.begin("https://passport.bilibili.com/qrcode/getLoginInfo"))
+            if (http.begin("https://passport.bilibili.com/x/passport-login/web/qrcode/poll" + String("?qrcode_key=") + oauthKey))
             {
                 http.addHeader("Content-Type", "application/x-www-form-urlencoded");
                 http.addHeader("Referer", "https://www.bilibili.com");
                 http.addHeader("User-Agent", "curl/7.70.0");
-                int code = http.POST("oauthKey=" + oauthKey);
+                int code = http.GET();
                 if (code == HTTP_CODE_OK)
                 {
                     Response = http.getString();
@@ -157,7 +158,7 @@ static bool login()
             ArduinoJson::deserializeJson(doc, Response);
             obj = doc.as<JsonObject>();
 
-            if (obj["status"] == true)
+            if (obj["data"]["code"] == 0)
             {
                 Response = obj["data"]["url"].as<String>();
                 Cookies = Response.substring(Response.indexOf("?") + 1);
@@ -168,15 +169,15 @@ static bool login()
             }
             else
             {
-                if (obj["data"] == -1 || obj["data"] == -2)
+                if (obj["data"]["code"] == 86038)
                 {
                     GUI::msgbox("超时", "二维码超时");
                     http.end();
                     goto RebuildQRCode;
                 }
-                else if (obj["data"] == -5)
+                else if (obj["data"]["code"] == 86090)
                 {
-                    Serial.println("-5");
+                    Serial.print("*");
                 }
             }
             http.end();

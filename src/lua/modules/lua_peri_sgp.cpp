@@ -5,10 +5,12 @@ extern const char *err_invalid_param;
 int sgp_get(lua_State *L)
 {
     peripherals.load_append(PERIPHERALS_SGP30_BIT);
+    xSemaphoreTake(peripherals.i2cMutex, portMAX_DELAY);
     if (peripherals.sgp.IAQmeasure())
     {
         lua_pushinteger(L, peripherals.sgp.TVOC);
         lua_pushinteger(L, peripherals.sgp.eCO2);
+        xSemaphoreGive(peripherals.i2cMutex);
     }
     else
     {
@@ -21,13 +23,16 @@ int sgp_get(lua_State *L)
 int sgp_getRaw(lua_State *L)
 {
     peripherals.load_append(PERIPHERALS_SGP30_BIT);
+    xSemaphoreTake(peripherals.i2cMutex, portMAX_DELAY);
     if (peripherals.sgp.IAQmeasureRaw())
     {
         lua_pushinteger(L, peripherals.sgp.rawH2);
         lua_pushinteger(L, peripherals.sgp.rawEthanol);
+        xSemaphoreGive(peripherals.i2cMutex);
     }
     else
     {
+        xSemaphoreGive(peripherals.i2cMutex);
         lua_pushstring(L, "测量失败");
         return 1;
     }
@@ -38,13 +43,16 @@ int sgp_getIAQBaseline(lua_State *L)
 {
     uint16_t TVOC_base, eCO2_base;
     peripherals.load_append(PERIPHERALS_SGP30_BIT);
+    xSemaphoreTake(peripherals.i2cMutex, portMAX_DELAY);
     if (peripherals.sgp.getIAQBaseline(&eCO2_base, &TVOC_base))
     {
         lua_pushinteger(L, eCO2_base);
         lua_pushinteger(L, TVOC_base);
+        xSemaphoreGive(peripherals.i2cMutex);
     }
     else
     {
+        xSemaphoreGive(peripherals.i2cMutex);
         lua_pushstring(L, "获取失败");
         return 1;
     }
@@ -60,12 +68,15 @@ int sgp_setIAQBaseline(lua_State *L)
         {
             uint16_t eCO2_base = luaL_checkinteger(L, 1);
             uint16_t TVOC_base = luaL_checkinteger(L, 2);
+            xSemaphoreTake(peripherals.i2cMutex, portMAX_DELAY);
             if (peripherals.sgp.setIAQBaseline(eCO2_base, TVOC_base))
             {
+                xSemaphoreGive(peripherals.i2cMutex);
                 return 0;
             }
             else
             {
+                xSemaphoreGive(peripherals.i2cMutex);
                 lua_pushstring(L, "设置失败");
                 lua_error(L);
                 return 0;
@@ -115,4 +126,3 @@ extern "C" int luaopen_peri_sgp(lua_State *L)
     luaL_newlib(L, _lualib);
     return 1;
 }
-

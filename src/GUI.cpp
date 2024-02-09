@@ -7,7 +7,7 @@ namespace GUI
     {
         for (int16_t i = 0; i < 60; ++i)
         {
-            if (digitalRead(btn) == 1)
+            if (digitalRead(btn) == hal.btn_activelow)
                 return false;
             delay(10);
         }
@@ -82,7 +82,7 @@ namespace GUI
         display.displayWindow(start_x, start_y, 160, 96);
         while (1)
         {
-            if (digitalRead(PIN_BUTTONR) == LOW || digitalRead(PIN_BUTTONL) == LOW || digitalRead(PIN_BUTTONC) == LOW)
+            if (hal.btnr.isPressing() || hal.btnl.isPressing() || hal.btnc.isPressing())
                 break;
             delay(10);
         }
@@ -118,12 +118,12 @@ namespace GUI
         display.displayWindow(start_x, start_y, 160, 96);
         while (1)
         {
-            if (digitalRead(PIN_BUTTONR) == LOW)
+            if (hal.btnr.isPressing())
             {
                 result = true;
                 break;
             }
-            if (digitalRead(PIN_BUTTONL) == LOW)
+            if (hal.btnl.isPressing())
             {
                 result = false;
                 break;
@@ -161,10 +161,10 @@ namespace GUI
         push_buffer();
         while (1)
         {
-            if (digitalRead(PIN_BUTTONL) == LOW)
+            if (hal.btnl.isPressing())
             {
                 delay(20);
-                if (digitalRead(PIN_BUTTONL) == LOW)
+                if (hal.btnl.isPressing())
                 {
                     if (selected == 0)
                     {
@@ -175,10 +175,10 @@ namespace GUI
                 }
             }
 
-            if (digitalRead(PIN_BUTTONR) == LOW)
+            if (hal.btnr.isPressing())
             {
                 delay(20);
-                if (digitalRead(PIN_BUTTONR) == LOW)
+                if (hal.btnr.isPressing())
                 {
                     ++selected;
                     if (selected == total)
@@ -189,10 +189,10 @@ namespace GUI
                 }
             }
 
-            if (digitalRead(PIN_BUTTONC) == LOW)
+            if (hal.btnc.isPressing())
             {
                 delay(20);
-                if (digitalRead(PIN_BUTTONC) == LOW)
+                if (hal.btnc.isPressing())
                 {
                     if (waitLongPress(PIN_BUTTONC) == true)
                     {
@@ -248,7 +248,7 @@ namespace GUI
             if (waitc == true)
             {
                 waitc = false;
-                while (digitalRead(PIN_BUTTONC) == LOW)
+                while (hal.btnc.isPressing())
                     delay(10);
                 delay(10);
             }
@@ -289,7 +289,7 @@ namespace GUI
         bool changed = true;
         while (1)
         {
-            if (digitalRead(PIN_BUTTONL) == LOW)
+            if (hal.btnl.isPressing())
             {
                 // 减
                 if (waitLongPress(PIN_BUTTONL))
@@ -309,7 +309,7 @@ namespace GUI
                 }
                 changed = true;
             }
-            else if (digitalRead(PIN_BUTTONR) == LOW)
+            else if (hal.btnr.isPressing())
             {
                 // 加
                 if (waitLongPress(PIN_BUTTONR))
@@ -329,7 +329,7 @@ namespace GUI
                 }
                 changed = true;
             }
-            else if (digitalRead(PIN_BUTTONC) == LOW)
+            else if (hal.btnc.isPressing())
             {
                 if (waitLongPress(PIN_BUTTONC))
                 {
@@ -407,7 +407,7 @@ namespace GUI
         bool changed = true;
         while (1)
         {
-            if (digitalRead(PIN_BUTTONL) == LOW)
+            if (hal.btnl.isPressing())
             {
                 // 减
                 if (waitLongPress(PIN_BUTTONL))
@@ -431,7 +431,7 @@ namespace GUI
                 }
                 changed = true;
             }
-            else if (digitalRead(PIN_BUTTONR) == LOW)
+            else if (hal.btnr.isPressing())
             {
                 // 加
                 if (waitLongPress(PIN_BUTTONR))
@@ -455,7 +455,7 @@ namespace GUI
                 }
                 changed = true;
             }
-            else if (digitalRead(PIN_BUTTONC) == LOW)
+            else if (hal.btnc.isPressing())
             {
                 if (waitLongPress(PIN_BUTTONC))
                 {

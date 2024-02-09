@@ -105,6 +105,7 @@ void Buzzer::init()
 {
     queue_buzzer = xQueueCreate(100, sizeof(buzzer_desc)); // 我知道ESP32的tone是用队列实现的，但是觉得不方便就写了个壳
     xTaskCreate(task_buzzer, "task_buzzer", 4096, NULL, 10, NULL);
+    ledcSetup(0, 48000, 10);
     ledcAttachPin(PIN_BUZZER, 0);
 }
 

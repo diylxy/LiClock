@@ -74,14 +74,7 @@ public:
     AppBase *getPtrByName(const char *appName);
     AppBase *getRealClock();
     void gotoApp(AppBase *appPtr);
-    void gotoApp(const char *appName)
-    {
-        AppBase *appPtr = getPtrByName(appName);
-        if (appPtr != NULL)
-        {
-            gotoApp(appPtr);
-        }
-    }
+    void gotoApp(const char *appName);
     void gotoAppBoot(const char *appName);
     bool recover(AppBase *home = NULL);
     void goBack();
@@ -96,6 +89,8 @@ public:
     uint32_t nextWakeup = 0;                      // 预定下次唤醒，注意如果是deepsleep唤醒需要重新设置
     void attachLocalEvent();                      // 附加appManager按钮事件
     String bootapp;
+    bool luaLoaded = false;
+    void loadLuaApps();
 };
 
 extern AppManager appManager;

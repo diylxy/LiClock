@@ -1,6 +1,13 @@
 #include <A_Config.h>
 #include "AppManager.h"
 
+
+const char *getRealPath(const char *fpath) {
+    return NULL;
+}
+void setPath(const char *path) {
+}
+
 bool file_exist(const char *path)
 {
     FILE *fp = fopen(getRealPath(path), "r");

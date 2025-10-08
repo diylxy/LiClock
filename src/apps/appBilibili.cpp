@@ -18,7 +18,7 @@ public:
 static AppBilibili app;
 
 String UID;
-DynamicJsonDocument doc(4096);
+JsonDocument doc;
 String Response;
 String Cookies;
 String Headers;

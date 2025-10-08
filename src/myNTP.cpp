@@ -95,6 +95,7 @@ void NTPSync()
         xSemaphoreGive(peripherals.i2cMutex);
     }
     time_t now;
+    int32_t last_update_delta;
 
     time(&now);
     settimeofday(&tv, NULL);
@@ -110,7 +111,7 @@ void NTPSync()
             tmp /= hal.every;
             now1 -= tmp;
         }
-        hal.last_update_delta = now1 - timenow;
+        last_update_delta = now1 - timenow;
     }
     if (hal.lastsync != 1 && ((now / 31536000 + 1970) > 2020))
     {
@@ -118,11 +119,21 @@ void NTPSync()
         int delta = now - tv.tv_sec;
         if (delta > 2)
         {
-            hal.pref.putInt("every", every);
-            hal.pref.putInt("delta", delta);
-            hal.every = every;
-            hal.delta = delta;
-            Serial.printf("误差已更新，经过%d秒误差%d秒\n用上次得到的参数修正后的RTC时间\n作为当前时间与NTP相比误差为%d秒\n", every, delta, hal.last_update_delta);
+            int lastEvery = hal.pref.getInt("every", -1);
+            if (lastEvery != -1 && lastEvery > every)
+            {
+                // Skip updating to avoid using less accurate time sync data
+                Serial.printf("误差未更新，经过%d秒误差%d秒\n没有上次的经过%d秒误差%d秒精确\n", every, delta, lastEvery, hal.pref.getInt("delta", 0));
+                return;
+            }
+            else
+            {
+                hal.pref.putInt("every", every);
+                hal.pref.putInt("delta", delta);
+                hal.every = every;
+                hal.delta = delta;
+                Serial.printf("误差已更新，经过%d秒误差%d秒\n用上次得到的参数修正后的RTC时间\n作为当前时间与NTP相比误差为%d秒\n", every, delta, hal.last_update_delta);
+            }
         }
         else
         {
@@ -139,4 +150,5 @@ void NTPSync()
     }
     hal.pref.putUInt("lastsync", tv.tv_sec);
     hal.lastsync = tv.tv_sec;
+    hal.last_update_delta = last_update_delta;
 }

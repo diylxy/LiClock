@@ -74,13 +74,14 @@ void HAL::loadConfig()
 void HAL::getTime()
 {
     int64_t tmp;
+    bool b12Hour = false, pm = false, century;
     if (peripherals.peripherals_current & PERIPHERALS_DS3231_BIT)
     {
         xSemaphoreTake(peripherals.i2cMutex, portMAX_DELAY);
         timeinfo.tm_year = peripherals.rtc.getYear() + 100;
-        timeinfo.tm_mon = peripherals.rtc.getMonth() - 1;
+        timeinfo.tm_mon = peripherals.rtc.getMonth(century) - 1;
         timeinfo.tm_mday = peripherals.rtc.getDate();
-        timeinfo.tm_hour = peripherals.rtc.getHour();
+        timeinfo.tm_hour = peripherals.rtc.getHour(b12Hour, pm); // Assuming the function requires a boolean argument
         timeinfo.tm_min = peripherals.rtc.getMinute();
         timeinfo.tm_sec = peripherals.rtc.getSecond();
         timeinfo.tm_wday = peripherals.rtc.getDoW() - 1;
@@ -147,6 +148,7 @@ void HAL::WiFiConfigManual()
 #include "img_manual.h"
     String passwd = String((esp_random() % 1000000000L) + 10000000L); // 生成随机密码
     String str = "WIFI:T:WPA2;S:WeatherClock;P:" + passwd + ";;";
+    Serial.println(str);
     WiFi.softAP("WeatherClock", passwd.c_str());
     WiFi.softAPConfig(IPAddress(192, 168, 4, 1), IPAddress(192, 168, 4, 1), IPAddress(255, 255, 255, 0));
     dnsServer.start(53, "*", IPAddress(192, 168, 4, 1));
@@ -246,9 +248,14 @@ void HAL::ReqWiFiConfig()
         ESP.restart();
     }
 }
-#include "esp_spi_flash.h"
-#include "esp_rom_md5.h"
 #include "esp_partition.h"
+#include "spi_flash_mmap.h"
+#include "esp_flash.h"
+#include "esp_rom_md5.h"
+#include "esp_flash.h"
+#include "esp_partition.h"
+//#undef SNTP_OPMODE_POLL
+//#include "lwip/apps/sntp.h"
 #define PARTITION_TOTAL 4
 #define PARTITIONS_OFFSET 0x8000
 #define PARTITION_SPIFFS (4 - 1)
@@ -256,7 +263,7 @@ void HAL::ReqWiFiConfig()
 void test_littlefs_size(bool format = true)
 {
     uint32_t size_request; // 存储目的分区大小
-    size_t size_physical = 0;
+    uint32_t size_physical = 0;
     esp_flash_get_physical_size(esp_flash_default_chip, &size_physical);
     size_request = size_physical - 0x300000 - 0x1000;
     if (hal.pref.getUInt("size", 0) != size_request)
@@ -266,81 +273,12 @@ void test_littlefs_size(bool format = true)
         LittleFS.format();
     }
 }
-void refresh_partition_table()
-{
-    md5_context_t ctx;
-    static uint8_t table[16 * 20];
-    static uint8_t table1[16 * 20];
-    esp_rom_md5_init(&ctx);
-    union
-    {
-        uint32_t size;
-        uint8_t size_byte[4];
-    } partition_size;
-    uint32_t size_request; // 存储目的分区大小
-    size_t size_physical = 0;
-    esp_flash_get_physical_size(esp_flash_default_chip, &size_physical);
-    if(size_physical <= 0)
-    {
-        Serial.println("获取Flash大小失败");
-        return;
-    }
-    size_request = size_physical - 0x300000 - 0x1000;
-    esp_flash_read(esp_flash_default_chip, table, 0x8000, sizeof(table));
-    memcpy(partition_size.size_byte, &table[16 * 2 * PARTITION_SPIFFS + 0x8], 4);
-    Serial.printf("当前LittleFS分区大小%d\n期望LittleFS分区大小%d\n", partition_size.size, size_request);
-    if (partition_size.size != size_request)
-    {
-        Serial.printf("正在修改分区表\n");
-        partition_size.size = size_request;
-        memcpy(&table[16 * 2 * PARTITION_SPIFFS + 0x8], partition_size.size_byte, 4);
-        Serial.println("正在计算MD5\n");
-        esp_rom_md5_update(&ctx, table, 16 * 2 * PARTITION_TOTAL);
-        esp_rom_md5_final(&table[16 * (2 * PARTITION_TOTAL + 1)], &ctx);
-        esp_flash_set_chip_write_protect(esp_flash_default_chip, false);
-        Serial.println("\n正在写入");
-        if (esp_flash_erase_region(esp_flash_default_chip, 0x8000, 0x1000) != ESP_OK)
-        {
-            Serial.println("擦除失败");
-            while (1)
-                vTaskDelay(1000);
-        }
-        if (esp_flash_write(esp_flash_default_chip, table, 0x8000, sizeof(table)) != ESP_OK)
-        {
-            Serial.println("写入失败");
-            while (1)
-                vTaskDelay(1000);
-        }
-        Serial.println("完成，正在校验结果");
-        esp_flash_read(esp_flash_default_chip, table1, 0x8000, sizeof(table1));
-        if (memcmp(table, table1, sizeof(table)) != 0)
-        {
-            Serial.println("校验失败");
-            while (1)
-                vTaskDelay(1000);
-        }
-        else
-        {
-            for (size_t i = 0; i < 16 * 12; i++)
-            {
-                Serial.printf("0x%02X ", table[i]);
-                if ((i + 1) % 16 == 0)
-                {
-                    Serial.println();
-                }
-            }
-        }
-        ESP.restart();
-    }
-}
 bool HAL::init()
 {
     int16_t total_gnd = 0;
     bool timeerr = false;
     bool initial = true;
     Serial.begin(115200);
-    setenv("TZ", "CST-8", 1);
-    tzset();
     // 读取时钟偏移
     pref.begin("clock");
     pinMode(PIN_BUTTONR, INPUT);
@@ -365,7 +303,11 @@ bool HAL::init()
         btn_activelow = true;
     }
 
-    esp_task_wdt_init(portMAX_DELAY, false);
+    esp_task_wdt_config_t wdt_config = {
+        .timeout_ms = portMAX_DELAY,
+        .trigger_panic = false
+    };
+    esp_task_wdt_init(&wdt_config);
     pinMode(PIN_CHARGING, INPUT);
     pinMode(PIN_SD_CARDDETECT, INPUT_PULLUP);
     pinMode(PIN_SDVDD_CTRL, OUTPUT);
@@ -394,7 +336,6 @@ bool HAL::init()
     {
         pref.putUInt("size", p->size);
     }
-    refresh_partition_table();
     if (pref.getUInt("lastsync") == 0)
     {
         pref.putUInt("lastsync", 1);  // 上次同步时间的准确时间
@@ -438,9 +379,9 @@ bool HAL::init()
             powerOff(false);
             ESP.restart();
         }
-        test_littlefs_size(false);
+        // test_littlefs_size(false);
     }
-    test_littlefs_size(true);
+    // test_littlefs_size(true);
     if (LittleFS.exists("/config.json") == false)
     {
         Serial.println("正在写入默认配置");
@@ -449,6 +390,8 @@ bool HAL::init()
         f.close();
     }
     loadConfig();
+    setenv("TZ", config[PARAM_TIMEZONE], 1);
+    tzset();
     weather.begin();
     buzzer.init();
     xTaskCreate(task_hal_update, "hal_update", 2048, NULL, 10, NULL);
@@ -483,17 +426,20 @@ void HAL::autoConnectWiFi()
             hal.ReqWiFiConfig();
         }
     }
-    sntp_stop();
+    //sntp_stop();
 }
 static void set_sleep_set_gpio_interrupt()
 {
     if (hal.btn_activelow)
     {
         esp_sleep_enable_ext0_wakeup((gpio_num_t)hal._wakeupIO[0], 0);
-        esp_sleep_enable_ext1_wakeup((1LL << hal._wakeupIO[1]), ESP_EXT1_WAKEUP_ALL_LOW);
+        esp_sleep_enable_ext1_wakeup((1LL << hal._wakeupIO[1]), ESP_EXT1_WAKEUP_ANY_LOW);
     }
     else
     {
+        rtc_gpio_pullup_dis((gpio_num_t)PIN_BUTTONC);     // avoid week pullup, sometimes it will wake up continuously
+        rtc_gpio_pullup_dis((gpio_num_t)PIN_BUTTONL);     // avoid week pullup, sometimes it will wake up continuously
+        rtc_gpio_pullup_dis((gpio_num_t)PIN_BUTTONR);     // avoid week pullup, sometimes it will wake up continuously
         esp_sleep_enable_ext1_wakeup((1ULL << PIN_BUTTONC) | (1ULL << PIN_BUTTONL) | (1ULL << PIN_BUTTONR), ESP_EXT1_WAKEUP_ANY_HIGH);
     }
 }
@@ -506,7 +452,7 @@ static void pre_sleep()
     display.hibernate();
     buzzer.waitForSleep();
     delay(10);
-    ledcDetachPin(PIN_BUZZER);
+    ledcDetach(PIN_BUZZER);
     digitalWrite(PIN_BUZZER, 0);
 }
 static void wait_display()
@@ -541,7 +487,7 @@ void HAL::goSleep(uint32_t sec)
         esp_light_sleep_start();
         display.init(0, false);
         peripherals.wakeup();
-        ledcAttachPin(PIN_BUZZER, 0);
+        ledcAttach(PIN_BUZZER, 48000, 10);
     }
     else
     {

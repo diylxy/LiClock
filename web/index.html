@@ -126,6 +126,26 @@
               <option value="1">开启</option>
             </select>
           </div>
+          <div class="form-group">
+            <label for="p9">时区信息</label>
+            <div class="d-flex">
+              <input type="text" class="form-control" id="p9" name="p9">
+              <button type="button" class="btn btn-success"
+                onclick="document.getElementById('p9').value = 'CST-8';">设置为北京时区</button>
+            </div>
+            <label for="p9">第二时区信息</label>
+            <div class="d-flex">
+              <input type="text" class="form-control" id="p10" name="p10">
+            </div>
+            <p>参考时区信息: <a href="https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html" target="_blank">TZ Variable</a>
+            </p>
+          </div>
+          <!--h2>ESP32 OTA固件更新</h2>
+          <div class="form-group">
+            <input type="file" id="ota_file"><br><br>
+            <button id="ota_upload">上传并更新</button>
+            <p id="message"></p>
+          </div-->
         </fieldset>
         <button type="submit" id="submit" class="btn btn-primary">保存设置</button>
         <button type="button" class="btn btn-warning" data-mdb-toggle="modal"
@@ -222,6 +242,38 @@
           }
         };
         xhr.send("IREALLYWANTTOSHUTDOWN");
+      });
+      // OTA Upload Handler
+      $("#ota_upload").click(function (event) {
+        event.preventDefault();
+        var file = $("#ota_file")[0].files[0];
+        if (!file) {
+            $("#message").text("请选择要上传的固件文件！");
+            return;
+        }
+        var formData = new FormData();
+        formData.append("update", file);
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/update", true);
+        // Display progress
+        xhr.upload.onprogress = function (event) {
+            if (event.lengthComputable) {
+                var percent = Math.round((event.loaded / event.total) * 100);
+                $("#message").text("上传中：" + percent + "%...");
+            }
+        };
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                $("#message").text("更新成功！ESP32 即将重启...");
+                setTimeout(function () { location.reload(); }, 3000);
+            } else {
+                $("#message").text("更新失败，错误代码：" + xhr.status);
+            }
+        };
+        xhr.onerror = function () {
+            $("#message").text("请求错误！");
+        };
+        xhr.send(formData);
       });
       setInterval(() => {
         var xhr = new XMLHttpRequest();

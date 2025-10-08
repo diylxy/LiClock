@@ -12,7 +12,7 @@ void enableIPv6()
     ip6addr_aton("240C::6666", &(dnsip.u_addr.ip6));
     dnsip.type = IPADDR_TYPE_V6;
     dns_setserver(2, &dnsip);
-    WiFi.enableIpV6();
+    WiFi.enableIPv6();
     esp_netif_get_ip6_global(get_esp_interface_netif(ESP_IF_WIFI_STA), (esp_ip6_addr_t *)&ipv6global);
     esp_netif_get_ip6_linklocal(get_esp_interface_netif(ESP_IF_WIFI_STA), (esp_ip6_addr_t *)&ipv6local);
 }

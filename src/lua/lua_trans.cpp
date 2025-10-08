@@ -119,7 +119,7 @@ void lua_execute(const char *filename)
 {
     if (luaL_dofile(L, filename))
     {
-        lua_printf("运行错误: %s\n", lua_tostring(L, -1));
+        Serial.printf("运行错误: %s\n", lua_tostring(L, -1));
         lua_pop(L, 1);
     }
     // luaL_dostring(L, "display.clearScreen()\ndisplay.display()\nprint(\"lua_execute\")\nbuzzer.append(1000, 100)\n");
@@ -129,4 +129,9 @@ void closeLua()
     if (L)
         lua_close(L);
     L = NULL;
+}
+
+_sig_func_ptr signal (int, _sig_func_ptr) {
+    // Empty, because signals don't exist on ESP32
+    return NULL;
 }

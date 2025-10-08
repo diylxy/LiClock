@@ -3,7 +3,7 @@
 #include "soc/rtc_cntl_reg.h"
 U8G2_FOR_ADAFRUIT_GFX u8g2Fonts;
 GxEPD2_BW<GxEPD2_290, GxEPD2_290::HEIGHT> display(GxEPD2_290(/*CS=5*/ CONFIG_SPI_CS, /*DC=*/CONFIG_PIN_DC, /*RST=*/CONFIG_PIN_RST, /*BUSY=*/CONFIG_PIN_BUSY)); // 注意：此类略微修改过，使用两个缓冲区
-DynamicJsonDocument config(1024);
+JsonDocument config;
 
 void task_appManager(void *)
 {
@@ -13,10 +13,18 @@ void task_appManager(void *)
         delay(20);
     }
 }
+
+void runWifiBackground()
+{
+    hal.autoConnectWiFi();
+    NTPSync();
+    ESP.restart();
+}
+
+
 #include <LittleFS.h>
 void setup()
 {
-    WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
     hal.init();
     alarms.load();
     alarms.check();
@@ -44,6 +52,11 @@ void setup()
     }
     bool recoverLast = false;
     hal.wakeUpFromDeepSleep = false;
+    if (hal.lastsync == 1 && config[PARAM_SSID] != "")
+    {
+        hal.lastsync = 0; // 避免重复进入
+        runWifiBackground();
+    }
     if (esp_sleep_get_wakeup_cause() != ESP_SLEEP_WAKEUP_UNDEFINED)
     {
         hal.wakeUpFromDeepSleep = true;

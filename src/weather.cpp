@@ -82,7 +82,7 @@ int8_t Weather::refresh()
 
     if (httpCode == HTTP_CODE_OK)
     {
-        DynamicJsonDocument doc(50000);
+        JsonDocument doc;
         auto s = http.getStream();
         deserializeJson(doc, s);
         if (doc["status"] != "ok")

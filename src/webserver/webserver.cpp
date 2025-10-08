@@ -2,7 +2,7 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncWebSocket.h>
-#include <SPIFFSEditor.h>
+#include <Update.h>
 
 // 下面是引用网页文件
 #include "index.h"
@@ -215,7 +215,7 @@ static void sendreq(AsyncWebServerRequest *request, const char *mime, const uint
     }
     else
     {
-        AsyncWebServerResponse *response = request->beginResponse_P(200, mime, name, len);
+        AsyncWebServerResponse *response = request->beginResponse(200, mime, name, len);
         response->addHeader("Content-Encoding", "gzip");
         response->addHeader("Last-Modified", buildTime);
         request->send(response);
@@ -270,14 +270,19 @@ void beginWebServer()
                                 message += "<br/>USB";
                                 message += hal.USBPluggedIn?"已插入":"未插入";
                                 message += hal.isCharging?"<br/>正在充电":"<br/>未充电";
+                                message += "<br/>RTC修正: 每隔";
+                                message += hal.every;
+                                message += "秒 修正";
+                                message += hal.delta;
+                                message += "秒";
                                 request->send(200, "text/plain", message); });
 
     server.on("/conf", HTTP_POST, [](AsyncWebServerRequest *request)
               {
                 Serial.println(request->getParam("json", true, false)->value());
-                                deserializeJson(config, request->getParam(0)->value());
-                                request->send(200, "text/plain", "OK");
-                                hal.saveConfig(); });
+                DeserializationError err = deserializeJson(config, request->getParam("json", true, false)->value());
+                request->send(200, "text/plain", "OK");
+                hal.saveConfig(); });
 
     server.on("/poweroff", HTTP_POST, [](AsyncWebServerRequest *request)
               {
@@ -297,13 +302,46 @@ void beginWebServer()
     server.on("/heap", HTTP_GET, [](AsyncWebServerRequest *request)
               { request->send(200, "text/plain", String(ESP.getFreeHeap())); });
 
-    server.addHandler(new SPIFFSEditor(LittleFS));
     server.on("/rundebug", HTTP_GET, luaExecuteHandler);
     server.on("/terminate", HTTP_GET, luaTerminateHandler);
     server.on("/rmrf", HTTP_POST, rmrfHandler);
     server.on("/mkdir", HTTP_POST, mkdirHandler);
     server.on("/rename", HTTP_POST, renameHandler);
     server.on("/createapp", HTTP_POST, createAppHandler);
+    server.on(
+        "/update", HTTP_POST,
+        [](AsyncWebServerRequest *request)
+        {
+            request->send(200, "text/plain", Update.hasError() ? "更新失败!" : "更新成功! 正在重启...");
+            delay(500);
+            ESP.restart();
+        },
+        [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
+        {
+            if (!index)
+            {
+                Serial.printf("Updating: %s\n", filename.c_str());
+                if (!Update.begin(UPDATE_SIZE_UNKNOWN))
+                {
+                    Update.printError(Serial);
+                }
+            }
+            if (Update.write(data, len) != len)
+            {
+                Update.printError(Serial);
+            }
+            if (final)
+            {
+                if (Update.end(true))
+                {
+                    Serial.println("Update Success!");
+                }
+                else
+                {
+                    Update.printError(Serial);
+                }
+            }
+        });
     server.begin();
     Serial.println("HTTP server started");
     serverRunning = true;
